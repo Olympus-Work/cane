@@ -22,8 +22,9 @@ jobs:
           curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o gitleaks.tgz
           tar -xzf gitleaks.tgz gitleaks
           sudo mv gitleaks /usr/local/bin/gitleaks
-      - name: Scan full history
-        run: gitleaks git --redact --no-banner --config .gitleaks.toml --verbose .
+      - name: Scan full history of this commit
+        # HEAD only: other fetched branches are scanned by their own runs.
+        run: gitleaks git --redact --no-banner --config .gitleaks.toml --verbose --log-opts="HEAD" .
 
   build:
     runs-on: ubuntu-latest
