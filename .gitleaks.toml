@@ -1,0 +1,4 @@
+title = "cane gitleaks config"
+
+[extend]
+useDefault = true

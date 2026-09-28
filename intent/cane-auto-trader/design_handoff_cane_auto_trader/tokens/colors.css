@@ -1,0 +1,100 @@
+/* colors.css — Waiphyo color system
+   ---------------------------------------------------------------------------
+   The brand is dark-first: the signature surface is the near-black ink used on
+   the home page (#151a1e). Indigo is the single accent. A light "paper" surface
+   mirrors the projects page. Tailwind-derived semantic families power the
+   category badges. Base scales first, then semantic aliases. */
+
+:root {
+  /* ---- Ink (dark surfaces — the signature theme) ---- */
+  --ink-900: #0f1316;   /* deepest — page void / footer */
+  --ink-800: #151a1e;   /* base background (theme-color) */
+  --ink-700: #1e252b;   /* raised / row hover */
+  --ink-600: #2b3740;   /* surface / pill / chip */
+  --ink-500: #3a4a55;   /* pill hover / hairline-strong */
+  --ink-400: #55687a;   /* muted border on dark */
+
+  /* ---- Paper (light surfaces — the projects theme) ---- */
+  --paper-0:   #ffffff;
+  --paper-50:  #f9fafb;
+  --gray-200:  #e5e7eb;
+  --gray-300:  #d1d5db;
+  --gray-400:  #9ca3af;
+  --gray-500:  #6b7280;
+  --gray-600:  #4b5563;
+  --gray-700:  #374151;
+  --gray-800:  #1f2937;
+  --gray-900:  #111827;
+
+  /* ---- Indigo (the accent) ---- */
+  --indigo-100: #e0e7ff;
+  --indigo-200: #c7d2fe;
+  --indigo-300: #a5b4fc;
+  --indigo-400: #818cf8;
+  --indigo-500: #6366f1;   /* primary accent */
+  --indigo-600: #4f46e5;   /* button fill */
+  --indigo-700: #4338ca;   /* button hover */
+  --indigo-800: #3730a3;
+
+  /* ---- Semantic category families (badge bg / text pairs) ---- */
+  --teal-bg:    #ccfbf1;  --teal-fg:    #115e59;
+  --amber-bg:   #fef3c7;  --amber-fg:   #92400e;
+  --purple-bg:  #f3e8ff;  --purple-fg:  #6b21a8;
+  --rose-bg:    #ffe4e6;  --rose-fg:    #9f1239;
+  --sky-bg:     #e0f2fe;  --sky-fg:     #075985;
+  --green-bg:   #dcfce7;  --green-fg:   #166534;
+  --blue-bg:    #dbeafe;  --blue-fg:    #1e40af;
+  --emerald-bg: #d1fae5;  --emerald-fg: #065f46;
+  --orange-bg:  #ffedd5;  --orange-fg:  #9a3412;
+  --red-bg:     #fee2e2;  --red-fg:     #991b1b;
+
+  /* ---- Status (functional) ---- */
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger:  #ef4444;
+  --info:    var(--indigo-500);
+
+  /* =======================================================================
+     SEMANTIC ALIASES — default to the DARK (signature) theme.
+     Use these in components; flip the whole surface with .light below. */
+  --bg-base:        var(--ink-800);
+  --bg-raised:      var(--ink-700);
+  --surface:        var(--ink-600);
+  --surface-hover:  var(--ink-500);
+  --border:         var(--ink-600);
+  --border-strong:  var(--ink-500);
+
+  --text-primary:   #ffffff;
+  --text-secondary: var(--gray-400);
+  --text-muted:     var(--gray-500);
+  --text-accent:    var(--indigo-300);
+  --text-on-accent: #ffffff;
+
+  --accent:         var(--indigo-500);
+  --accent-hover:   var(--indigo-400);
+  --accent-strong:  var(--indigo-600);
+  --accent-soft-bg: rgba(99, 102, 241, 0.14);
+
+  --focus-ring:     var(--indigo-500);
+}
+
+/* Light surface — mirrors the projects page. Scope a subtree with class="light". */
+.light {
+  --bg-base:        var(--paper-50);
+  --bg-raised:      var(--paper-0);
+  --surface:        var(--paper-0);
+  --surface-hover:  var(--paper-50);
+  --border:         var(--gray-200);
+  --border-strong:  var(--gray-300);
+
+  --text-primary:   var(--gray-900);
+  --text-secondary: var(--gray-600);
+  --text-muted:     var(--gray-400);
+  --text-accent:    var(--indigo-600);
+  --text-on-accent: #ffffff;
+
+  --accent:         var(--indigo-600);
+  --accent-hover:   var(--indigo-700);
+  --accent-strong:  var(--indigo-700);
+  --accent-soft-bg: var(--indigo-100);
+}

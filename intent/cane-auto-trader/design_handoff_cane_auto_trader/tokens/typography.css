@@ -1,0 +1,36 @@
+/* typography.css — Waiphyo type system
+   Poppins for everything (display through UI); JetBrains Mono for code, IDs,
+   CVEs, and other security/technical strings. */
+
+:root {
+  --font-sans: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Type scale (rem, 16px base) */
+  --text-xs:   0.75rem;   /* 12 — micro labels, footnotes */
+  --text-sm:   0.875rem;  /* 14 — secondary / meta */
+  --text-base: 1rem;      /* 16 — body */
+  --text-lg:   1.125rem;  /* 18 — lead body */
+  --text-xl:   1.25rem;   /* 20 — card title */
+  --text-2xl:  1.5rem;    /* 24 — section heading sm */
+  --text-3xl:  1.875rem;  /* 30 — section heading */
+  --text-4xl:  2.25rem;   /* 36 — page heading */
+  --text-5xl:  3rem;      /* 48 — hero display */
+
+  /* Weights */
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  /* Line heights */
+  --leading-tight:   1.15;  /* display / headings */
+  --leading-snug:    1.35;  /* card titles */
+  --leading-normal:  1.5;   /* UI */
+  --leading-relaxed: 1.7;   /* long-form body / bio */
+
+  /* Letter spacing */
+  --tracking-tight:  -0.02em;  /* large display */
+  --tracking-normal: 0;
+  --tracking-wide:   0.04em;   /* uppercase eyebrows / pill labels */
+}
