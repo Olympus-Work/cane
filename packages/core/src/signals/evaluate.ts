@@ -19,6 +19,8 @@ export interface OpenPosition {
   side: Side;
   kind: EntryKind;
   stop: Decimal;
+  /** Evaluation time the entry was decided (UTC ms). B5.3 trails only on 1D candles closed after it. */
+  openedAt: number;
 }
 
 export interface SignalRef {
@@ -118,10 +120,12 @@ function managePosition(position: OpenPosition, d: TfView): Decision {
   if (position.side === 'short' && bar.firstGreen) {
     return { type: 'exit', side: 'short', reason: 'first_green', signal, refPrice: close };
   }
-  // B5.3: move the stop to the new 1D trail, only in the position's favour,
-  // and only while the trail is on the protective side of price.
+  // B5.3: after each 1D candle that closed after the entry, move the stop to
+  // the new 1D trail, only in the position's favour, and only while the
+  // trail is on the protective side of price.
   const trail = d.a.trail[d.i] ?? null;
-  if (trail !== null) {
+  const closedAfterEntry = d.a.candles[d.i]!.closeTime >= position.openedAt;
+  if (trail !== null && closedAfterEntry) {
     if (position.side === 'long' && trail.gt(position.stop) && trail.lt(close)) {
       return { type: 'move_stop', side: 'long', stop: trail, signal };
     }

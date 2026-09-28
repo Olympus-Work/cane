@@ -1,6 +1,6 @@
 import { Decimal } from 'decimal.js';
 import { describe, expect, it } from 'vitest';
-import { TIMEFRAME_MS, type Candle } from '@cane/core';
+import { TIMEFRAME_MS, type Candle, type Decision, type DecideInput } from '@cane/core';
 import { simulate } from '../src/replay/simulate.js';
 
 const H4 = TIMEFRAME_MS['4h'];
@@ -80,6 +80,20 @@ describe('simulate (replay)', () => {
     expect(new Set(keys).size).toBe(keys.length);
   });
 
+  it('B7.4: the 1D candle that closed a position never opens the next one', () => {
+    let checked = 0;
+    for (const r of [futures, spot]) {
+      for (let i = 1; i < r.trades.length; i++) {
+        const prev = r.trades[i - 1]!;
+        const next = r.trades[i]!;
+        if (prev.exitReason !== 'first_red' && prev.exitReason !== 'first_green') continue;
+        checked++;
+        if (next.signalTimeframe === '1d') expect(next.signalOpenTime).toBeGreaterThan(prev.exitTime! - DAY);
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
+  });
+
   it('late entries carry a 2R take-profit; primary entries none', () => {
     for (const t of futures.trades) {
       if (t.kind === 'primary') expect(t.takeProfit).toBeNull();
@@ -100,5 +114,30 @@ describe('simulate (replay)', () => {
 
   it('is deterministic', () => {
     expect(simulate({ pair: 'TESTUSDT', market: 'futures', candles, from, to })).toEqual(futures);
+  });
+});
+
+describe('simulate: exit candle is consumed (B7.4)', () => {
+  it('a plain entry on the candle that just closed the position is ignored', () => {
+    const t0 = to - 30 * DAY;
+    const dayOf = (ms: number) => START + Math.floor((ms - START) / DAY) * DAY;
+    const exitDay = dayOf(t0 + 5 * DAY) - DAY; // 1D candle X that closes at the exit evaluation
+    const px = new Decimal(100);
+    // Stub decide: enter long, exit on X, then (like the real decide 4h later) offer a short keyed to X.
+    const stub = (inp: DecideInput): Decision => {
+      if (inp.nowMs === t0) {
+        return { type: 'enter', side: 'long', kind: 'primary', signal: { timeframe: '1d', openTime: dayOf(t0) - DAY }, refPrice: px, stop: new Decimal(1), stopSource: 'trail', takeProfit: null, trend1w: 'bullish' };
+      }
+      if (inp.position !== null && inp.nowMs === exitDay + DAY) {
+        return { type: 'exit', side: 'long', reason: 'first_red', signal: { timeframe: '1d', openTime: exitDay }, refPrice: px };
+      }
+      if (inp.position === null && inp.nowMs > exitDay + DAY) {
+        return { type: 'enter', side: 'short', kind: 'primary', signal: { timeframe: '1d', openTime: exitDay }, refPrice: px, stop: new Decimal(1000), stopSource: 'trail', takeProfit: null, trend1w: 'bearish' };
+      }
+      return { type: 'none', reason: 'no_signal' };
+    };
+    const flat = h4.map((c) => ({ ...c, open: px, high: px, low: px, close: px }));
+    const r = simulate({ pair: 'TESTUSDT', market: 'futures', candles: { ...candles, '4h': flat }, from: t0 - H4 + 1, to }, stub);
+    expect(r.trades.map((t) => [t.side, t.exitReason])).toEqual([['long', 'first_red']]);
   });
 });
