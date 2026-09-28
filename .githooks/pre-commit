@@ -1,0 +1,7 @@
+#!/bin/sh
+# Blocks commits that contain secrets. Install: pnpm install (sets core.hooksPath).
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-commit: gitleaks not found on PATH. Install it (https://github.com/gitleaks/gitleaks) — commit blocked." >&2
+  exit 1
+fi
+exec gitleaks git --pre-commit --staged --redact --no-banner --config .gitleaks.toml

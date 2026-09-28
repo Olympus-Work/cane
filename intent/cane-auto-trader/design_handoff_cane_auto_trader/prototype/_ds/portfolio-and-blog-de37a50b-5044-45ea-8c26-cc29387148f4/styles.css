@@ -1,0 +1,7 @@
+/* styles.css — Waiphyo Design System entry point.
+   Consumers link THIS file. It is a manifest of @imports only. */
+
+@import url("tokens/fonts.css");
+@import url("tokens/colors.css");
+@import url("tokens/typography.css");
+@import url("tokens/spacing.css");

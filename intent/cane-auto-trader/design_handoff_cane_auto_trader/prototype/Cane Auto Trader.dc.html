@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/portfolio-and-blog-de37a50b-5044-45ea-8c26-cc29387148f4/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/portfolio-and-blog-de37a50b-5044-45ea-8c26-cc29387148f4/tokens/colors.css">
+<link rel="stylesheet" href="_ds/portfolio-and-blog-de37a50b-5044-45ea-8c26-cc29387148f4/tokens/typography.css">
+<link rel="stylesheet" href="_ds/portfolio-and-blog-de37a50b-5044-45ea-8c26-cc29387148f4/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/portfolio-and-blog-de37a50b-5044-45ea-8c26-cc29387148f4/styles.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&amp;display=swap">
+<script src="_ds/portfolio-and-blog-de37a50b-5044-45ea-8c26-cc29387148f4/_ds_bundle.js"></script>
+<style>
+body{margin:0;background:#0f1316}
+*{box-sizing:border-box}
+a{color:var(--text-accent);text-decoration:none}
+a:hover{color:var(--indigo-200)}
+input,select,button,textarea{font-family:inherit}
+input[type=range]{accent-color:var(--indigo-500)}
+</style>
+</helmet>
+
+<div class="{{ themeClass }}" style="min-height:100vh;background:{{ pageBg }};font-family:'Poppins','Noto Sans Thai',sans-serif;color:var(--text-primary);font-variant-numeric:tabular-nums;font-size:14px;line-height:1.5">
+
+<sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+  <div style="min-height:100vh;display:flex;flex-direction:column;background:radial-gradient(1200px 700px at 100% 0%, rgba(99,102,241,0.55), transparent 65%),radial-gradient(1000px 650px at 0% 100%, rgba(20,184,166,0.30), transparent 62%),radial-gradient(800px 500px at 15% 10%, rgba(168,85,247,0.28), transparent 60%),linear-gradient(160deg, var(--bg-base), var(--bg-base));background-attachment:fixed">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px">
+      <div style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;letter-spacing:-0.02em"><i class="fas fa-wave-square" style="color:var(--accent)"></i>Cane</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="display:inline-flex;flex:none;padding:3px;border:1px solid var(--border-strong);border-radius:9999px">
+          <sc-for list="{{ langSeg }}" as="o" hint-placeholder-count="2">
+            <button onClick="{{ o.onClick }}" style="border:0;cursor:pointer;padding:3px 10px;border-radius:9999px;font-size:12px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button>
+          </sc-for>
+        </div>
+        <button onClick="{{ toggleTheme }}" aria-label="Theme" style="flex:none;width:34px;height:34px;border-radius:9999px;border:1px solid var(--border-strong);background:transparent;color:var(--text-secondary);cursor:pointer"><i class="{{ themeIcon }}"></i></button>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:24px 16px 64px">
+      <div style="width:100%;max-width:400px;background:var(--bg-raised);border:1px solid var(--border);border-radius:16px;padding:32px;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;gap:20px">
+        <sc-if value="{{ loginCreds }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <h1 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.02em">{{ t.loginTitle }}</h1>
+            <p style="margin:0;color:var(--text-secondary)">{{ t.loginSub }}</p>
+          </div>
+          <sc-if value="{{ isLocked }}">
+            <div role="alert" style="display:flex;gap:12px;padding:14px;border-radius:12px;background:var(--red-bg);color:var(--red-fg)">
+              <i class="fas fa-lock" style="margin-top:3px"></i>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <strong style="font-weight:600">{{ t.locked }}</strong>
+                <span>{{ t.tryAgainIn }} <span style="font-family:var(--font-mono);font-weight:600">{{ lockLeft }}</span></span>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ showWrongCreds }}">
+            <div role="alert" style="display:flex;gap:12px;padding:14px;border-radius:12px;background:var(--amber-bg);color:var(--amber-fg)">
+              <i class="fas fa-circle-exclamation" style="margin-top:3px"></i>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <strong style="font-weight:600">{{ t.wrongCreds }}</strong>
+                <span>{{ attemptsText }}</span>
+              </div>
+            </div>
+          </sc-if>
+          <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Field" label="{{ t.email }}" type="email" icon="fas fa-envelope" value="{{ email }}" on-change="{{ onEmail }}" hint-size="100%,70px"></x-import>
+          <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Field" label="{{ t.password }}" type="password" icon="fas fa-key" value="{{ password }}" on-change="{{ onPassword }}" hint="{{ t.pwHint }}" hint-size="100%,90px"></x-import>
+          <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" block="{{ true }}" size="lg" icon-right="fas fa-arrow-right" disabled="{{ isLocked }}" on-click="{{ submitCreds }}" hint-size="100%,48px">{{ t.continue }}</x-import>
+        </sc-if>
+        <sc-if value="{{ loginTotp }}">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="width:44px;height:44px;border-radius:12px;background:var(--accent-soft-bg);color:var(--text-accent);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:8px"><i class="fas fa-shield-halved"></i></div>
+            <h1 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.02em">{{ t.totpTitle }}</h1>
+            <p style="margin:0;color:var(--text-secondary)">{{ t.totpSub }}</p>
+          </div>
+          <input value="{{ loginCode }}" onChange="{{ onLoginCode }}" inputMode="numeric" maxLength="6" placeholder="000000" aria-label="TOTP" style="height:56px;border-radius:12px;border:1px solid var(--border-strong);background:var(--bg-base);color:var(--text-primary);text-align:center;font-family:var(--font-mono);font-size:26px;letter-spacing:0.5em;padding-left:0.5em;outline:none" style-focus="border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft-bg)">
+          <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" block="{{ true }}" size="lg" disabled="{{ loginCodeIncomplete }}" on-click="{{ submitTotp }}" hint-size="100%,48px">{{ t.verify }}</x-import>
+          <button onClick="{{ backToCreds }}" style="background:none;border:0;color:var(--text-secondary);cursor:pointer;font-size:13px;display:flex;gap:6px;align-items:center;justify-content:center"><i class="fas fa-arrow-left"></i>{{ t.back }}</button>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ isApp }}">
+  <div style="max-width:{{ frameMax }};margin:{{ frameMargin }};min-height:{{ frameMinH }};background:radial-gradient(1200px 700px at 100% 0%, rgba(99,102,241,0.55), transparent 65%),radial-gradient(1000px 650px at 0% 100%, rgba(20,184,166,0.30), transparent 62%),radial-gradient(800px 500px at 15% 10%, rgba(168,85,247,0.28), transparent 60%),linear-gradient(160deg, var(--bg-base), var(--bg-base));background-attachment:fixed;border:{{ frameBorder }};border-radius:{{ frameRadius }};overflow:hidden;position:relative;display:flex;flex-direction:column">
+
+    <sc-if value="{{ isDesktop }}">
+      <header style="position:sticky;top:0;z-index:20;background:color-mix(in srgb, var(--bg-base) 82%, transparent);border-bottom:1px solid var(--border);height:64px;display:flex;align-items:center;gap:16px;padding:0 20px">
+        <div style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;letter-spacing:-0.02em"><i class="fas fa-wave-square" style="color:var(--accent)"></i>Cane</div>
+        <nav style="display:flex;gap:4px;min-width:0;flex-shrink:1;overflow:hidden">
+          <sc-for list="{{ nav }}" as="n" hint-placeholder-count="3">
+            <button onClick="{{ n.onClick }}" style="border:0;cursor:pointer;padding:8px 12px;border-radius:8px;font-size:14px;font-weight:500;display:flex;gap:8px;align-items:center;white-space:nowrap;flex:none;background:{{ n.bg }};color:{{ n.fg }}" style-hover="color:var(--text-primary)"><i class="{{ n.icon }}"></i>{{ n.label }}</button>
+          </sc-for>
+        </nav>
+        <div style="flex:1"></div>
+        <div title="{{ status.label }}" style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:9999px;border:1px solid var(--border-strong);font-size:13px;font-weight:500;white-space:nowrap;flex:none;min-width:0;max-width:220px;overflow:hidden;text-overflow:ellipsis"><i class="{{ status.icon }}" style="color:{{ status.color }}"></i>{{ status.label }}</div>
+        <div style="display:inline-flex;flex:none;padding:3px;border:1px solid var(--border-strong);border-radius:9999px">
+          <sc-for list="{{ langSeg }}" as="o" hint-placeholder-count="2">
+            <button onClick="{{ o.onClick }}" style="border:0;cursor:pointer;padding:3px 10px;border-radius:9999px;font-size:12px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button>
+          </sc-for>
+        </div>
+        <button onClick="{{ toggleTheme }}" aria-label="Theme" style="flex:none;width:34px;height:34px;border-radius:9999px;border:1px solid var(--border-strong);background:transparent;color:var(--text-secondary);cursor:pointer"><i class="{{ themeIcon }}"></i></button>
+        <div style="flex:none;width:1px;height:28px;background:var(--border-strong)"></div>
+        <button onClick="{{ openKill }}" style="flex:none;white-space:nowrap;display:flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:8px;border:1.5px solid var(--danger);background:transparent;color:{{ neg }};font-weight:600;font-size:13px;cursor:pointer" style-hover="background:rgba(239,68,68,0.12)"><i class="fas fa-power-off"></i>{{ t.killSwitch }}</button>
+      </header>
+    </sc-if>
+
+    <sc-if value="{{ isMobile }}">
+      <header style="position:sticky;top:0;z-index:20;background:color-mix(in srgb, var(--bg-base) 82%, transparent);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px">
+        <div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:17px;letter-spacing:-0.02em"><i class="fas fa-wave-square" style="color:var(--accent)"></i>Cane</div>
+        <div style="flex:1"></div>
+        <div style="display:inline-flex;flex:none;padding:3px;border:1px solid var(--border-strong);border-radius:9999px">
+          <sc-for list="{{ langSeg }}" as="o" hint-placeholder-count="2">
+            <button onClick="{{ o.onClick }}" style="border:0;cursor:pointer;padding:3px 9px;border-radius:9999px;font-size:12px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button>
+          </sc-for>
+        </div>
+        <button onClick="{{ toggleTheme }}" aria-label="Theme" style="width:32px;height:32px;border-radius:9999px;border:1px solid var(--border-strong);background:transparent;color:var(--text-secondary);cursor:pointer"><i class="{{ themeIcon }}"></i></button>
+        <div role="status" style="flex-basis:100%;display:flex">
+          <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:9999px;border:1px solid var(--border-strong);font-size:12px;font-weight:500;white-space:nowrap"><i class="{{ status.icon }}" style="color:{{ status.color }}"></i>{{ status.label }}</div>
+        </div>
+      </header>
+    </sc-if>
+
+    <sc-if value="{{ killed }}">
+      <div role="status" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:{{ bannerPad }};background:var(--red-bg);color:var(--red-fg)">
+        <i class="fas fa-circle-stop"></i>
+        <strong style="font-weight:600">{{ t.tradingStopped }}</strong>
+        <span style="flex:1;min-width:200px">{{ t.tradingStoppedSub }}</span>
+        <sc-if value="{{ isDesktop }}"><button onClick="{{ goStrategies }}" style="border:1px solid currentColor;background:transparent;color:inherit;border-radius:8px;padding:5px 12px;font-weight:600;font-size:13px;cursor:pointer">{{ t.goStrategies }}</button></sc-if>
+      </div>
+    </sc-if>
+
+    <main style="flex:1;width:100%;max-width:1280px;margin:0 auto;padding:{{ mainPad }};display:flex;flex-direction:column;gap:24px">
+
+      <sc-if value="{{ showDashDesktop }}">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap">
+          <h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-0.02em">{{ t.dashboard }}</h1>
+          <span style="color:var(--text-secondary);font-size:13px;display:flex;gap:6px;align-items:center"><i class="{{ syncIcon }}"></i>{{ syncText }}</span>
+        </div>
+        <sc-if value="{{ isLoading }}">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+            <sc-for list="{{ skel5 }}" as="s" hint-placeholder-count="5">
+              <div style="height:104px;border-radius:16px;background:var(--bg-raised);border:1px solid var(--border);padding:20px;display:flex;flex-direction:column;gap:14px">
+                <div style="width:50%;height:10px;border-radius:9999px;background:var(--surface)"></div>
+                <div style="width:75%;height:20px;border-radius:9999px;background:var(--surface)"></div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="border-radius:16px;background:var(--bg-raised);border:1px solid var(--border);padding:20px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;gap:10px;align-items:center;color:var(--text-secondary)"><i class="fas fa-circle-notch fa-spin"></i>{{ t.loadingData }}</div>
+            <sc-for list="{{ skel5 }}" as="s" hint-placeholder-count="5">
+              <div style="height:14px;border-radius:9999px;background:var(--surface)"></div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ notLoading }}">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px">
+            <sc-for list="{{ stats }}" as="s" hint-placeholder-count="5">
+              <div style="border-radius:16px;background:var(--bg-raised);border:1px solid var(--border);padding:20px;display:flex;flex-direction:column;gap:6px;opacity:{{ staleOpacity }}">
+                <span style="font-size:12px;color:var(--text-secondary);font-weight:500">{{ s.label }}</span>
+                <span style="font-size:20px;font-weight:600;letter-spacing:-0.01em;color:{{ s.color }};display:flex;gap:8px;align-items:center;white-space:nowrap"><i class="{{ s.icon }}" style="font-size:15px"></i>{{ s.value }}</span>
+                <span style="font-size:12px;color:var(--text-muted)">{{ s.sub }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ hasAlerts }}">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{ alerts }}" as="a" hint-placeholder-count="2">
+                <div role="alert" style="display:flex;gap:12px;align-items:flex-start;padding:12px 16px;border-radius:12px;background:{{ a.bg }};color:{{ a.fg }}">
+                  <i class="{{ a.icon }}" style="margin-top:4px"></i>
+                  <div style="flex:1;display:flex;flex-direction:column"><strong style="font-weight:600">{{ a.title }}</strong><span>{{ a.body }}</span>
+                    <sc-if value="{{ a.hasItems }}"><ul style="margin:6px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px;font-size:13px"><sc-for list="{{ a.items }}" as="it" hint-placeholder-count="3"><li style="display:flex;gap:8px"><span style="font-weight:600;min-width:84px">{{ it.pair }}</span><span>{{ it.reason }}</span></li></sc-for></ul></sc-if>
+                  </div>
+                  <button onClick="{{ a.onClick }}" style="border:1px solid currentColor;background:transparent;color:inherit;border-radius:8px;padding:4px 12px;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap">{{ a.cta }}</button>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <div style="border-radius:16px;background:var(--bg-raised);border:1px solid var(--border);overflow:hidden">
+            <div style="display:flex;gap:4px;padding:8px 8px 0;border-bottom:1px solid var(--border)">
+              <sc-for list="{{ dashTabs }}" as="d" hint-placeholder-count="3">
+                <button onClick="{{ d.onClick }}" style="border:0;background:transparent;cursor:pointer;padding:10px 14px;font-size:14px;font-weight:500;color:{{ d.fg }};border-bottom:2px solid {{ d.line }};display:flex;gap:8px;align-items:center">{{ d.label }}<span style="font-size:11px;padding:1px 7px;border-radius:9999px;background:var(--surface);color:var(--text-secondary)">{{ d.count }}</span></button>
+              </sc-for>
+            </div>
+            <sc-if value="{{ tabPositions }}">
+              <sc-if value="{{ hasPositions }}">
+                <div style="overflow-x:auto">
+                  <div style="min-width:1120px">
+                    <div style="display:grid;grid-template-columns:1.1fr .8fr .7fr .7fr 1fr 1fr 1.3fr 1fr 1fr 1fr .6fr;padding:10px 16px;font-size:12px;font-weight:500;color:var(--text-secondary);border-bottom:1px solid var(--border)">
+                      <span>{{ t.pair }}</span><span>{{ t.market }}</span><span>{{ t.side }}</span><span style="text-align:right">{{ t.qty }}</span><span style="text-align:right">{{ t.entry }}</span><span style="text-align:right">{{ t.markChg }}</span><span style="text-align:right">{{ t.upnl }}</span><span style="text-align:right">{{ t.stop }}</span><span style="text-align:right">{{ t.tp }}</span><span style="text-align:right">{{ t.liq }}</span><span style="text-align:right">{{ t.lev }}</span>
+                    </div>
+                    <sc-for list="{{ positions }}" as="p" hint-placeholder-count="3">
+                      <div style="display:grid;grid-template-columns:1.1fr .8fr .7fr .7fr 1fr 1fr 1.3fr 1fr 1fr 1fr .6fr;padding:14px 16px;align-items:center;border-bottom:1px solid var(--border);font-size:13px;opacity:{{ staleOpacity }}" style-hover="background:var(--surface-hover)">
+                        <span style="font-weight:600">{{ p.pair }}</span>
+                        <span style="color:var(--text-secondary)">{{ p.marketL }}</span>
+                        <span style="display:flex;gap:6px;align-items:center;font-weight:500"><i class="{{ p.sideIcon }}" style="color:{{ p.sideColor }}"></i>{{ p.sideL }}</span>
+                        <span style="text-align:right;font-family:var(--font-mono)">{{ p.qty }}</span>
+                        <span style="text-align:right;font-family:var(--font-mono)">{{ p.entryF }}</span>
+                        <span style="text-align:right;font-family:var(--font-mono);display:flex;flex-direction:column;align-items:flex-end"><span>{{ p.markF }}</span><span style="font-size:11px;color:{{ p.chgColor }}"><i class="{{ p.chgIcon }}" style="font-size:10px;margin-right:3px"></i>{{ p.chgF }}</span></span>
+                        <span style="text-align:right;font-family:var(--font-mono);color:{{ p.pnlColor }};font-weight:500">{{ p.upnlF }} <span style="opacity:.85">({{ p.upctF }})</span></span>
+                        <span style="text-align:right;font-family:var(--font-mono)">{{ p.stopF }}</span>
+                        <span style="text-align:right;font-family:var(--font-mono);color:var(--text-secondary)">{{ p.tpF }}</span>
+                        <span style="text-align:right;font-family:var(--font-mono);color:var(--text-secondary)">{{ p.liqF }}</span>
+                        <span style="text-align:right;font-family:var(--font-mono);color:var(--text-secondary)">{{ p.levF }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ noPositions }}">
+                <div style="padding:56px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">
+                  <i class="fas fa-layer-group" style="font-size:28px;color:var(--text-muted)"></i>
+                  <strong style="font-weight:600">{{ t.noPositions }}</strong>
+                  <span style="color:var(--text-secondary);max-width:420px">{{ emptyPosSub }}</span>
+                  <sc-if value="{{ noStrats }}"><x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" size="sm" icon="fas fa-plus" on-click="{{ newStrategy }}" hint-size="140px,34px">{{ t.newStrategy }}</x-import></sc-if>
+                </div>
+              </sc-if>
+            </sc-if>
+            <sc-if value="{{ tabHistory }}">
+              <sc-if value="{{ hasTrades }}">
+                <div style="overflow-x:auto">
+                  <div style="min-width:980px">
+                    <div style="display:grid;grid-template-columns:1.2fr 1fr .8fr .7fr 1.7fr 1.1fr 1.1fr 24px;padding:10px 16px;font-size:12px;font-weight:500;color:var(--text-secondary);border-bottom:1px solid var(--border)">
+                      <span>{{ t.time }}</span><span>{{ t.pair }}</span><span>{{ t.market }}</span><span>{{ t.side }}</span><span style="text-align:right">{{ t.entryExit }}</span><span style="text-align:right">{{ t.rpnl }}</span><span style="padding-left:24px">{{ t.exitReason }}</span><span></span>
+                    </div>
+                    <sc-for list="{{ trades }}" as="r" hint-placeholder-count="5">
+                      <button onClick="{{ r.onClick }}" style="width:100%;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer;display:grid;grid-template-columns:1.2fr 1fr .8fr .7fr 1.7fr 1.1fr 1.1fr 24px;padding:14px 16px;align-items:center;border-bottom:1px solid var(--border);font-size:13px;opacity:{{ staleOpacity }}" style-hover="background:var(--surface-hover)">
+                        <span style="font-family:var(--font-mono);color:var(--text-secondary)">{{ r.time }}</span>
+                        <span style="font-weight:600">{{ r.pair }}</span>
+                        <span style="color:var(--text-secondary)">{{ r.marketL }}</span>
+                        <span style="display:flex;gap:6px;align-items:center;font-weight:500"><i class="{{ r.sideIcon }}" style="color:{{ r.sideColor }}"></i>{{ r.sideL }}</span>
+                        <span style="text-align:right;font-family:var(--font-mono)">{{ r.entryF }} → {{ r.exitF }}</span>
+                        <span style="text-align:right;font-family:var(--font-mono);font-weight:500;color:{{ r.pnlColor }}"><i class="{{ r.pnlIcon }}" style="font-size:11px;margin-right:4px"></i>{{ r.pnlF }}</span>
+                        <span style="padding-left:24px;display:flex;gap:6px;align-items:center;color:var(--text-secondary)"><i class="{{ r.reasonIcon }}"></i>{{ r.reasonL }}</span>
+                        <i class="fas fa-chevron-right" style="color:var(--text-muted);font-size:11px"></i>
+                      </button>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ noTrades }}">
+                <div style="padding:56px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">
+                  <i class="fas fa-clock-rotate-left" style="font-size:28px;color:var(--text-muted)"></i>
+                  <strong style="font-weight:600">{{ t.noTrades }}</strong>
+                  <span style="color:var(--text-secondary)">{{ t.noTradesSub }}</span>
+                </div>
+              </sc-if>
+            </sc-if>
+            <sc-if value="{{ tabAudit }}">
+              <div style="overflow-x:auto">
+                <div style="min-width:760px">
+                  <div style="display:grid;grid-template-columns:190px 220px 1fr;padding:10px 16px;font-size:12px;font-weight:500;color:var(--text-secondary);border-bottom:1px solid var(--border)">
+                    <span>{{ t.time }}</span><span>{{ t.action }}</span><span>{{ t.details }}</span>
+                  </div>
+                  <sc-for list="{{ audit }}" as="l" hint-placeholder-count="6">
+                    <div style="display:grid;grid-template-columns:190px 220px 1fr;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;align-items:center">
+                      <span style="font-family:var(--font-mono);color:var(--text-secondary)">{{ l.time }}</span>
+                      <span style="font-weight:500;display:flex;gap:8px;align-items:center"><i class="{{ l.icon }}" style="color:var(--text-accent);width:14px"></i>{{ l.action }}</span>
+                      <span style="color:var(--text-secondary)">{{ l.details }}</span>
+                    </div>
+                  </sc-for>
+                  <div style="padding:12px 16px;font-size:12px;color:var(--text-muted);display:flex;gap:8px;align-items:center"><i class="fas fa-eye-slash"></i>{{ t.auditNote }}</div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="border-radius:16px;background:var(--bg-raised);border:1px solid var(--border);padding:20px;display:flex;flex-direction:column;gap:14px;opacity:{{ staleOpacity }}">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+              <h2 style="margin:0;font-size:16px;font-weight:600">{{ t.hmTitle }} <span style="font-weight:400;color:var(--text-secondary)">— {{ t.hmSub }}</span></h2>
+              <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">{{ t.hmRange }}</span>
+            </div>
+            <div style="overflow-x:auto">
+              <div style="min-width:720px;display:flex;flex-direction:column;gap:6px">
+                <div style="display:grid;grid-template-columns:repeat({{ hmCols }},minmax(0,1fr));gap:4px">
+                  <sc-for list="{{ hmMonths }}" as="mo" hint-placeholder-count="12"><span style="font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:0.06em;color:var(--text-muted);white-space:nowrap;overflow:visible">{{ mo }}</span></sc-for>
+                </div>
+                <div style="display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,auto);grid-template-columns:repeat({{ hmCols }},minmax(0,1fr));gap:4px">
+                  <sc-for list="{{ hmCells }}" as="c" hint-placeholder-count="60"><div onMouseEnter="{{ c.onEnter }}" onMouseLeave="{{ hmLeave }}" style="aspect-ratio:1;border-radius:3px;background:{{ c.bg }};border:1px solid {{ c.bd }};box-shadow:{{ c.ring }};cursor:default"></div></sc-for>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--text-secondary)">
+              <span>{{ hmSummary }}</span>
+              <div style="display:flex;align-items:center;gap:4px"><span style="margin-right:4px">{{ t.hmLess }}</span><sc-for list="{{ hmLegend }}" as="lg" hint-placeholder-count="5"><span style="width:12px;height:12px;border-radius:3px;background:{{ lg.bg }};border:1px solid {{ lg.bd }}"></span></sc-for><span style="margin-left:4px">{{ t.hmMore }}</span></div>
+            </div>
+          </div>
+        </sc-if>
+      </sc-if>
+
+      <sc-if value="{{ showDashMobile }}">
+        <sc-if value="{{ isLoading }}">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <sc-for list="{{ skel4 }}" as="s" hint-placeholder-count="4">
+              <div style="height:84px;border-radius:14px;background:var(--bg-raised);border:1px solid var(--border);padding:14px;display:flex;flex-direction:column;gap:12px"><div style="width:60%;height:9px;border-radius:9999px;background:var(--surface)"></div><div style="width:80%;height:16px;border-radius:9999px;background:var(--surface)"></div></div>
+            </sc-for>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;justify-content:center;color:var(--text-secondary);padding:24px"><i class="fas fa-circle-notch fa-spin"></i>{{ t.loadingData }}</div>
+        </sc-if>
+        <sc-if value="{{ notLoading }}">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <sc-for list="{{ statsMobile }}" as="s" hint-placeholder-count="4">
+              <div style="border-radius:14px;background:var(--bg-raised);border:1px solid var(--border);padding:14px;display:flex;flex-direction:column;gap:4px;opacity:{{ staleOpacity }}">
+                <span style="font-size:11px;color:var(--text-secondary);font-weight:500">{{ s.label }}</span>
+                <span style="font-size:17px;font-weight:600;color:{{ s.color }};display:flex;gap:6px;align-items:center"><i class="{{ s.icon }}" style="font-size:12px"></i>{{ s.value }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <sc-for list="{{ alerts }}" as="a" hint-placeholder-count="2">
+            <div role="alert" style="display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:12px;background:{{ a.bg }};color:{{ a.fg }};font-size:13px">
+              <i class="{{ a.icon }}" style="margin-top:3px"></i>
+              <div style="display:flex;flex-direction:column"><strong style="font-weight:600">{{ a.title }}</strong><span>{{ a.body }}</span>
+                <sc-if value="{{ a.hasItems }}"><ul style="margin:6px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;font-size:12px"><sc-for list="{{ a.items }}" as="it" hint-placeholder-count="3"><li style="display:flex;flex-direction:column"><span style="font-weight:600">{{ it.pair }}</span><span>{{ it.reason }}</span></li></sc-for></ul></sc-if>
+              </div>
+            </div>
+          </sc-for>
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><h2 style="margin:0;font-size:16px;font-weight:600">{{ t.positions }}</h2><span style="font-size:12px;color:var(--text-secondary)">{{ posCount }}</span></div>
+          <sc-for list="{{ positions }}" as="p" hint-placeholder-count="3">
+            <div style="border-radius:14px;background:var(--bg-raised);border:1px solid var(--border);padding:14px;display:flex;flex-direction:column;gap:10px;opacity:{{ staleOpacity }}">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+                <div style="display:flex;flex-direction:column"><strong style="font-weight:600">{{ p.pair }}</strong><span style="font-size:12px;color:var(--text-secondary);display:flex;gap:6px;align-items:center"><i class="{{ p.sideIcon }}" style="color:{{ p.sideColor }}"></i>{{ p.sideL }} · {{ p.marketL }} {{ p.levF }}</span></div>
+                <div style="text-align:right;font-family:var(--font-mono);color:{{ p.pnlColor }};font-weight:600;display:flex;flex-direction:column"><span>{{ p.upnlF }}</span><span style="font-size:12px">{{ p.upctF }}</span></div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:11px;color:var(--text-secondary)">
+                <div style="display:flex;flex-direction:column"><span>{{ t.entry }}</span><span style="font-family:var(--font-mono);color:var(--text-primary);font-size:12px">{{ p.entryF }}</span></div>
+                <div style="display:flex;flex-direction:column"><span>{{ t.mark }}</span><span style="font-family:var(--font-mono);color:var(--text-primary);font-size:12px">{{ p.markF }}</span><span style="font-family:var(--font-mono);font-size:11px;color:{{ p.chgColor }}"><i class="{{ p.chgIcon }}" style="font-size:9px;margin-right:2px"></i>{{ p.chgF }}</span></div>
+                <div style="display:flex;flex-direction:column"><span>{{ t.stop }}</span><span style="font-family:var(--font-mono);color:var(--text-primary);font-size:12px">{{ p.stopF }}</span></div>
+              </div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ noPositions }}">
+            <div style="border-radius:14px;border:1px dashed var(--border-strong);padding:28px 16px;text-align:center;color:var(--text-secondary);display:flex;flex-direction:column;gap:6px;align-items:center"><i class="fas fa-layer-group" style="font-size:22px;color:var(--text-muted)"></i>{{ t.noPositions }}</div>
+          </sc-if>
+
+          <div style="border-radius:16px;background:var(--bg-raised);border:1px solid var(--border);padding:20px;display:flex;flex-direction:column;gap:14px;opacity:{{ staleOpacity }}">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+              <h2 style="margin:0;font-size:16px;font-weight:600">{{ t.hmTitle }} <span style="font-weight:400;color:var(--text-secondary)">— {{ t.hmSub }}</span></h2>
+              <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">{{ t.hmRangeShort }}</span>
+            </div>
+            <div style="overflow-x:auto">
+              <div style="min-width:0;display:flex;flex-direction:column;gap:6px">
+                <div style="display:grid;grid-template-columns:repeat({{ hmColsM }},minmax(0,1fr));gap:4px">
+                  <sc-for list="{{ hmMonthsM }}" as="mo" hint-placeholder-count="12"><span style="font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:0.06em;color:var(--text-muted);white-space:nowrap;overflow:visible">{{ mo }}</span></sc-for>
+                </div>
+                <div style="display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,auto);grid-template-columns:repeat({{ hmColsM }},minmax(0,1fr));gap:4px">
+                  <sc-for list="{{ hmCellsM }}" as="c" hint-placeholder-count="60"><div onMouseEnter="{{ c.onEnter }}" onMouseLeave="{{ hmLeave }}" style="aspect-ratio:1;border-radius:3px;background:{{ c.bg }};border:1px solid {{ c.bd }};box-shadow:{{ c.ring }};cursor:default"></div></sc-for>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--text-secondary)">
+              <span>{{ hmSummary }}</span>
+              <div style="display:flex;align-items:center;gap:4px"><span style="margin-right:4px">{{ t.hmLess }}</span><sc-for list="{{ hmLegend }}" as="lg" hint-placeholder-count="5"><span style="width:12px;height:12px;border-radius:3px;background:{{ lg.bg }};border:1px solid {{ lg.bd }}"></span></sc-for><span style="margin-left:4px">{{ t.hmMore }}</span></div>
+            </div>
+          </div>
+          <h2 style="margin:8px 0 0;font-size:16px;font-weight:600">{{ t.history }}</h2>
+          <div style="border-radius:14px;background:var(--bg-raised);border:1px solid var(--border);overflow:hidden">
+            <sc-for list="{{ tradesShort }}" as="r" hint-placeholder-count="4">
+              <button onClick="{{ r.onClick }}" style="width:100%;border:0;border-bottom:1px solid var(--border);background:transparent;color:inherit;text-align:left;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 14px;min-height:56px">
+                <div style="flex:1;display:flex;flex-direction:column"><strong style="font-weight:600;font-size:13px">{{ r.pair }} <span style="font-weight:400;color:var(--text-secondary)">· {{ r.sideL }}</span></strong><span style="font-size:11px;color:var(--text-secondary)">{{ r.time }} · {{ r.reasonL }}</span></div>
+                <span style="font-family:var(--font-mono);font-weight:600;font-size:13px;color:{{ r.pnlColor }}">{{ r.pnlF }}</span>
+                <i class="fas fa-chevron-right" style="color:var(--text-muted);font-size:11px"></i>
+              </button>
+            </sc-for>
+            <sc-if value="{{ noTrades }}"><div style="padding:20px;text-align:center;color:var(--text-secondary)">{{ t.noTrades }}</div></sc-if>
+          </div>
+          <div style="height:88px"></div>
+        </sc-if>
+      </sc-if>
+
+      <sc-if value="{{ showKillPage }}">
+        <sc-if value="{{ killed }}">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <h1 style="margin:0;font-size:{{ h1Size }};font-weight:700;letter-spacing:-0.02em;display:flex;gap:12px;align-items:center"><i class="fas fa-circle-stop" style="color:{{ neg }}"></i>{{ t.tradingStopped }}</h1>
+            <span style="color:var(--text-secondary)">{{ t.killedAt }} <span style="font-family:var(--font-mono)">2026-09-27 14:06:31</span></span>
+          </div>
+          <div style="border-radius:16px;background:var(--bg-raised);border:1px solid var(--border);overflow:hidden">
+            <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><strong style="font-weight:600">{{ t.perPair }}</strong><span style="color:var(--text-secondary);font-size:13px">{{ killSummary }}</span></div>
+            <sc-for list="{{ killRows }}" as="k" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap">
+                <div style="flex:1;min-width:180px;display:flex;flex-direction:column"><strong style="font-weight:600">{{ k.pair }} <span style="font-weight:400;color:var(--text-secondary)">· {{ k.marketL }}</span></strong><span style="font-size:12px;color:var(--text-secondary)">{{ k.what }}</span></div>
+                <span style="display:flex;gap:8px;align-items:center;font-weight:600;font-size:13px;color:{{ k.color }}"><i class="{{ k.icon }}"></i>{{ k.label }}</span>
+              </div>
+            </sc-for>
+            <div style="padding:12px 16px;font-size:13px;color:var(--text-secondary);display:flex;gap:8px;align-items:flex-start"><i class="fas fa-hand" style="margin-top:3px"></i>{{ t.untouched }}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;padding:16px;border-radius:12px;background:var(--accent-soft-bg)">
+            <strong style="font-weight:600">{{ t.howResume }}</strong>
+            <span style="color:var(--text-secondary)">{{ t.howResumeSub }}</span>
+            <sc-if value="{{ isDesktop }}"><div style="margin-top:6px"><x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" size="sm" icon-right="fas fa-arrow-right" on-click="{{ goStrategies }}" hint-size="160px,34px">{{ t.goStrategies }}</x-import></div></sc-if>
+          </div>
+        </sc-if>
+        <sc-if value="{{ notKilled }}">
+          <div style="max-width:560px;margin:40px auto;text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center">
+            <div style="width:64px;height:64px;border-radius:9999px;border:2px solid var(--danger);color:{{ neg }};display:flex;align-items:center;justify-content:center;font-size:24px"><i class="fas fa-power-off"></i></div>
+            <h1 style="margin:0;font-size:24px;font-weight:700;letter-spacing:-0.02em">{{ t.killSwitch }}</h1>
+            <p style="margin:0;color:var(--text-secondary)">{{ t.killIntro }}</p>
+            <button onClick="{{ openKill }}" style="height:52px;padding:0 28px;border-radius:12px;border:0;background:var(--danger);color:#fff;font-weight:700;font-size:16px;cursor:pointer;display:flex;gap:10px;align-items:center"><i class="fas fa-power-off"></i>{{ t.killCta }}</button>
+          </div>
+        </sc-if>
+      </sc-if>
+
+      <sc-if value="{{ showStrategies }}">
+        <sc-if value="{{ stratList }}">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+            <div style="display:flex;flex-direction:column;gap:2px"><h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-0.02em">{{ t.strategies }}</h1><span style="color:var(--text-secondary);font-size:13px">{{ t.stratSub }}</span></div>
+            <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" icon="fas fa-plus" on-click="{{ newStrategy }}" disabled="{{ isLoading }}" hint-size="150px,40px">{{ t.newStrategy }}</x-import>
+          </div>
+          <sc-if value="{{ stratError }}">
+            <div role="alert" style="display:flex;gap:12px;padding:12px 16px;border-radius:12px;background:var(--amber-bg);color:var(--amber-fg)"><i class="fas fa-plug-circle-xmark" style="margin-top:4px"></i><div style="display:flex;flex-direction:column"><strong style="font-weight:600">{{ t.alUnreachT }}</strong><span>{{ t.stratErrorSub }}</span></div></div>
+          </sc-if>
+          <div style="border-radius:16px;background:var(--bg-raised);border:1px solid var(--border);overflow:hidden">
+            <sc-if value="{{ isLoading }}">
+              <div style="padding:20px;display:flex;flex-direction:column;gap:18px">
+                <div style="display:flex;gap:10px;align-items:center;color:var(--text-secondary)"><i class="fas fa-circle-notch fa-spin"></i>{{ t.loadingData }}</div>
+                <sc-for list="{{ skel5 }}" as="s" hint-placeholder-count="5"><div style="display:grid;grid-template-columns:1fr 1fr 1fr 2fr;gap:16px"><div style="height:12px;border-radius:9999px;background:var(--surface)"></div><div style="height:12px;border-radius:9999px;background:var(--surface)"></div><div style="height:12px;border-radius:9999px;background:var(--surface)"></div><div style="height:12px;border-radius:9999px;background:var(--surface)"></div></div></sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ stratsReady }}">
+              <div style="overflow-x:auto">
+                <div style="min-width:1380px">
+                  <div style="display:grid;grid-template-columns:1.1fr 130px .7fr 1.3fr 1.4fr 170px 1fr .7fr .7fr 250px;padding:10px 16px;font-size:12px;font-weight:500;color:var(--text-secondary);border-bottom:1px solid var(--border)">
+                    <span>{{ t.pair }}</span><span style="text-align:right;padding-right:16px">{{ t.curPrice }}</span><span>{{ t.market }}</span><span>{{ t.state }}</span><span>{{ t.position }}</span><span>{{ t.pnl30 }}</span><span>{{ t.sizing }}</span><span>{{ t.lev }}</span><span>{{ t.marginMode }}</span><span style="text-align:right">{{ t.actions }}</span>
+                  </div>
+                  <sc-for list="{{ strats }}" as="s" hint-placeholder-count="6">
+                    <div style="display:grid;grid-template-columns:1.1fr 130px .7fr 1.3fr 1.4fr 170px 1fr .7fr .7fr 250px;padding:12px 16px;align-items:center;border-bottom:1px solid var(--border);font-size:13px" style-hover="background:var(--surface-hover)">
+                      <div style="display:flex;flex-direction:column"><strong style="font-weight:600">{{ s.pair }}</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">{{ s.id }}</span></div>
+                      <div style="display:flex;flex-direction:column;align-items:flex-end;padding-right:16px"><span style="font-family:var(--font-mono);font-weight:500">{{ s.priceF }}</span><span style="font-family:var(--font-mono);font-size:11px;color:{{ s.chgColor }}"><i class="{{ s.chgIcon }}" style="font-size:10px;margin-right:3px"></i>{{ s.chgF }}</span></div>
+                      <span style="color:var(--text-secondary)">{{ s.marketL }}</span>
+                      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">
+                        <sc-if value="{{ s.neutral }}"><span style="display:inline-flex;gap:6px;align-items:center;padding:2px 10px;border-radius:9999px;background:var(--surface);color:var(--text-secondary);font-size:12px;font-weight:500"><i class="{{ s.stateIcon }}"></i>{{ s.stateL }}</span></sc-if>
+                        <sc-if value="{{ s.tinted }}"><x-import component-from-global-scope="PortfolioAndBlog_de37a5.Badge" color="{{ s.badge }}" icon="{{ s.stateIcon }}" hint-size="110px,22px">{{ s.stateL }}</x-import></sc-if>
+                        <sc-if value="{{ s.hasNote }}"><span style="font-size:11px;color:var(--text-secondary)">{{ s.note }}</span></sc-if>
+                      </div>
+                      <span style="font-family:var(--font-mono);font-size:12px">{{ s.posL }}</span>
+                      <div style="display:flex;align-items:center;gap:8px">
+                        <svg width="96" height="32" viewBox="0 0 96 32" aria-hidden="true" style="flex:none;overflow:visible"><line x1="0" x2="96" y1="{{ s.zeroY }}" y2="{{ s.zeroY }}" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="2 3"></line><polyline points="{{ s.spark }}" fill="none" stroke="{{ s.sparkColor }}" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"></polyline></svg>
+                        <span style="font-family:var(--font-mono);font-size:12px;font-weight:500;color:{{ s.sparkColor }};white-space:nowrap"><i class="{{ s.sparkIcon }}" style="font-size:10px;margin-right:3px"></i>{{ s.sparkL }}</span>
+                      </div>
+                      <span style="color:var(--text-secondary)">{{ s.modeL }}</span>
+                      <span style="font-family:var(--font-mono);font-size:12px">{{ s.levL }}</span>
+                      <span style="color:var(--text-secondary)">{{ s.marginL }}</span>
+                      <div style="display:flex;gap:6px;justify-content:flex-end">
+                        <sc-if value="{{ s.canEnable }}"><x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" size="sm" icon="fas fa-play" on-click="{{ s.onEnable }}" hint-size="80px,32px">{{ t.enable }}</x-import></sc-if>
+                        <sc-if value="{{ s.canDisable }}"><x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" size="sm" variant="secondary" icon="fas fa-pause" on-click="{{ s.onDisable }}" hint-size="80px,32px">{{ t.disable }}</x-import></sc-if>
+                        <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" size="sm" variant="ghost" icon="fas fa-pen" on-click="{{ s.onEdit }}" hint-size="60px,32px">{{ t.edit }}</x-import>
+                        <sc-if value="{{ s.canClose }}"><button onClick="{{ s.onClose }}" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid var(--border-strong);background:transparent;color:{{ neg }};font-size:13px;font-weight:500;cursor:pointer;display:flex;gap:6px;align-items:center"><i class="fas fa-xmark"></i>{{ t.close }}</button></sc-if>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ stratsEmpty }}">
+              <div style="padding:64px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">
+                <i class="fas fa-chess-knight" style="font-size:28px;color:var(--text-muted)"></i>
+                <strong style="font-weight:600">{{ t.noStrats }}</strong>
+                <span style="color:var(--text-secondary);max-width:440px">{{ t.noStratsSub }}</span>
+                <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" size="sm" icon="fas fa-plus" on-click="{{ newStrategy }}" hint-size="140px,34px">{{ t.newStrategy }}</x-import>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ stratFormOpen }}">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <button onClick="{{ cancelForm }}" style="align-self:flex-start;background:none;border:0;color:var(--text-secondary);cursor:pointer;font-size:13px;display:flex;gap:6px;align-items:center;padding:0"><i class="fas fa-arrow-left"></i>{{ t.strategies }}</button>
+            <h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-0.02em">{{ formTitle }}</h1>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;align-items:start">
+            <div style="border-radius:16px;background:var(--bg-raised);border:1px solid var(--border);padding:24px;display:flex;flex-direction:column;gap:22px">
+              <div style="display:flex;flex-direction:column;gap:6px;position:relative">
+                <label style="font-size:13px;font-weight:500">{{ t.pair }}</label>
+                <div style="position:relative">
+                  <i class="fas fa-magnifying-glass" style="position:absolute;left:12px;top:13px;color:var(--text-muted);font-size:13px"></i>
+                  <input value="{{ form.pairQuery }}" onChange="{{ onPairQuery }}" onFocus="{{ openPairList }}" placeholder="BTCUSDT" disabled="{{ form.locked }}" style="width:100%;height:40px;padding:0 12px 0 34px;border-radius:8px;border:1px solid {{ pairBorder }};background:var(--bg-base);color:var(--text-primary);font-size:14px;font-family:var(--font-mono);outline:none" style-focus="border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft-bg)">
+                </div>
+                <sc-if value="{{ pairListOpen }}">
+                  <div style="position:absolute;top:70px;left:0;right:0;z-index:5;background:var(--bg-raised);border:1px solid var(--border-strong);border-radius:12px;box-shadow:var(--shadow-xl);max-height:220px;overflow:auto;padding:4px">
+                    <sc-for list="{{ pairOptions }}" as="po" hint-placeholder-count="5">
+                      <button onClick="{{ po.onClick }}" style="width:100%;text-align:left;border:0;background:transparent;color:var(--text-primary);padding:8px 10px;border-radius:8px;cursor:pointer;font-family:var(--font-mono);font-size:13px;display:flex;justify-content:space-between" style-hover="background:var(--surface-hover)">{{ po.pair }}<span style="font-family:'Poppins','Noto Sans Thai',sans-serif;color:var(--text-muted);font-size:12px">{{ po.note }}</span></button>
+                    </sc-for>
+                    <sc-if value="{{ noPairMatch }}"><div style="padding:10px;color:var(--text-secondary);font-size:13px">{{ t.noPairMatch }}</div></sc-if>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ dupError }}"><span role="alert" style="font-size:13px;color:{{ neg }};display:flex;gap:6px;align-items:flex-start"><i class="fas fa-circle-exclamation" style="margin-top:3px"></i>{{ dupText }}</span></sc-if>
+                <span style="font-size:12px;color:var(--text-muted)">{{ t.pairHint }}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:13px;font-weight:500">{{ t.market }}</label>
+                <div style="display:inline-flex;align-self:flex-start;padding:3px;border:1px solid var(--border-strong);border-radius:10px;background:var(--bg-base)">
+                  <sc-for list="{{ marketSeg }}" as="o" hint-placeholder-count="2">
+                    <button onClick="{{ o.onClick }}" disabled="{{ form.locked }}" style="border:0;cursor:pointer;padding:6px 18px;border-radius:8px;font-size:13px;font-weight:500;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+              <sc-if value="{{ formFutures }}">
+                <sc-if value="{{ form.locked }}">
+                  <div style="display:flex;gap:10px;padding:12px 14px;border-radius:12px;background:var(--surface);color:var(--text-secondary);font-size:13px"><i class="fas fa-lock" style="margin-top:3px"></i><span>{{ lockText }}</span></div>
+                </sc-if>
+                <div style="display:flex;flex-direction:column;gap:6px;opacity:{{ lockOpacity }}">
+                  <div style="display:flex;justify-content:space-between"><label style="font-size:13px;font-weight:500">{{ t.lev }}</label><span style="font-family:var(--font-mono);font-weight:600">{{ form.lev }}x</span></div>
+                  <input type="range" min="1" max="20" step="1" value="{{ form.lev }}" onChange="{{ onLev }}" disabled="{{ form.locked }}" style="width:100%">
+                  <span style="font-size:12px;color:var(--text-muted)">{{ t.levHint }}</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px;opacity:{{ lockOpacity }}">
+                  <label style="font-size:13px;font-weight:500">{{ t.marginMode }}</label>
+                  <div style="display:inline-flex;align-self:flex-start;padding:3px;border:1px solid var(--border-strong);border-radius:10px;background:var(--bg-base)">
+                    <sc-for list="{{ marginSeg }}" as="o" hint-placeholder-count="2">
+                      <button onClick="{{ o.onClick }}" disabled="{{ form.locked }}" style="border:0;cursor:pointer;padding:6px 18px;border-radius:8px;font-size:13px;font-weight:500;background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <label style="font-size:13px;font-weight:500">{{ t.sizing }}</label>
+                  <sc-for list="{{ modeCards }}" as="m" hint-placeholder-count="3">
+                    <button onClick="{{ m.onClick }}" style="text-align:left;cursor:pointer;display:flex;gap:12px;padding:12px 14px;border-radius:12px;border:1.5px solid {{ m.border }};background:{{ m.bg }};color:var(--text-primary)">
+                      <i class="{{ m.radio }}" style="margin-top:3px;color:{{ m.dot }}"></i>
+                      <span style="display:flex;flex-direction:column;gap:2px"><strong style="font-weight:600;font-size:13px">{{ m.title }}</strong><span style="font-size:12px;color:var(--text-secondary)">{{ m.desc }}</span></span>
+                    </button>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="display:flex;justify-content:space-between"><label style="font-size:13px;font-weight:500">{{ t.baseSize }}</label><span style="font-family:var(--font-mono);font-weight:600">{{ form.base }}%</span></div>
+                <input type="range" min="5" max="20" step="1" value="{{ form.base }}" onChange="{{ onBase }}" style="width:100%">
+                <span style="font-size:12px;color:var(--text-muted)">{{ t.baseHint }}</span>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <label style="font-size:13px;font-weight:500">{{ t.jevThr }}</label>
+                  <input type="number" min="0" max="1" step="0.05" value="{{ form.thr }}" onChange="{{ onThr }}" style="height:40px;padding:0 12px;border-radius:8px;border:1px solid var(--border-strong);background:var(--bg-base);color:var(--text-primary);font-size:14px;font-family:var(--font-mono);outline:none" style-focus="border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft-bg)">
+                </div>
+                <sc-if value="{{ formModeC }}">
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <label style="font-size:13px;font-weight:500">{{ t.riskFull }}</label>
+                    <input type="number" min="0.1" max="10" step="0.1" value="{{ form.risk }}" onChange="{{ onRisk }}" style="height:40px;padding:0 12px;border-radius:8px;border:1px solid var(--border-strong);background:var(--bg-base);color:var(--text-primary);font-size:14px;font-family:var(--font-mono);outline:none" style-focus="border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft-bg)">
+                  </div>
+                </sc-if>
+              </div>
+              <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:16px;border-top:1px solid var(--border)">
+                <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" variant="ghost" on-click="{{ cancelForm }}" hint-size="90px,40px">{{ t.cancel }}</x-import>
+                <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" icon="fas fa-check" disabled="{{ saveDisabled }}" on-click="{{ saveForm }}" hint-size="110px,40px">{{ t.save }}</x-import>
+              </div>
+            </div>
+            <div style="border-radius:16px;background:var(--bg-raised);border:1px solid var(--border);padding:24px;display:flex;flex-direction:column;gap:16px;position:sticky;top:88px">
+              <div style="display:flex;gap:10px;align-items:center"><i class="fas fa-calculator" style="color:var(--text-accent)"></i><strong style="font-weight:600">{{ t.preview }}</strong></div>
+              <p style="margin:0;padding:14px;border-radius:12px;background:var(--accent-soft-bg);font-family:var(--font-mono);font-size:13px;line-height:1.6">{{ example.base }}</p>
+              <sc-for list="{{ example.rows }}" as="e" hint-placeholder-count="4">
+                <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding-bottom:10px;border-bottom:1px solid var(--border)"><span style="color:var(--text-secondary)">{{ e.k }}</span><span style="font-family:var(--font-mono);text-align:right">{{ e.v }}</span></div>
+              </sc-for>
+              <span style="font-size:12px;color:var(--text-muted)">{{ example.note }}</span>
+            </div>
+          </div>
+        </sc-if>
+      </sc-if>
+
+      <sc-if value="{{ showSettings }}">
+        <h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-0.02em">{{ t.settings }}</h1>
+        <div style="display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;align-items:start">
+          <nav style="display:flex;flex-direction:column;gap:2px;position:sticky;top:88px">
+            <sc-for list="{{ settingsNav }}" as="n" hint-placeholder-count="4">
+              <button onClick="{{ n.onClick }}" style="border:0;cursor:pointer;text-align:left;padding:10px 12px;border-radius:8px;font-size:14px;font-weight:500;display:flex;gap:10px;align-items:center;background:{{ n.bg }};color:{{ n.fg }}"><i class="{{ n.icon }}" style="width:16px"></i>{{ n.label }}</button>
+            </sc-for>
+          </nav>
+          <div style="display:flex;flex-direction:column;gap:20px;max-width:720px">
+
+            <sc-if value="{{ setKeys }}">
+              <div style="border-radius:16px;background:var(--bg-raised);border:1px solid var(--border);padding:24px;display:flex;flex-direction:column;gap:18px">
+                <div style="display:flex;flex-direction:column;gap:2px"><h2 style="margin:0;font-size:18px;font-weight:600">{{ t.exKeys }}</h2><span style="color:var(--text-secondary);font-size:13px">{{ t.exKeysSub }}</span></div>
+                <sc-if value="{{ keyMasked }}">
+                  <div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;border:1px solid var(--border-strong);flex-wrap:wrap">
+                    <i class="fas fa-key" style="color:var(--text-accent)"></i>
+                    <div style="flex:1;display:flex;flex-direction:column"><span style="font-size:12px;color:var(--text-secondary)">{{ t.apiKey }}</span><span style="font-family:var(--font-mono);font-weight:600;letter-spacing:0.05em">•••• 4F2A</span></div>
+                    <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" size="sm" variant="secondary" icon="fas fa-rotate" on-click="{{ replaceKeys }}" hint-size="100px,32px">{{ t.replace }}</x-import>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ keyEditing }}">
+                  <div style="display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--text-secondary)"><i class="fas fa-circle-info" style="margin-top:3px;color:var(--text-accent)"></i><span>{{ t.kHelp }}</span></div>
+                  <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Field" label="{{ t.apiKey }}" placeholder="{{ t.pasteKey }}" value="{{ apiKey }}" on-change="{{ onApiKey }}" hint-size="100%,70px"></x-import>
+                  <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Field" label="{{ t.apiSecret }}" type="password" placeholder="{{ t.pasteSecret }}" value="{{ apiSecret }}" on-change="{{ onApiSecret }}" hint="{{ t.writeOnly }}" hint-size="100%,90px"></x-import>
+                </sc-if>
+                <div role="{{ keyVal.role }}" style="display:flex;gap:12px;padding:12px 14px;border-radius:12px;background:{{ keyVal.bg }};color:{{ keyVal.fg }}"><i class="{{ keyVal.icon }}" style="margin-top:3px"></i><div style="display:flex;flex-direction:column;gap:2px"><strong style="font-weight:600">{{ keyVal.title }}</strong><span style="font-size:13px">{{ keyVal.body }}</span></div></div>
+
+                <sc-if value="{{ keyEditing }}">
+                  <div style="display:flex;gap:8px;justify-content:flex-end">
+                    <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" variant="ghost" on-click="{{ cancelKeys }}" hint-size="90px,40px">{{ t.cancel }}</x-import>
+                    <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" icon="fas fa-shield-halved" disabled="{{ keysIncomplete }}" on-click="{{ saveKeys }}" hint-size="150px,40px">{{ t.saveTotp }}</x-import>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ setNotif }}">
+              <sc-for list="{{ notifCards }}" as="c" hint-placeholder-count="2">
+                <div style="border-radius:16px;background:var(--bg-raised);border:1px solid var(--border);padding:24px;display:flex;flex-direction:column;gap:16px">
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <div style="width:36px;height:36px;border-radius:10px;background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--text-accent)"><i class="{{ c.icon }}"></i></div>
+                    <div style="flex:1;display:flex;flex-direction:column"><h2 style="margin:0;font-size:16px;font-weight:600">{{ c.title }}</h2><span style="font-size:12px;color:var(--text-secondary)">{{ c.stateL }}</span></div>
+                    <button onClick="{{ c.onToggle }}" role="switch" aria-checked="{{ c.on }}" aria-label="{{ c.title }}" style="width:44px;height:24px;border-radius:9999px;border:0;padding:2px;cursor:pointer;background:{{ c.trackBg }};display:flex;justify-content:{{ c.knobPos }}"><span style="width:20px;height:20px;border-radius:9999px;background:#fff;display:block"></span></button>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+                    <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Field" label="{{ c.f1 }}" type="password" placeholder="{{ c.p1 }}" hint-size="100%,70px"></x-import>
+                    <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Field" label="{{ c.f2 }}" placeholder="{{ c.p2 }}" hint-size="100%,70px"></x-import>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+                    <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" size="sm" variant="secondary" icon="fas fa-paper-plane" on-click="{{ c.onTest }}" hint-size="150px,32px">{{ t.sendTest }}</x-import>
+                    <span style="font-size:12px;color:var(--text-muted)">{{ c.last }}</span>
+                  </div>
+                </div>
+              </sc-for>
+              <div style="display:flex;justify-content:flex-end"><x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" icon="fas fa-shield-halved" on-click="{{ saveNotif }}" hint-size="150px,40px">{{ t.saveTotp }}</x-import></div>
+            </sc-if>
+
+            <sc-if value="{{ setTrading }}">
+              <div style="border-radius:16px;background:var(--bg-raised);border:1px solid var(--border);padding:24px;display:flex;flex-direction:column;gap:16px">
+                <div style="display:flex;flex-direction:column;gap:2px"><h2 style="margin:0;font-size:18px;font-weight:600">{{ t.trading }}</h2><span style="color:var(--text-secondary);font-size:13px">{{ t.tradingSub }}</span></div>
+                <div style="display:flex;flex-direction:column;gap:6px;max-width:260px">
+                  <label style="font-size:13px;font-weight:500">{{ t.jevTimeout }}</label>
+                  <div style="display:flex;align-items:center;gap:8px"><input type="number" min="1" max="30" step="1" value="{{ jevTimeout }}" onChange="{{ onJevTimeout }}" style="width:100px;height:40px;padding:0 12px;border-radius:8px;border:1px solid var(--border-strong);background:var(--bg-base);color:var(--text-primary);font-size:14px;font-family:var(--font-mono);outline:none" style-focus="border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft-bg)"><span style="color:var(--text-secondary)">{{ t.seconds }}</span></div>
+                </div>
+                <span style="font-size:12px;color:var(--text-muted)">{{ t.jevTimeoutHint }}</span>
+                <div style="display:flex;justify-content:flex-end"><x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" icon="fas fa-check" on-click="{{ saveTrading }}" hint-size="100px,40px">{{ t.save }}</x-import></div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ setSecurity }}">
+              <div style="border-radius:16px;background:var(--bg-raised);border:1px solid var(--border);padding:24px;display:flex;flex-direction:column;gap:14px">
+                <h2 style="margin:0;font-size:18px;font-weight:600">{{ t.changePw }}</h2>
+                <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Field" label="{{ t.curPw }}" type="password" hint-size="100%,70px"></x-import>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+                  <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Field" label="{{ t.newPw }}" type="password" hint-size="100%,70px"></x-import>
+                  <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Field" label="{{ t.confirmPw }}" type="password" hint-size="100%,70px"></x-import>
+                </div>
+                <div style="display:flex;justify-content:flex-end"><x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" on-click="{{ savePw }}" hint-size="160px,40px">{{ t.updatePw }}</x-import></div>
+              </div>
+              <div style="border-radius:16px;background:var(--bg-raised);border:1px solid var(--border);padding:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+                <div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:2px"><h2 style="margin:0;font-size:18px;font-weight:600">{{ t.totpSetup }}</h2><span style="color:var(--text-secondary);font-size:13px">{{ t.totpSetupSub }}</span></div>
+                <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" variant="secondary" icon="fas fa-qrcode" on-click="{{ resetupTotp }}" hint-size="150px,40px">{{ t.resetup }}</x-import>
+              </div>
+              <div style="border-radius:16px;background:var(--bg-raised);border:1px solid var(--border);padding:24px;display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+                  <div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:2px"><h2 style="margin:0;font-size:18px;font-weight:600">{{ t.recovery }}</h2><span style="color:var(--text-secondary);font-size:13px">{{ t.recoverySub }}</span></div>
+                  <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" variant="secondary" icon="fas fa-arrows-rotate" on-click="{{ regenCodes }}" hint-size="150px,40px">{{ t.regen }}</x-import>
+                </div>
+                <sc-if value="{{ showCodes }}">
+                  <div style="display:flex;gap:10px;padding:12px 14px;border-radius:12px;background:var(--amber-bg);color:var(--amber-fg);font-size:13px"><i class="fas fa-triangle-exclamation" style="margin-top:3px"></i>{{ t.shownOnce }}</div>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;padding:16px;border-radius:12px;background:var(--bg-base);border:1px solid var(--border-strong)">
+                    <sc-for list="{{ codes }}" as="cd" hint-placeholder-count="10"><span style="font-family:var(--font-mono);font-size:14px;letter-spacing:0.04em">{{ cd }}</span></sc-for>
+                  </div>
+                  <div style="display:flex;gap:8px;justify-content:flex-end">
+                    <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" size="sm" variant="secondary" icon="fas fa-copy" on-click="{{ copyCodes }}" hint-size="90px,32px">{{ t.copy }}</x-import>
+                    <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" size="sm" variant="secondary" icon="fas fa-download" on-click="{{ downloadCodes }}" hint-size="120px,32px">{{ t.download }}</x-import>
+                  </div>
+                </sc-if>
+              </div>
+              <div style="border-radius:16px;background:var(--bg-raised);border:1px solid var(--border);padding:24px;display:flex;flex-direction:column;gap:14px">
+                <h2 style="margin:0;font-size:18px;font-weight:600">{{ t.session }}</h2>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
+                  <sc-for list="{{ sessionRows }}" as="sr" hint-placeholder-count="4">
+                    <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:var(--text-secondary)">{{ sr.k }}</span><span style="font-weight:500">{{ sr.v }}</span></div>
+                  </sc-for>
+                </div>
+                <div style="display:flex;justify-content:flex-end"><x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" size="sm" variant="ghost" icon="fas fa-right-from-bracket" on-click="{{ signOut }}" hint-size="110px,32px">{{ t.signOut }}</x-import></div>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+    </main>
+
+    <sc-if value="{{ showMobileKill }}">
+      <div style="position:sticky;bottom:0;padding:12px 16px 20px;background:var(--bg-base);border-top:1px solid var(--border)">
+        <button onClick="{{ openKill }}" style="width:100%;height:56px;border-radius:14px;border:0;background:var(--danger);color:#fff;font-weight:700;font-size:17px;cursor:pointer;display:flex;gap:10px;align-items:center;justify-content:center"><i class="fas fa-power-off"></i>{{ t.killSwitch }}</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{ showMobileBackDash }}">
+      <div style="position:sticky;bottom:0;padding:12px 16px 20px;background:var(--bg-base);border-top:1px solid var(--border)">
+        <button onClick="{{ goDashboard }}" style="width:100%;height:52px;border-radius:14px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text-primary);font-weight:600;font-size:15px;cursor:pointer;display:flex;gap:10px;align-items:center;justify-content:center"><i class="fas fa-gauge"></i>{{ t.dashboard }}</button>
+      </div>
+    </sc-if>
+  </div>
+</sc-if>
+
+<sc-if value="{{ drawerOpen }}">
+  <div onClick="{{ closeDrawer }}" style="position:fixed;inset:0;background:rgba(15,19,22,0.6);z-index:40"></div>
+  <aside class="{{ themeClass }}" style="position:fixed;top:0;right:0;bottom:0;width:min(480px,100%);background:var(--bg-raised);border-left:1px solid var(--border);z-index:41;overflow:auto;display:flex;flex-direction:column;color:var(--text-primary);font-family:'Poppins','Noto Sans Thai',sans-serif;font-variant-numeric:tabular-nums">
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:20px 24px;border-bottom:1px solid var(--border)">
+      <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">{{ d.id }}</span><h2 style="margin:0;font-size:20px;font-weight:700;letter-spacing:-0.02em">{{ d.title }}</h2><span style="font-size:13px;color:var(--text-secondary)">{{ d.time }}</span></div>
+      <button onClick="{{ closeDrawer }}" aria-label="Close" style="width:36px;height:36px;border-radius:9999px;border:1px solid var(--border-strong);background:transparent;color:var(--text-secondary);cursor:pointer"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div style="padding:20px 24px;display:flex;flex-direction:column;gap:20px">
+      <sc-if value="{{ d.fallback }}"><div style="align-self:flex-start"><x-import component-from-global-scope="PortfolioAndBlog_de37a5.Badge" color="amber" icon="fas fa-robot" hint-size="160px,22px">{{ t.fallbackBadge }}</x-import></div></sc-if>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <sc-for list="{{ d.facts }}" as="fa" hint-placeholder-count="4">
+          <div style="padding:12px;border-radius:12px;background:var(--bg-base);border:1px solid var(--border);display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:var(--text-secondary)">{{ fa.k }}</span><span style="font-weight:600;display:flex;gap:6px;align-items:center"><i class="{{ fa.icon }}" style="font-size:12px;color:var(--text-accent)"></i>{{ fa.v }}</span></div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ d.flipIn }}">
+        <div style="display:flex;gap:12px;padding:14px;border-radius:12px;background:var(--accent-soft-bg)">
+          <i class="fas fa-right-left" style="margin-top:3px;color:var(--text-accent)"></i>
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+            <strong style="font-weight:600">{{ t.flipInT }}</strong>
+            <span style="font-size:13px;color:var(--text-secondary)">{{ d.flipInNote }}</span>
+            <button onClick="{{ d.flipInGo }}" style="align-self:flex-start;border:0;background:none;padding:0;cursor:pointer;color:var(--text-accent);font-size:13px;font-weight:600;display:flex;gap:6px;align-items:center">{{ t.flipPrev }} <span style="font-family:var(--font-mono)">{{ d.flipInId }}</span><i class="fas fa-arrow-right" style="font-size:11px"></i></button>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ d.flipOut }}">
+        <div style="display:flex;gap:12px;padding:14px;border-radius:12px;border:1px solid var(--border)">
+          <i class="fas fa-right-left" style="margin-top:3px;color:var(--text-accent)"></i>
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+            <strong style="font-weight:600">{{ t.flipOutT }}</strong>
+            <span style="font-size:13px;color:var(--text-secondary)">{{ d.flipOutNote }}</span>
+            <button onClick="{{ d.flipOutGo }}" style="align-self:flex-start;border:0;background:none;padding:0;cursor:pointer;color:var(--text-accent);font-size:13px;font-weight:600;display:flex;gap:6px;align-items:center">{{ t.flipNext }} <span style="font-family:var(--font-mono)">{{ d.flipOutId }}</span><i class="fas fa-arrow-right" style="font-size:11px"></i></button>
+          </div>
+        </div>
+      </sc-if>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><strong style="font-weight:600">{{ t.confluence }}</strong><span style="font-size:12px;color:var(--text-secondary)">{{ t.threshold }} <span style="font-family:var(--font-mono);color:var(--text-primary)">0.70</span></span></div>
+        <sc-for list="{{ d.factors }}" as="fc" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;border:1px solid var(--border)">
+            <i class="{{ fc.icon }}" style="color:{{ fc.color }};width:16px;text-align:center"></i>
+            <span style="flex:1">{{ fc.name }}</span>
+            <div style="width:80px;height:6px;border-radius:9999px;background:var(--surface);position:relative;overflow:hidden"><div style="position:absolute;left:0;top:0;bottom:0;width:{{ fc.w }};background:{{ fc.bar }};border-radius:9999px"></div></div>
+            <span style="font-family:var(--font-mono);font-weight:600;width:36px;text-align:right">{{ fc.conf }}</span>
+            <span style="font-size:12px;color:var(--text-secondary);width:64px;text-align:right">{{ fc.label }}</span>
+          </div>
+        </sc-for>
+        <sc-if value="{{ d.factorNoteShow }}"><span style="font-size:12px;color:var(--text-secondary)">{{ d.factorNote }}</span></sc-if>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0;border-radius:12px;border:1px solid var(--border);overflow:hidden">
+        <sc-for list="{{ d.sizing }}" as="z" hint-placeholder-count="4">
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--text-secondary)">{{ z.k }}</span><span style="text-align:right;display:flex;flex-direction:column;align-items:flex-end"><span style="font-family:var(--font-mono);font-weight:500">{{ z.v }}</span><span style="font-size:11px;color:var(--text-muted)">{{ z.sub }}</span></span></div>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0;border-radius:12px;border:1px solid var(--border);overflow:hidden">
+        <sc-for list="{{ d.pnl }}" as="z" hint-placeholder-count="4">
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:{{ z.w }}"><span style="color:var(--text-secondary)">{{ z.k }}</span><span style="font-family:var(--font-mono);color:{{ z.c }}">{{ z.v }}</span></div>
+        </sc-for>
+      </div>
+    </div>
+  </aside>
+</sc-if>
+
+<sc-if value="{{ modalOpen }}">
+  <div class="{{ themeClass }}" style="position:fixed;inset:0;z-index:50;background:rgba(15,19,22,0.66);display:flex;align-items:center;justify-content:center;padding:16px;font-family:'Poppins','Noto Sans Thai',sans-serif;color:var(--text-primary)">
+    <div role="dialog" aria-modal="true" style="width:100%;max-width:460px;background:var(--bg-raised);border:1px solid var(--border-strong);border-radius:16px;box-shadow:var(--shadow-xl);padding:24px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div style="width:42px;height:42px;flex:none;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:17px;background:{{ m.iconBg }};color:{{ m.iconFg }}"><i class="{{ m.icon }}"></i></div>
+        <div style="display:flex;flex-direction:column;gap:4px"><h2 style="margin:0;font-size:18px;font-weight:700;letter-spacing:-0.01em">{{ m.title }}</h2><span style="color:var(--text-secondary);font-size:14px">{{ m.body }}</span></div>
+      </div>
+      <sc-if value="{{ m.hasList }}">
+        <ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ m.list }}" as="li" hint-placeholder-count="3"><li style="display:flex;gap:10px;font-size:14px"><i class="{{ li.icon }}" style="margin-top:4px;color:{{ li.color }};width:14px"></i><span>{{ li.text }}</span></li></sc-for>
+        </ul>
+      </sc-if>
+      <sc-if value="{{ m.isTotp }}">
+        <input value="{{ modalCode }}" onChange="{{ onModalCode }}" inputMode="numeric" maxLength="6" placeholder="000000" aria-label="TOTP" style="height:54px;border-radius:12px;border:1px solid var(--border-strong);background:var(--bg-base);color:var(--text-primary);text-align:center;font-family:var(--font-mono);font-size:24px;letter-spacing:0.5em;padding-left:0.5em;outline:none" style-focus="border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft-bg)">
+      </sc-if>
+      <sc-if value="{{ m.hasError }}"><span role="alert" style="font-size:13px;color:{{ neg }};display:flex;gap:6px;align-items:flex-start"><i class="fas fa-circle-exclamation" style="margin-top:3px"></i>{{ m.error }}</span></sc-if>
+      <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+        <x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" variant="ghost" on-click="{{ closeModal }}" hint-size="90px,40px">{{ t.cancel }}</x-import>
+        <sc-if value="{{ m.danger }}"><button onClick="{{ m.onOk }}" style="height:40px;padding:0 18px;border-radius:8px;border:0;background:var(--danger);color:#fff;font-weight:600;font-size:14px;cursor:pointer;display:flex;gap:8px;align-items:center"><i class="{{ m.okIcon }}"></i>{{ m.ok }}</button></sc-if>
+        <sc-if value="{{ m.primary }}"><x-import component-from-global-scope="PortfolioAndBlog_de37a5.Button" icon="{{ m.okIcon }}" disabled="{{ m.okDisabled }}" on-click="{{ m.onOk }}" hint-size="110px,40px">{{ m.ok }}</x-import></sc-if>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ hmTipOn }}">
+  <div class="{{ themeClass }}" role="tooltip" style="position:fixed;left:{{ hmTip.left }};top:{{ hmTip.top }};transform:{{ hmTip.tf }};z-index:55;width:260px;pointer-events:none;background:var(--bg-raised);border:1px solid var(--border-strong);border-radius:12px;box-shadow:var(--shadow-xl);padding:14px 16px;display:flex;flex-direction:column;gap:10px;font-family:'Poppins','Noto Sans Thai',sans-serif;color:var(--text-primary);font-variant-numeric:tabular-nums">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--border)"><strong style="font-family:var(--font-mono);font-size:15px;font-weight:600">{{ hmTip.date }}</strong><span style="font-size:12px;color:var(--text-secondary)">{{ hmTip.weekday }}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">{{ t.hmTrades }}</span><span style="font-family:var(--font-mono);font-weight:600">{{ hmTip.count }}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">PnL</span><span style="font-family:var(--font-mono);font-weight:600;color:{{ hmTip.pnlColor }}">{{ hmTip.pnl }}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">Win / Loss</span><span style="font-family:var(--font-mono)">{{ hmTip.wl }}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;padding-top:10px;border-top:1px dashed var(--border-strong)"><span style="color:var(--text-secondary)">{{ t.hmLevel }}</span><span style="font-weight:600;color:var(--text-accent)">{{ hmTip.level }}</span></div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ toastOn }}">
+  <div role="status" style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:60;background:var(--gray-900);color:#fff;border:1px solid var(--ink-500);padding:10px 16px;border-radius:9999px;font-size:13px;display:flex;gap:8px;align-items:center;box-shadow:var(--shadow-xl);font-family:'Poppins','Noto Sans Thai',sans-serif"><i class="fas fa-circle-check" style="color:var(--success)"></i>{{ toast }}</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;dataState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;populated&quot;,&quot;empty&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;populated&quot;,&quot;tsType&quot;:&quot;'populated'|'empty'|'loading'|'error'&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;device&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;mobile&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;'desktop'|'mobile'&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;login&quot;,&quot;dashboard&quot;,&quot;strategies&quot;,&quot;killswitch&quot;,&quot;settings&quot;],&quot;default&quot;:&quot;login&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;}}">
+const f = (n, d = 2) => Number(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+const sg = (n, d = 2) => (n > 0 ? '+' : n < 0 ? '−' : '') + f(Math.abs(n), d);
+const FUT_EQ = 10000, SPOT_EQ = 4120.55;
+const PAIRS = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','AVAXUSDT','DOGEUSDT','LINKUSDT','DOTUSDT','LTCUSDT','TRXUSDT'];
+
+const EN = {
+  dashboard:'Dashboard', strategies:'Strategies', settings:'Settings', killSwitch:'Kill switch',
+  loginTitle:'Sign in to Cane', loginSub:'Owner access only.', email:'Email', password:'Password', pwHint:'Prototype password: cane',
+  continue:'Continue', verify:'Verify', back:'Back', totpTitle:'Two-factor code', totpSub:'Enter the 6-digit code from your authenticator app.',
+  wrongCreds:'Email or password is incorrect.', attemptsLeft:'{n} attempts left before a 15-minute lock.', locked:'Too many failed attempts. Sign-in is locked.', tryAgainIn:'Try again in',
+  running:'Running', stoppedKill:'Stopped by kill switch', unreachable:'Exchange unreachable',
+  spotEq:'Spot equity', futEq:'Futures equity', todayPnl:"Today's realised PnL", totalPnl:'Total realised PnL', openPos:'Open positions',
+  synced:'Synced 14:02:11', syncFail:'Last sync 14:02:11 · retrying', syncing:'Syncing…', loadingData:'Loading data from exchange…',
+  positions:'Open positions', history:'Trade history', audit:'Audit log',
+  pair:'Pair', market:'Market', side:'Side', qty:'Qty', entry:'Entry', mark:'Mark', upnl:'Unrealised PnL', stop:'Stop', tp:'Take-profit', liq:'Liq. price', lev:'Leverage',
+  time:'Time', entryExit:'Entry → Exit', rpnl:'Realised PnL (net)', exitReason:'Exit reason', action:'Action', details:'Details',
+  auditNote:'Secrets are never written to the audit log.',
+  long:'Long', short:'Short', spot:'Spot', futures:'Futures',
+  firstRed:'First red', firstGreen:'First green', stopR:'Stop', tpR:'Take-profit', killR:'Kill switch', flipR:'Flip',
+  noPositions:'No open positions', emptyPosRun:'Strategies are waiting for a signal. Positions appear here when one opens.', emptyPosNone:'Create a strategy to let Cane start trading.',
+  noTrades:'No closed trades yet', noTradesSub:'Closed trades and their exit reasons will be listed here.',
+  newStrategy:'New strategy',
+  alAttT:'{pair} needs attention', alAttNT:'{n} strategies need attention', alAttB:'No new entries on these pairs until you review them.', alFbT:'Jev fallback used', alFbB:'SOLUSDT entry on 2026-09-24 opened at base size after Jev did not answer within {timeout} s.',
+  att_margin:'Order rejected: insufficient margin', att_reconcile:'Position differs from exchange (reconciliation)', att_stopMissing:'Stop order missing — re-placed', att_liqSkip:'Entry skipped: stop would sit beyond liquidation even at 1x', att_halted:'Symbol trading halted',
+  alKeyT:'Exchange key error', alKeyB:'Requests are rejected with "Invalid API-key, IP, or permissions". Check the key and its permissions in Binance API settings.',
+  alUnreachT:'Exchange unreachable', alUnreachB:'No response since 14:02:11. Retrying every 10 s. Figures below are from the last successful sync.',
+  review:'Review', view:'View', openSettings:'Open settings',
+  tradingStopped:'Trading stopped', tradingStoppedSub:'Kill switch activated. Re-enable strategies one by one to resume.', goStrategies:'Go to Strategies',
+  killedAt:'Kill switch activated at', perPair:'Result per pair', untouched:'Positions not opened by Cane were not touched (1: XRPUSDT Spot, manual).',
+  howResume:'How to resume', howResumeSub:'There is no global restart. Enable each strategy from Strategies; each enable asks for a fresh TOTP code.',
+  killIntro:'Stops all trading immediately. Use it when something looks wrong.', killCta:'Stop all trading',
+  success:'Closed', retrying:'Failed · retrying', cancelled:'Orders cancelled',
+  stratSub:'One enabled strategy per pair. Trading decisions are automatic.', state:'State', position:'Position', sizing:'Sizing mode', marginMode:'Margin mode', actions:'Actions',
+  st_disabled:'Disabled', st_warming:'Warming up', st_waiting:'Waiting for signal', st_inPos:'In position', st_attention:'Needs attention', st_closed:'Closed',
+  enable:'Enable', disable:'Disable', edit:'Edit', close:'Close', isolated:'Isolated', cross:'Cross',
+  noStrats:'No strategies yet', noStratsSub:'A strategy trades one USDT pair on Spot or Futures using the CDC signal and Jev confluence.',
+  pnl30:'30-day PnL (USDT)', hmTitle:'Consistency', hmSub:'daily trading activity', hmRange:'last 12 months', hmRangeShort:'last 16 weeks', hmLess:'Less', hmMore:'More', hmTrades:'Trades', hmLevel:'Activity level', hmTradesN:'{c}', hmLv:['None','Low','Normal','High','Very high'], hmWd:['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'], hmSum:'{d} trading days out of {n} · longest streak {s} days', hmTip:'{date} · {c} trades', hmTipNone:'{date} · no trades', markChg:'Mark · 24h', curPrice:'Price · 24h', stratErrorSub:'States and positions may be out of date until the exchange responds.',
+  newTitle:'New strategy', editTitle:'Edit strategy', pairHint:'USDT pairs only.', noPairMatch:'No USDT pair matches.',
+  dup:'{pair} already has an enabled strategy: {id} ({market}). Disable it first.',
+  levHint:'Ceiling, not a target. Cane may use less when liquidation would sit inside the stop. Max 20x.',
+  lockText:'Leverage and margin mode are locked while {id} has an open position. They can change after the position closes.',
+  modeA:'A · % equity as margin', modeAD:'Size % of equity is posted as margin. Notional = margin × leverage.',
+  modeB:'B · % equity as notional', modeBD:'Size % of equity is the position notional. Leverage only changes margin used.',
+  modeC:'C · Risk % per trade', modeCD:'Size so a stop-out loses a set % of equity, scaled by confluence.',
+  baseSize:'Base size', baseHint:'5–20%. Each confirmed confluence factor adds 20%.', jevThr:'Jev confidence threshold', riskFull:'Risk at full confluence (%)',
+  cancel:'Cancel', save:'Save', preview:'Sizing preview',
+  exBase:'With {eq} USDT and {lev}x: {s}% → notional {n}, margin {m}', exSpot:'With {eq} USDT: {s}% → buy {n} USDT',
+  exC:'With {eq} USDT: risk {r}% of equity → {ru} USDT lost at stop',
+  rBase:'Base only', rTwo:'2 factors', rFull:'All 3 factors', notional:'notional', margin:'margin', risk:'risk',
+  exNote:'Example uses current equity. The actual amount is computed at entry.', exNoteC:'Notional depends on stop distance. Example assumes a stop 4% away.',
+  mEnableT:'Enable {id}?', mEnableB:'Enter a fresh 6-digit code to enable trading on {pair}.', mTotpT:'Confirm with authenticator', mTotpB:'Enter a fresh 6-digit code to save these changes.', mRegenT:'Regenerate recovery codes?', mRegenB:'Enter a fresh 6-digit code. New codes replace all earlier ones, which stop working immediately.',
+  mCloseT:'Close {pair} position?', mCloseB:'This closes the position at market and cancels its open orders.', mCloseL1:'Market close: {pos}', mCloseL2:'Cancel stop and take-profit orders', mCloseOk:'Close at market',
+  mKillT:'Stop all trading?', mKillB:'This acts immediately and cannot be undone in one step.', mKillL1:'Disable all strategies', mKillL2:'Cancel all orders placed by Cane', mKillL3:'Close all Cane positions at market', mKillL4:'Positions not opened by Cane are not touched', mKillOk:'Stop all trading',
+  codeWrong:'Code not accepted. Wait for the next code and try again.',
+  exKeys:'Exchange keys', exKeysSub:'Trade permission only. Keys are write-only and never shown again after saving.', apiKey:'API key', apiSecret:'API secret', pasteKey:'Paste API key', pasteSecret:'Paste API secret', writeOnly:'Write-only. Stored encrypted.',
+  replace:'Replace', copy:'Copy', download:'Download', saveTotp:'Save with TOTP',
+  kOkT:'Accepted', kOkB:'Read, Spot and Futures trading enabled. Withdrawals and universal transfer disabled.', kBadT:'Rejected: withdrawal permission is enabled', kBadB:'Create a key without withdrawal permission and paste it again.', kNewT:'Not validated yet', kNewB:'The key is checked against the exchange when you save.',
+  kNoTradeT:'Rejected: trading permission is missing', kNoTradeB:'{m} trading is not enabled on this key. Turn it on in Binance API settings, then paste the key again.',
+  kHelp:'In Binance API settings enable Reading, Spot & Margin Trading and Futures. Keep Withdrawals and Universal Transfer off.',
+  notif:'Notifications', line:'LINE', telegram:'Telegram', on:'Enabled', off:'Disabled', sendTest:'Send test message', token:'Channel access token', target:'Target ID', botToken:'Bot token', chatId:'Chat ID', lastTest:'Last test: 2026-09-26 18:40 · delivered', never:'No test sent yet',
+  trading:'Trading', tradingSub:'Parameters shared by all strategies.', jevTimeout:'Jev timeout', seconds:'seconds', jevTimeoutHint:'If Jev does not answer in time, the entry uses base size and is marked as a Jev fallback. Default 3.',
+  security:'Security', changePw:'Change password', curPw:'Current password', newPw:'New password', confirmPw:'Confirm new password', updatePw:'Update password',
+  totpSetup:'Authenticator (TOTP)', totpSetupSub:'Set up on a new device. The current device stops working after confirmation.', resetup:'Re-setup TOTP',
+  recovery:'Recovery codes', recoverySub:'10 single-use codes for when the authenticator is unavailable.', regen:'Regenerate', shownOnce:'These codes are shown once. Store them offline now. Earlier codes no longer work.',
+  session:'Active session', device:'Device', ip:'IP address', signedIn:'Signed in', expires:'Expires', signOut:'Sign out',
+  tf:'Signal timeframe', trend1w:'1W trend at entry', up:'Up', down:'Down', late:'4H late entry', confluence:'Confluence factors', threshold:'Threshold',
+  f_channel:'Channel breakout', f_capit:'Capitulation', f_hl:'Higher low', f_breakdown:'Channel breakdown', f_euphoria:'Euphoria', f_lh:'Lower high', present:'Present', absent:'Not present',
+  lateNote:'Late entries use base size only. No confluence bonus.', fbNote:'Jev did not answer within {timeout} s. All factors treated as not present.',
+  flipInT:'Flip', flipInNote:'Opened after a profitable {prev} closed on {sig}. {n} of 3 {side} factors present (minimum 2). 1W filter not applied to flips.', flipOutT:'Flipped', flipOutNote:'Closed on {sig} with profit. {n} of 3 {side} factors were present, so the opposite side opened on the same candle.', flipPrev:'Previous trade', flipNext:'Next trade', sigRed:'first red', sigGreen:'first green', sideLong:'long', sideShort:'short', sideLongC:'Long', sideShortC:'Short', fallbackBadge:'Jev fallback: base size',
+  resSize:'Resulting size', sizeMode:'Sizing mode', levUsed:'Leverage used', lowered:'lowered from {a} to {b}', gross:'Gross PnL', fees:'Fees', funding:'Funding', net:'Net realised PnL',
+  tEnabled:'{id} enabled', tDisabled:'{id} disabled · still managing its open position', tDisabledNoPos:'{id} disabled', tClosed:'{pair} closed at market', tSaved:'Saved', tTest:'Test message sent to {c}', tCopied:'Copied', tStrat:'Strategy saved', tDownloaded:'recovery-codes.txt downloaded'
+};
+
+const TH = {
+  dashboard:'แดชบอร์ด', strategies:'กลยุทธ์', settings:'ตั้งค่า', killSwitch:'หยุดฉุกเฉิน',
+  loginTitle:'เข้าสู่ระบบ Cane', loginSub:'เฉพาะเจ้าของบัญชีเท่านั้น', email:'อีเมล', password:'รหัสผ่าน', pwHint:'รหัสผ่านต้นแบบ: cane',
+  continue:'ดำเนินการต่อ', verify:'ยืนยัน', back:'ย้อนกลับ', totpTitle:'รหัสยืนยันสองชั้น', totpSub:'กรอกรหัส 6 หลักจากแอป Authenticator',
+  wrongCreds:'อีเมลหรือรหัสผ่านไม่ถูกต้อง', attemptsLeft:'เหลืออีก {n} ครั้งก่อนถูกล็อก 15 นาที', locked:'พยายามผิดหลายครั้งเกินไป ระบบล็อกการเข้าสู่ระบบ', tryAgainIn:'ลองใหม่ได้ในอีก',
+  running:'กำลังทำงาน', stoppedKill:'หยุดด้วยปุ่มฉุกเฉิน', unreachable:'เชื่อมต่อ Exchange ไม่ได้',
+  spotEq:'Equity Spot', futEq:'Equity Futures', todayPnl:'กำไร/ขาดทุนวันนี้', totalPnl:'กำไร/ขาดทุนสะสม', openPos:'สถานะที่เปิดอยู่',
+  synced:'ซิงก์ล่าสุด 14:02:11', syncFail:'ซิงก์ล่าสุด 14:02:11 · กำลังลองใหม่', syncing:'กำลังซิงก์…', loadingData:'กำลังโหลดข้อมูลจาก Exchange…',
+  positions:'สถานะที่เปิดอยู่', history:'ประวัติการเทรด', audit:'บันทึกการใช้งาน',
+  pair:'คู่เทรด', market:'ตลาด', side:'ฝั่ง', qty:'จำนวน', entry:'ราคาเข้า', mark:'ราคา Mark', upnl:'กำไร/ขาดทุนยังไม่รับรู้', stop:'Stop', tp:'Take-profit', liq:'ราคา Liq.', lev:'Leverage',
+  time:'เวลา', entryExit:'เข้า → ออก', rpnl:'กำไร/ขาดทุนสุทธิ', exitReason:'เหตุผลที่ปิด', action:'การกระทำ', details:'รายละเอียด',
+  auditNote:'ข้อมูลลับจะไม่ถูกบันทึกใน audit log',
+  long:'Long', short:'Short', spot:'Spot', futures:'Futures',
+  firstRed:'แท่งแดงแรก', firstGreen:'แท่งเขียวแรก', stopR:'ชน Stop', tpR:'ถึง Take-profit', killR:'หยุดฉุกเฉิน', flipR:'กลับฝั่ง',
+  noPositions:'ไม่มีสถานะที่เปิดอยู่', emptyPosRun:'กลยุทธ์กำลังรอสัญญาณ สถานะจะแสดงที่นี่เมื่อมีการเปิด', emptyPosNone:'สร้างกลยุทธ์เพื่อให้ Cane เริ่มเทรด',
+  noTrades:'ยังไม่มีการเทรดที่ปิดแล้ว', noTradesSub:'การเทรดที่ปิดแล้วและเหตุผลการปิดจะแสดงที่นี่',
+  newStrategy:'สร้างกลยุทธ์',
+  alAttT:'{pair} ต้องตรวจสอบ', alAttNT:'{n} กลยุทธ์ต้องตรวจสอบ', alAttB:'ไม่มีการเข้าใหม่ในคู่เหล่านี้จนกว่าจะตรวจสอบ', alFbT:'ใช้ Jev fallback', alFbB:'SOLUSDT เข้าเมื่อ 2026-09-24 ด้วยขนาดฐาน เพราะ Jev ไม่ตอบภายใน {timeout} วินาที',
+  att_margin:'คำสั่งถูกปฏิเสธ: มาร์จิ้นไม่พอ', att_reconcile:'สถานะไม่ตรงกับ Exchange (reconciliation)', att_stopMissing:'ไม่พบคำสั่ง Stop — วางใหม่แล้ว', att_liqSkip:'ข้ามการเข้า: Stop อยู่เลยราคา liquidation แม้ใช้ 1x', att_halted:'Symbol ถูกระงับการเทรด',
+  alKeyT:'API key มีปัญหา', alKeyB:'คำขอถูกปฏิเสธ "Invalid API-key, IP, or permissions" ตรวจสอบ key และสิทธิ์ในหน้าตั้งค่า API ของ Binance',
+  alUnreachT:'เชื่อมต่อ Exchange ไม่ได้', alUnreachB:'ไม่มีการตอบกลับตั้งแต่ 14:02:11 ลองใหม่ทุก 10 วินาที ตัวเลขด้านล่างเป็นข้อมูลจากการซิงก์ครั้งล่าสุด',
+  review:'ตรวจสอบ', view:'ดู', openSettings:'ไปที่ตั้งค่า',
+  tradingStopped:'หยุดเทรดแล้ว', tradingStoppedSub:'เปิดใช้ปุ่มหยุดฉุกเฉินแล้ว เปิดกลยุทธ์ทีละตัวเพื่อกลับมาเทรด', goStrategies:'ไปที่กลยุทธ์',
+  killedAt:'หยุดฉุกเฉินเมื่อ', perPair:'ผลลัพธ์รายคู่', untouched:'สถานะที่ไม่ได้เปิดโดย Cane ไม่ถูกแตะต้อง (1 รายการ: XRPUSDT Spot เปิดเอง)',
+  howResume:'วิธีกลับมาเทรด', howResumeSub:'ไม่มีปุ่มเริ่มใหม่ทั้งหมด ให้เปิดกลยุทธ์ทีละตัวในหน้ากลยุทธ์ ทุกครั้งต้องใช้รหัส TOTP ใหม่',
+  killIntro:'หยุดการเทรดทั้งหมดทันที ใช้เมื่อพบความผิดปกติ', killCta:'หยุดเทรดทั้งหมด',
+  success:'ปิดแล้ว', retrying:'ล้มเหลว · กำลังลองใหม่', cancelled:'ยกเลิกคำสั่งแล้ว',
+  stratSub:'เปิดได้หนึ่งกลยุทธ์ต่อหนึ่งคู่ การตัดสินใจเทรดเป็นอัตโนมัติ', state:'สถานะ', position:'สถานะถือครอง', sizing:'โหมดขนาด', marginMode:'โหมดมาร์จิ้น', actions:'การจัดการ',
+  st_disabled:'ปิดใช้งาน', st_warming:'กำลังเตรียมข้อมูล', st_waiting:'รอสัญญาณ', st_inPos:'ถือสถานะ', st_attention:'ต้องตรวจสอบ', st_closed:'ปิดแล้ว',
+  enable:'เปิดใช้', disable:'ปิดใช้', edit:'แก้ไข', close:'ปิดสถานะ', isolated:'Isolated', cross:'Cross',
+  noStrats:'ยังไม่มีกลยุทธ์', noStratsSub:'กลยุทธ์หนึ่งตัวเทรดคู่ USDT หนึ่งคู่บน Spot หรือ Futures ตามสัญญาณ CDC และ confluence จาก Jev',
+  pnl30:'PnL 30 วัน (USDT)', hmTitle:'Consistency', hmSub:'กิจกรรมการเทรดรายวัน', hmRange:'12 เดือนล่าสุด', hmRangeShort:'16 สัปดาห์ล่าสุด', hmLess:'น้อย', hmMore:'มาก', hmTrades:'จำนวนเทรด', hmLevel:'ระดับกิจกรรม', hmTradesN:'{c} รายการ', hmLv:['ไม่มี','น้อย','ปกติ','สูง','สูงมาก'], hmWd:['วันอาทิตย์','วันจันทร์','วันอังคาร','วันพุธ','วันพฤหัสบดี','วันศุกร์','วันเสาร์'], hmSum:'{d} วันที่มีการเทรด จาก {n} วัน · สตรีคยาวสุด {s} วัน', hmTip:'{date} · {c} เทรด', hmTipNone:'{date} · ไม่มีการเทรด', markChg:'ราคา Mark · 24 ชม.', curPrice:'ราคา · 24 ชม.', stratErrorSub:'สถานะอาจไม่เป็นปัจจุบันจนกว่า Exchange จะตอบกลับ',
+  newTitle:'สร้างกลยุทธ์', editTitle:'แก้ไขกลยุทธ์', pairHint:'เฉพาะคู่ USDT', noPairMatch:'ไม่พบคู่ USDT ที่ตรงกัน',
+  dup:'{pair} มีกลยุทธ์ที่เปิดใช้อยู่แล้ว: {id} ({market}) ปิดใช้ก่อน',
+  levHint:'เป็นเพดาน ไม่ใช่เป้าหมาย ระบบอาจใช้น้อยกว่าเมื่อราคา liquidation อยู่ในระยะ stop สูงสุด 20x',
+  lockText:'Leverage และโหมดมาร์จิ้นถูกล็อกขณะ {id} มีสถานะเปิดอยู่ แก้ไขได้หลังปิดสถานะ',
+  modeA:'A · % ของ equity เป็นมาร์จิ้น', modeAD:'ใช้ % ของ equity เป็นมาร์จิ้น มูลค่าสัญญา = มาร์จิ้น × leverage',
+  modeB:'B · % ของ equity เป็นมูลค่าสัญญา', modeBD:'ใช้ % ของ equity เป็นมูลค่าสัญญา leverage เปลี่ยนเพียงมาร์จิ้นที่ใช้',
+  modeC:'C · ความเสี่ยง % ต่อเทรด', modeCD:'กำหนดขนาดให้ขาดทุนเมื่อชน stop เท่ากับ % ของ equity ตามระดับ confluence',
+  baseSize:'ขนาดฐาน', baseHint:'5–20% แต่ละปัจจัย confluence ที่ยืนยันเพิ่ม 20%', jevThr:'เกณฑ์ความมั่นใจ Jev', riskFull:'ความเสี่ยงที่ confluence เต็ม (%)',
+  cancel:'ยกเลิก', save:'บันทึก', preview:'ตัวอย่างขนาดสถานะ',
+  exBase:'ด้วย {eq} USDT และ {lev}x: {s}% → มูลค่าสัญญา {n}, มาร์จิ้น {m}', exSpot:'ด้วย {eq} USDT: {s}% → ซื้อ {n} USDT',
+  exC:'ด้วย {eq} USDT: เสี่ยง {r}% ของ equity → ขาดทุน {ru} USDT เมื่อชน stop',
+  rBase:'ฐานอย่างเดียว', rTwo:'2 ปัจจัย', rFull:'ครบ 3 ปัจจัย', notional:'มูลค่า', margin:'มาร์จิ้น', risk:'เสี่ยง',
+  exNote:'ตัวอย่างใช้ equity ปัจจุบัน ขนาดจริงคำนวณตอนเข้า', exNoteC:'มูลค่าสัญญาขึ้นกับระยะ stop ตัวอย่างสมมติ stop ห่าง 4%',
+  mEnableT:'เปิดใช้ {id}?', mEnableB:'กรอกรหัส 6 หลักใหม่เพื่อเปิดการเทรด {pair}', mTotpT:'ยืนยันด้วย Authenticator', mTotpB:'กรอกรหัส 6 หลักใหม่เพื่อบันทึกการเปลี่ยนแปลง', mRegenT:'สร้างรหัสกู้คืนใหม่?', mRegenB:'กรอกรหัส 6 หลักใหม่ รหัสชุดใหม่จะแทนที่รหัสเดิมทั้งหมด และรหัสเดิมจะใช้ไม่ได้ทันที',
+  mCloseT:'ปิดสถานะ {pair}?', mCloseB:'ปิดสถานะด้วยราคาตลาดและยกเลิกคำสั่งที่ค้างอยู่', mCloseL1:'ปิดที่ราคาตลาด: {pos}', mCloseL2:'ยกเลิกคำสั่ง stop และ take-profit', mCloseOk:'ปิดที่ราคาตลาด',
+  mKillT:'หยุดเทรดทั้งหมด?', mKillB:'มีผลทันที และไม่สามารถย้อนกลับได้ในขั้นตอนเดียว', mKillL1:'ปิดใช้ทุกกลยุทธ์', mKillL2:'ยกเลิกทุกคำสั่งที่ Cane สร้าง', mKillL3:'ปิดทุกสถานะของ Cane ที่ราคาตลาด', mKillL4:'สถานะที่ไม่ได้เปิดโดย Cane จะไม่ถูกแตะต้อง', mKillOk:'หยุดเทรดทั้งหมด',
+  codeWrong:'รหัสไม่ถูกต้อง รอรหัสถัดไปแล้วลองใหม่',
+  exKeys:'API key ของ Exchange', exKeysSub:'สิทธิ์เทรดเท่านั้น key บันทึกแบบเขียนอย่างเดียวและจะไม่แสดงอีกหลังบันทึก', apiKey:'API key', apiSecret:'API secret', pasteKey:'วาง API key', pasteSecret:'วาง API secret', writeOnly:'เขียนอย่างเดียว เก็บแบบเข้ารหัส',
+  replace:'เปลี่ยน', copy:'คัดลอก', download:'ดาวน์โหลด', saveTotp:'บันทึกด้วย TOTP',
+  kOkT:'ผ่านการตรวจสอบ', kOkB:'เปิดสิทธิ์อ่าน และเทรด Spot และ Futures ปิดการถอนและ Universal Transfer', kBadT:'ถูกปฏิเสธ: เปิดสิทธิ์การถอนอยู่', kBadB:'สร้าง key ใหม่โดยไม่เปิดสิทธิ์ถอน แล้ววางอีกครั้ง', kNewT:'ยังไม่ได้ตรวจสอบ', kNewB:'ระบบจะตรวจสอบ key กับ Exchange เมื่อบันทึก',
+  kNoTradeT:'ถูกปฏิเสธ: ไม่มีสิทธิ์เทรด', kNoTradeB:'key นี้ยังไม่เปิดสิทธิ์เทรด {m} เปิดสิทธิ์นี้ในหน้าตั้งค่า API ของ Binance แล้ววาง key อีกครั้ง',
+  kHelp:'ในหน้าตั้งค่า API ของ Binance ให้เปิด Reading, Spot & Margin Trading และ Futures ส่วน Withdrawals และ Universal Transfer ให้ปิดไว้',
+  notif:'การแจ้งเตือน', on:'เปิดอยู่', off:'ปิดอยู่', sendTest:'ส่งข้อความทดสอบ', token:'Channel access token', target:'Target ID', botToken:'Bot token', chatId:'Chat ID', lastTest:'ทดสอบล่าสุด: 2026-09-26 18:40 · ส่งถึงแล้ว', never:'ยังไม่เคยทดสอบ',
+  trading:'การเทรด', tradingSub:'ค่าที่ใช้ร่วมกันทุกกลยุทธ์', jevTimeout:'Jev timeout', seconds:'วินาที', jevTimeoutHint:'หาก Jev ไม่ตอบภายในเวลา ระบบเข้าด้วยขนาดฐานและบันทึกเป็น Jev fallback ค่าเริ่มต้น 3',
+  security:'ความปลอดภัย', changePw:'เปลี่ยนรหัสผ่าน', curPw:'รหัสผ่านปัจจุบัน', newPw:'รหัสผ่านใหม่', confirmPw:'ยืนยันรหัสผ่านใหม่', updatePw:'อัปเดตรหัสผ่าน',
+  totpSetup:'Authenticator (TOTP)', totpSetupSub:'ตั้งค่าบนอุปกรณ์ใหม่ อุปกรณ์เดิมจะใช้ไม่ได้หลังยืนยัน', resetup:'ตั้งค่า TOTP ใหม่',
+  recovery:'รหัสกู้คืน', recoverySub:'รหัสใช้ครั้งเดียว 10 ชุด สำหรับกรณีใช้ Authenticator ไม่ได้', regen:'สร้างใหม่', shownOnce:'รหัสเหล่านี้แสดงเพียงครั้งเดียว เก็บไว้แบบออฟไลน์ทันที รหัสเดิมใช้ไม่ได้แล้ว',
+  session:'เซสชันที่ใช้งานอยู่', device:'อุปกรณ์', ip:'IP address', signedIn:'เข้าสู่ระบบเมื่อ', expires:'หมดอายุ', signOut:'ออกจากระบบ',
+  tf:'Timeframe สัญญาณ', trend1w:'เทรนด์ 1W ตอนเข้า', up:'ขาขึ้น', down:'ขาลง', late:'4H เข้าช้า', confluence:'ปัจจัย confluence', threshold:'เกณฑ์',
+  f_channel:'Channel breakout', f_capit:'Capitulation', f_hl:'Higher low', f_breakdown:'Channel breakdown', f_euphoria:'Euphoria', f_lh:'Lower high', present:'มี', absent:'ไม่มี',
+  lateNote:'การเข้าช้าใช้ขนาดฐานเท่านั้น ไม่มีโบนัส confluence', fbNote:'Jev ไม่ตอบภายใน {timeout} วินาที ทุกปัจจัยถือว่าไม่มี',
+  flipInT:'กลับฝั่ง (Flip)', flipInNote:'เปิดหลัง {prev} ที่มีกำไรถูกปิดด้วย{sig} พบปัจจัยฝั่ง {side} {n} จาก 3 (ขั้นต่ำ 2) ไม่ใช้ตัวกรอง 1W กับการกลับฝั่ง', flipOutT:'กลับฝั่งแล้ว', flipOutNote:'ปิดด้วย{sig}พร้อมกำไร พบปัจจัยฝั่ง {side} {n} จาก 3 จึงเปิดฝั่งตรงข้ามในแท่งเดียวกัน', flipPrev:'เทรดก่อนหน้า', flipNext:'เทรดถัดไป', sigRed:'แท่งแดงแรก', sigGreen:'แท่งเขียวแรก', sideLong:'Long', sideShort:'Short', sideLongC:'Long', sideShortC:'Short', fallbackBadge:'Jev fallback: ขนาดฐาน',
+  resSize:'ขนาดที่ได้', sizeMode:'โหมดขนาด', levUsed:'Leverage ที่ใช้', lowered:'ลดจาก {a} เป็น {b}', gross:'กำไร/ขาดทุนขั้นต้น', fees:'ค่าธรรมเนียม', funding:'Funding', net:'กำไร/ขาดทุนสุทธิ',
+  tEnabled:'เปิดใช้ {id} แล้ว', tDisabled:'ปิดใช้ {id} แล้ว · ยังดูแลสถานะที่เปิดอยู่', tDisabledNoPos:'ปิดใช้ {id} แล้ว', tClosed:'ปิด {pair} ที่ราคาตลาดแล้ว', tSaved:'บันทึกแล้ว', tTest:'ส่งข้อความทดสอบไป {c} แล้ว', tCopied:'คัดลอกแล้ว', tStrat:'บันทึกกลยุทธ์แล้ว', tDownloaded:'ดาวน์โหลด recovery-codes.txt แล้ว'
+};
+EN.line = 'LINE'; EN.telegram = 'Telegram'; TH.line = 'LINE'; TH.telegram = 'Telegram';
+
+const POSITIONS = [
+  { pair:'BTCUSDT', market:'futures', side:'long', qty:'0.050', entry:61240, mark:63105.5, upnl:93.28, upct:3.05, stop:59880, tp:null, liq:49620.4, lev:'5x' },
+  { pair:'ETHUSDT', market:'spot', side:'long', qty:'0.8000', entry:2410, mark:2386.2, upnl:-19.04, upct:-0.99, stop:2280, tp:null, liq:null, lev:null },
+  { pair:'SOLUSDT', market:'futures', side:'short', qty:'12.0', entry:148.2, mark:144.9, upnl:39.6, upct:2.23, stop:153.1, tp:138.4, liq:196.8, lev:'3x' }
+];
+const TRADES = [
+  { id:'T-1043', time:'2026-09-27 00:00', pair:'BNBUSDT', market:'futures', side:'short', entry:588.4, exit:579.1, gross:32.55, fees:-1.44, funding:0.38, reason:'firstGreen', tf:'1D', trend:'up', factors:[['channel',0.78],['capit',0.52],['hl',0.74]], base:10, mode:'B', lev:'5x', lowered:null, fb:false, flipFrom:'T-1039' },
+  { id:'T-1042', time:'2026-09-26 20:00', pair:'BTCUSDT', market:'futures', side:'long', entry:60050, exit:62410, gross:296.42, fees:-4.10, funding:-1.22, reason:'firstRed', tf:'1D', trend:'down', factors:[['channel',0.82],['capit',0.41],['hl',0.77]], base:10, mode:'B', lev:'5x', lowered:null, fb:false, flipFrom:'T-1038' },
+  { id:'T-1041', time:'2026-09-25 04:00', pair:'ETHUSDT', market:'spot', side:'long', entry:2520, exit:2455, gross:-50.70, fees:-1.60, funding:0, reason:'stopR', tf:'1D', trend:'up', factors:null, base:10, mode:null, lev:null, lowered:null, fb:true },
+  { id:'T-1040', time:'2026-09-24 16:00', pair:'SOLUSDT', market:'futures', side:'short', entry:156.4, exit:149.1, gross:89.90, fees:-1.94, funding:-0.76, reason:'tpR', tf:'4H', trend:'down', factors:null, base:10, mode:'C', lev:'3x', lowered:['5x','3x'], fb:false },
+  { id:'T-1039', time:'2026-09-23 00:00', pair:'BNBUSDT', market:'futures', side:'long', entry:572.0, exit:588.4, gross:57.40, fees:-1.45, funding:-0.40, reason:'flipR', tf:'1D', trend:'up', factors:[['channel',0.74],['capit',0.22],['hl',0.58]], base:10, mode:'B', lev:'5x', lowered:null, fb:false, flipTo:'T-1043' },
+  { id:'T-1038', time:'2026-09-22 00:00', pair:'BTCUSDT', market:'futures', side:'short', entry:61200, exit:60050, gross:99.10, fees:-3.05, funding:-0.45, reason:'flipR', tf:'1D', trend:'down', factors:[['channel',0.88],['capit',0.79],['hl',0.71]], base:10, mode:'B', lev:'5x', lowered:null, fb:false, flipTo:'T-1042' },
+  { id:'T-1037', time:'2026-09-20 09:12', pair:'AVAXUSDT', market:'futures', side:'long', entry:26.42, exit:26.18, gross:-7.30, fees:-0.92, funding:-0.18, reason:'killR', tf:'1D', trend:'up', factors:[['channel',0.71],['capit',0.35],['hl',0.44]], base:10, mode:'A', lev:'4x', lowered:null, fb:false }
+];
+const STRATS = [
+  { id:'S-01', pair:'BTCUSDT', market:'futures', state:'inPos', pos:'Long 0.050 @ 61,240.00', mode:'B', lev:5, margin:'isolated', base:10, thr:0.7, risk:2 },
+  { id:'S-02', pair:'ETHUSDT', market:'spot', state:'inPos', pos:'Long 0.8000 @ 2,410.00', base:10, thr:0.7 },
+  { id:'S-03', pair:'SOLUSDT', market:'futures', state:'attention', note:'stopMissing', pos:'Short 12.0 @ 148.20', mode:'C', lev:5, levUsed:3, margin:'isolated', base:10, thr:0.7, risk:2 },
+  { id:'S-04', pair:'BNBUSDT', market:'futures', state:'waiting', mode:'B', lev:5, margin:'cross', base:10, thr:0.7, risk:2 },
+  { id:'S-05', pair:'AVAXUSDT', market:'futures', state:'attention', mode:'A', lev:4, margin:'isolated', base:10, thr:0.7, risk:2, note:'margin' },
+  { id:'S-06', pair:'XRPUSDT', market:'spot', state:'warming', base:10, thr:0.7 },
+  { id:'S-07', pair:'DOGEUSDT', market:'futures', state:'disabled', mode:'B', lev:5, margin:'isolated', base:15, thr:0.75, risk:2 },
+  { id:'S-08', pair:'LINKUSDT', market:'spot', state:'closed', base:10, thr:0.7 },
+  { id:'S-09', pair:'ADAUSDT', market:'futures', state:'attention', note:'reconcile', mode:'B', lev:5, margin:'isolated', base:10, thr:0.7, risk:2 },
+  { id:'S-10', pair:'LTCUSDT', market:'futures', state:'attention', note:'liqSkip', mode:'C', lev:10, margin:'isolated', base:10, thr:0.7, risk:2 },
+  { id:'S-11', pair:'DOTUSDT', market:'futures', state:'attention', note:'halted', mode:'B', lev:3, margin:'cross', base:10, thr:0.7, risk:2 }
+];
+const AUDIT = [
+  ['2026-09-27 09:14:02','login','Owner signed in · 203.0.113.24 · TOTP verified','fas fa-right-to-bracket'],
+  ['2026-09-27 08:00:04','order','BTCUSDT Futures · stop moved 59,410.00 → 59,880.00','fas fa-arrow-up-wide-short'],
+  ['2026-09-26 21:40:18','strategyEnabled','S-04 BNBUSDT Futures · TOTP verified','fas fa-play'],
+  ['2026-09-26 18:40:51','notifTest','LINE · delivered','fas fa-paper-plane'],
+  ['2026-09-25 11:02:37','keysUpdated','API key •••• 4F2A · validation accepted','fas fa-key'],
+  ['2026-09-24 16:00:09','jevFallback','SOLUSDT entry · Jev timeout 3 s · base size used','fas fa-robot'],
+  ['2026-09-23 00:00:06','flip','BNBUSDT Futures · Long closed on first red (+55.55) → Short opened · 2/3 short factors','fas fa-right-left'],
+  ['2026-09-20 09:12:44','killSwitch','3 positions closed · 5 orders cancelled','fas fa-power-off']
+];
+const AUDIT_ACT = { en:{ login:'Login', order:'Stop updated', strategyEnabled:'Strategy enabled', notifTest:'Test notification', keysUpdated:'Exchange key saved', jevFallback:'Jev fallback', flip:'Flip to short', killSwitch:'Kill switch' },
+  th:{ login:'เข้าสู่ระบบ', order:'ปรับ stop', strategyEnabled:'เปิดใช้กลยุทธ์', notifTest:'ทดสอบแจ้งเตือน', keysUpdated:'บันทึก API key', jevFallback:'Jev fallback', flip:'กลับฝั่งเป็น Short', killSwitch:'หยุดฉุกเฉิน' } };
+const PRICES = { BTCUSDT:[63105.5,2.14], ETHUSDT:[2386.2,-0.87], SOLUSDT:[144.9,-1.62], BNBUSDT:[581.3,0.45], XRPUSDT:[0.5874,1.08], ADAUSDT:[0.3912,-0.34], AVAXUSDT:[25.84,-2.31], DOGEUSDT:[0.1068,3.72], LINKUSDT:[11.42,0.96], DOTUSDT:[4.318,-0.52], LTCUSDT:[66.75,0.21], TRXUSDT:[0.1542,0.12] };
+const priceF = p => p >= 100 ? f(p, 2) : p >= 1 ? f(p, 3) : f(p, 4);
+const SPARK_END = { 'S-01':412.6, 'S-02':-38.2, 'S-03':156.9, 'S-04':-22.4, 'S-05':-61.8, 'S-06':0, 'S-07':74.3, 'S-08':118.5, 'S-09':-12.6, 'S-10':18.2, 'S-11':-8.4 };
+function spark(id) {
+  const end = SPARK_END[id] ?? 0, n = 30;
+  let seed = [...id].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) % 2147483647;
+  const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+  const vals = [0]; let v = 0;
+  for (let i = 1; i < n; i++) { v += (rnd() - 0.5) * (Math.abs(end) * 0.25 + 8) + (end - v) / (n - i); vals.push(i === n - 1 ? end : v); }
+  if (end === 0) vals.fill(0);
+  const lo = Math.min(0, ...vals), hi = Math.max(0, ...vals), span = hi - lo || 1;
+  const y = x => (2 + (1 - (x - lo) / span) * 28).toFixed(1);
+  return { points: vals.map((x, i) => (i * 96 / (n - 1)).toFixed(1) + ',' + y(x)).join(' '), zeroY: y(0), end };
+}
+const MON = { en:['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'], th:['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'] };
+const HM_DAYS = (() => {
+  const end = new Date(Date.UTC(2026, 8, 27)), start = new Date(end); start.setUTCDate(start.getUTCDate() - 52 * 7 - end.getUTCDay());
+  const firstActive = Date.UTC(2026, 6, 28); let seed = 91;
+  const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+  const days = [];
+  for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+    const ts = d.getTime(); let c = 0;
+    if (ts >= firstActive) { const r = rnd(); c = r < 0.42 ? 0 : r < 0.7 ? 1 : r < 0.88 ? 2 : r < 0.96 ? 3 : 5; }
+    let w = 0, pnl = 0; for (let i = 0; i < c; i++) { const win = rnd() < 0.58; if (win) w++; pnl += win ? 8 + rnd() * 70 : -(6 + rnd() * 45); }
+    days.push({ iso: d.toISOString().slice(0, 10), y: d.getUTCFullYear(), m: d.getUTCMonth(), dom: d.getUTCDate(), wd: d.getUTCDay(), c, w, l: c - w, pnl: Math.round(pnl * 100) / 100 });
+  }
+  while (days.length % 7) days.push(null);
+  return days;
+})();
+const REASON_ICON = { firstRed:'fas fa-square', firstGreen:'far fa-square', stopR:'fas fa-hand', tpR:'fas fa-bullseye', killR:'fas fa-power-off', flipR:'fas fa-right-left' };
+
+class Component extends DCLogic {
+  state = {
+    screen:'login', page:'dashboard', lang:'en', theme:'dark',
+    loginStep:'creds', email:'owner@cane.local', password:'', attempts:0, lockUntil:0, now:Date.now(), loginCode:'', wrongShown:false,
+    dashTab:'positions', trade:null, modal:null, modalCode:'', modalError:false,
+    killed:false, killRows:null, strats:STRATS.map(s => ({ ...s })), form:null, pairOpen:false,
+    settingsTab:'keys', keyMode:'saved', keyDemo:'withdraw', apiKey:'', apiSecret:'', notif:{ line:true, telegram:false }, jevTimeout:3, codes:null, toast:null, hmHover:null
+  };
+
+  componentDidMount() { this.applyProps(); this.tick = setInterval(() => { if (this.state.lockUntil) this.setState({ now: Date.now() }); }, 1000); }
+  componentWillUnmount() { clearInterval(this.tick); clearTimeout(this.toastT); clearTimeout(this.killT); }
+  componentDidUpdate(p) { if (p.startScreen !== this.props.startScreen || p.dataState !== this.props.dataState || p.device !== this.props.device) this.applyProps(); }
+  applyProps() {
+    const s = this.props.startScreen ?? 'login';
+    const ds = this.props.dataState ?? 'populated';
+    const next = { strats: ds === 'empty' ? [] : STRATS.map(x => ({ ...x })), form:null, killed:false, killRows:null };
+    if (s === 'login') Object.assign(next, { screen:'login', loginStep:'creds' });
+    else if (s === 'killswitch') Object.assign(next, { screen:'app', page:'killswitch' }, this.killState(ds === 'empty' ? [] : next.strats));
+    else Object.assign(next, { screen:'app', page:s });
+    this.setState(next);
+  }
+  killState(strats) {
+    clearTimeout(this.killT);
+    this.killT = setTimeout(() => this.setState(st => ({ killRows: (st.killRows || []).map(r => ({ ...r, st: r.st === 'retrying' ? 'success' : r.st })) })), 4000);
+    return {
+      killed:true, dashTab:'positions',
+      strats: strats.map(x => ({ ...x, state: x.state === 'closed' ? 'closed' : 'disabled', pos: null })),
+      killRows: [
+        { pair:'BTCUSDT', market:'futures', what:'Long 0.050 · 2 orders', st:'success' },
+        { pair:'ETHUSDT', market:'spot', what:'Long 0.8000 · 1 order', st:'success' },
+        { pair:'SOLUSDT', market:'futures', what:'Short 12.0 · 2 orders', st:'retrying' },
+        { pair:'BNBUSDT', market:'futures', what:'1 order', st:'cancelled' }
+      ]
+    };
+  }
+  toast(msg) { clearTimeout(this.toastT); this.setState({ toast: msg }); this.toastT = setTimeout(() => this.setState({ toast: null }), 2600); }
+  fill(s, o) { return s.replace(/\{(\w+)\}/g, (_, k) => o[k] ?? ''); }
+
+  openTotp(action, ctx) { this.setState({ modal: { type:'totp', action, ctx }, modalCode:'', modalError:false }); }
+  confirmModal() {
+    const { modal, modalCode } = this.state; const t = this.t;
+    if (!modal) return;
+    if (modal.type === 'totp') {
+      if (modalCode === '000000') { this.setState({ modalError: true }); return; }
+      const a = modal.action;
+      if (a === 'enable') {
+        this.setState(st => ({ strats: st.strats.map(x => x.id === modal.ctx.id ? { ...x, state: x.pos ? 'inPos' : 'warming' } : x), killed:false, killRows:null, modal:null }));
+        this.toast(this.fill(t.tEnabled, modal.ctx)); return;
+      }
+      if (a === 'keys') { const r = this.state.keyDemo, nx = { withdraw:'noTrade', noTrade:'ok', ok:'withdraw' }[r] || 'withdraw'; this.setState({ keyMode: r === 'ok' ? 'saved' : r, keyDemo:nx, modal:null, apiKey:'', apiSecret:'' }); if (r === 'ok') this.toast(t.tSaved); return; }
+      if (a === 'regen') { this.setState({ modal:null, codes: ['7KQ2-9XHD','M4TP-2WZA','R8NC-6EJY','B3VF-XK71','H9LS-4QPE','D2WA-8MTR','Y6GE-3NBC','P5JX-7RDV','C8ZM-1HQK','T4UB-5SWL'] }); return; }
+      this.setState({ modal:null }); this.toast(t.tSaved); return;
+    }
+    if (modal.type === 'close') {
+      this.setState(st => ({ strats: st.strats.map(x => x.id === modal.ctx.id ? { ...x, state:'closed', pos:null } : x), modal:null }));
+      this.toast(this.fill(t.tClosed, modal.ctx)); return;
+    }
+    if (modal.type === 'kill') { this.setState({ modal:null, page:'killswitch', form:null, trade:null, ...this.killState(this.state.strats) }); }
+  }
+
+  renderVals() {
+    const S = this.state, lang = S.lang, t = { ...EN, ...(lang === 'th' ? TH : {}) }; this.t = t;
+    const dark = S.theme === 'dark', ds = this.props.dataState ?? 'populated', mobile = (this.props.device ?? 'desktop') === 'mobile';
+    const pos = dark ? 'var(--success)' : 'var(--green-fg)', neg = dark ? 'var(--danger)' : 'var(--red-fg)';
+    const loading = ds === 'loading', empty = ds === 'empty', err = ds === 'error';
+    const pc = n => n > 0 ? pos : n < 0 ? neg : 'var(--text-secondary)';
+    const pIcon = n => n > 0 ? 'fas fa-caret-up' : n < 0 ? 'fas fa-caret-down' : 'fas fa-minus';
+    const mk = m => t[m], sideIcon = s => s === 'long' ? 'fas fa-arrow-trend-up' : 'fas fa-arrow-trend-down';
+    const seg = (opts, val, pick) => opts.map(([v, l]) => ({ label:l, bg: v === val ? 'var(--accent-strong)' : 'transparent', fg: v === val ? '#fff' : 'var(--text-secondary)', onClick: () => pick(v) }));
+    const page = mobile && (S.page === 'strategies' || S.page === 'settings') ? 'dashboard' : S.page;
+
+    // login
+    const locked = S.lockUntil > S.now;
+    const left = Math.max(0, Math.ceil((S.lockUntil - S.now) / 1000));
+    const lockLeft = `${String(Math.floor(left / 60)).padStart(2, '0')}:${String(left % 60).padStart(2, '0')}`;
+
+    // status
+    const status = S.killed ? { label:t.stoppedKill, icon:'fas fa-circle-stop', color:neg }
+      : err ? { label:t.unreachable, icon:'fas fa-plug-circle-xmark', color:'var(--warning)' }
+      : { label:t.running, icon:'fas fa-circle-check', color:pos };
+
+    const openPositions = (empty || loading || S.killed) ? [] : POSITIONS;
+    const positions = openPositions.map(p => ({
+      ...p, marketL: mk(p.market), sideL: t[p.side], sideIcon: sideIcon(p.side), sideColor: p.side === 'long' ? pos : neg,
+      entryF: f(p.entry), markF: f(p.mark), chgF: sg(PRICES[p.pair][1]) + '%', chgColor: pc(PRICES[p.pair][1]), chgIcon: pIcon(PRICES[p.pair][1]), upnlF: sg(p.upnl), upctF: sg(p.upct) + '%', pnlColor: pc(p.upnl),
+      stopF: f(p.stop), tpF: p.tp ? f(p.tp) : '—', liqF: p.liq ? f(p.liq) : '—', levF: p.lev || '—'
+    }));
+    const tradeList = empty ? [] : TRADES;
+    const trades = tradeList.map(r => {
+      const net = r.gross + r.fees + r.funding;
+      return { ...r, marketL: mk(r.market), sideL: t[r.side], sideIcon: sideIcon(r.side), sideColor: r.side === 'long' ? pos : neg,
+        entryF: f(r.entry), exitF: f(r.exit), pnlF: sg(net), pnlColor: pc(net), pnlIcon: pIcon(net), reasonL: t[r.reason], reasonIcon: REASON_ICON[r.reason],
+        onClick: () => this.setState({ trade: r.id }) };
+    });
+    const todayNet = empty ? 0 : 312.45, totalNet = empty ? 0 : 1284.9;
+    const stats = [
+      { label:t.spotEq, value: f(empty ? 0 : SPOT_EQ) + ' USDT', icon:'fas fa-wallet', color:'var(--text-primary)', sub:t.spot },
+      { label:t.futEq, value: f(FUT_EQ) + ' USDT', icon:'fas fa-scale-balanced', color:'var(--text-primary)', sub:'USDⓈ-M' },
+      { label:t.todayPnl, value: sg(todayNet) + ' USDT', icon: pIcon(todayNet), color: pc(todayNet), sub:'2026-09-27' },
+      { label:t.totalPnl, value: sg(totalNet) + ' USDT', icon: pIcon(totalNet), color: pc(totalNet), sub: empty ? '—' : '42 trades' },
+      { label:t.openPos, value: String(positions.length), icon:'fas fa-layer-group', color:'var(--text-primary)', sub: positions.length ? 'Spot 1 · Futures 2' : '—' }
+    ];
+    const alerts = [];
+    const jevT = String(S.jevTimeout || 3);
+    if (!empty && !S.killed) {
+      if (err) {
+        alerts.push({ title:t.alUnreachT, body:t.alUnreachB, icon:'fas fa-plug-circle-xmark', bg:'var(--amber-bg)', fg:'var(--amber-fg)', cta:t.review, onClick: () => this.toast(t.syncing) });
+        alerts.push({ title:t.alKeyT, body:t.alKeyB, icon:'fas fa-key', bg:'var(--red-bg)', fg:'var(--red-fg)', cta:t.openSettings, onClick: () => this.setState({ page:'settings', settingsTab:'keys' }) });
+      }
+      const att = S.strats.filter(x => x.state === 'attention');
+      if (att.length) alerts.push({ title: att.length === 1 ? this.fill(t.alAttT, { pair: att[0].pair }) : this.fill(t.alAttNT, { n: att.length }), body:t.alAttB,
+        items: att.map(x => ({ pair: x.pair, reason: t['att_' + x.note] || '' })), hasItems: true,
+        icon:'fas fa-triangle-exclamation', bg:'var(--orange-bg)', fg:'var(--orange-fg)', cta:t.review, onClick: () => this.setState({ page:'strategies' }) });
+      alerts.push({ title:t.alFbT, body: this.fill(t.alFbB, { timeout: jevT }), icon:'fas fa-robot', bg:'var(--sky-bg)', fg:'var(--sky-fg)', cta:t.view, onClick: () => this.setState({ dashTab:'history', trade:'T-1040' }) });
+    }
+    const audit = (empty ? AUDIT.slice(0, 1) : AUDIT).map(([time, a, details, icon]) => ({ time, action: AUDIT_ACT[lang][a], details, icon }));
+    const dashTabs = [['positions', t.positions, positions.length], ['history', t.history, trades.length], ['audit', t.audit, audit.length]]
+      .map(([k, l, c]) => ({ label:l, count:String(c), fg: S.dashTab === k ? 'var(--text-primary)' : 'var(--text-secondary)', line: S.dashTab === k ? 'var(--accent)' : 'transparent', onClick: () => this.setState({ dashTab:k }) }));
+
+    // strategies
+    const BADGE = { warming:['sky','fas fa-hourglass-half'], waiting:['indigo','fas fa-clock'], inPos:['green','fas fa-circle-dot'], attention:['orange','fas fa-triangle-exclamation'], disabled:[null,'fas fa-pause'], closed:[null,'fas fa-flag-checkered'] };
+    const enabledStates = ['warming','waiting','inPos','attention'];
+    const strats = (loading ? [] : S.strats).map(x => {
+      const [badge, icon] = BADGE[x.state];
+      const fut = x.market === 'futures';
+      const sp = spark(x.id), [px, chg] = PRICES[x.pair] || [0, 0];
+      return { ...x, priceF: priceF(px), chgF: sg(chg) + '%', chgColor: pc(chg), chgIcon: pIcon(chg), spark: sp.points, zeroY: sp.zeroY, sparkColor: pc(sp.end), sparkIcon: pIcon(sp.end), sparkL: sg(sp.end), marketL: mk(x.market), stateL: t['st_' + x.state], stateIcon: icon, badge: badge || 'indigo', neutral: !badge, tinted: !!badge,
+        hasNote: x.state === 'attention', note: t['att_' + x.note] || '',
+        posL: x.pos || '—', modeL: fut ? (t['mode' + x.mode] || '').split(' · ')[0] + ' · ' + ({ A:'margin', B:'notional', C:'risk' })[x.mode] : '—',
+        levL: fut ? (x.levUsed ? `${x.lev}x (${x.levUsed}x)` : `${x.lev}x`) : '—', marginL: fut ? t[x.margin] : '—',
+        canEnable: x.state === 'disabled' || x.state === 'closed', canDisable: enabledStates.includes(x.state), canClose: !!x.pos,
+        onEnable: () => {
+          const other = S.strats.find(o => o.pair === x.pair && o.id !== x.id && enabledStates.includes(o.state));
+          if (other) { this.toast(this.fill(t.dup, { pair:x.pair, id:other.id, market:mk(other.market) })); return; }
+          this.openTotp('enable', { id:x.id, pair:x.pair });
+        },
+        onDisable: () => { this.setState(st => ({ strats: st.strats.map(o => o.id === x.id ? { ...o, state:'disabled' } : o) })); this.toast(this.fill(x.pos ? t.tDisabled : t.tDisabledNoPos, x)); },
+        onEdit: () => this.setState({ pairOpen:false, form: { id:x.id, pair:x.pair, pairQuery:x.pair, market:x.market, lev:x.lev || 5, margin:x.margin || 'isolated', mode:x.mode || 'B', base:x.base || 10, thr:x.thr ?? 0.7, risk:x.risk ?? 2, locked: !!x.pos } }),
+        onClose: () => this.setState({ modal: { type:'close', ctx:{ id:x.id, pair:x.pair, pos:x.pos } } })
+      };
+    });
+
+    // form
+    const F = S.form;
+    let formVals = { form: { pairQuery:'', locked:false, lev:5, base:10, thr:0.7, risk:2 }, example: { base:'', rows:[], note:'' } };
+    if (F) {
+      const q = (F.pairQuery || '').toUpperCase();
+      const pairOptions = PAIRS.filter(p => p.includes(q)).map(p => {
+        const ex = S.strats.find(o => o.pair === p && o.id !== F.id && enabledStates.includes(o.state));
+        return { pair:p, note: ex ? ex.id + ' · ' + t['st_' + ex.state] : '', onClick: () => this.setState(st => ({ form: { ...st.form, pair:p, pairQuery:p }, pairOpen:false })) };
+      });
+      const dup = F.pair && S.strats.find(o => o.pair === F.pair && o.id !== F.id && enabledStates.includes(o.state));
+      const fut = F.market === 'futures', eq = fut ? FUT_EQ : SPOT_EQ;
+      const calc = s => {
+        if (!fut) return `${f(eq * s / 100)} USDT`;
+        if (F.mode === 'A') { const m = eq * s / 100; return `${t.notional} ${f(m * F.lev)} · ${t.margin} ${f(m)}`; }
+        if (F.mode === 'B') { const n = eq * s / 100; return `${t.notional} ${f(n)} · ${t.margin} ${f(n / F.lev)}`; }
+        const r = F.risk * s / 100, ru = eq * r / 100, n = ru / 0.04; return `${t.risk} ${f(r, 2)}% · ${t.notional} ${f(n)}`;
+      };
+      const b = Number(F.base);
+      let exBase;
+      if (!fut) exBase = this.fill(t.exSpot, { eq:f(eq), s:b, n:f(eq * b / 100) });
+      else if (F.mode === 'A') exBase = this.fill(t.exBase, { eq:f(eq), lev:F.lev, s:b, n:f(eq * b / 100 * F.lev), m:f(eq * b / 100) });
+      else if (F.mode === 'B') exBase = this.fill(t.exBase, { eq:f(eq), lev:F.lev, s:b, n:f(eq * b / 100), m:f(eq * b / 100 / F.lev) });
+      else exBase = this.fill(t.exC, { eq:f(eq), r:f(F.risk * b / 100), ru:f(eq * F.risk * b / 10000) });
+      const modeCards = [['A', t.modeA, t.modeAD], ['B', t.modeB, t.modeBD], ['C', t.modeC, t.modeCD]].map(([k, title, desc]) => ({
+        title, desc, border: F.mode === k ? 'var(--accent)' : 'var(--border-strong)', bg: F.mode === k ? 'var(--accent-soft-bg)' : 'transparent',
+        radio: F.mode === k ? 'fas fa-circle-dot' : 'far fa-circle', dot: F.mode === k ? 'var(--text-accent)' : 'var(--text-muted)',
+        onClick: () => this.setState(st => ({ form: { ...st.form, mode:k } }))
+      }));
+      const ownerId = F.id || '';
+      formVals = {
+        form: F, pairOptions, pairListOpen: S.pairOpen && !F.locked, noPairMatch: !pairOptions.length,
+        dupError: !!dup, dupText: dup ? this.fill(t.dup, { pair:F.pair, id:dup.id, market:mk(dup.market) }) : '', pairBorder: dup ? 'var(--danger)' : 'var(--border-strong)',
+        formFutures: fut, formModeC: fut && F.mode === 'C', lockOpacity: F.locked ? 0.55 : 1, lockText: this.fill(t.lockText, { id: ownerId }),
+        marketSeg: seg([['spot', t.spot], ['futures', t.futures]], F.market, v => !F.locked && this.setState(st => ({ form: { ...st.form, market:v } }))),
+        marginSeg: seg([['isolated', t.isolated], ['cross', t.cross]], F.margin, v => !F.locked && this.setState(st => ({ form: { ...st.form, margin:v } }))),
+        modeCards, formTitle: F.id ? `${t.editTitle} · ${F.id}` : t.newTitle,
+        saveDisabled: !F.pair || !!dup,
+        example: { base: exBase, note: fut && F.mode === 'C' ? t.exNoteC : t.exNote,
+          rows: [[t.rBase, b], [t.rTwo, b + 40], [t.rFull, Math.min(100, b + 60)]].map(([k, s]) => ({ k: `${k} (${s}%)`, v: calc(s) })) }
+      };
+    }
+    const upd = k => e => { const v = e.target.value; this.setState(st => ({ form: { ...st.form, [k]: v } })); };
+    const updNum = k => e => { const v = Number(e.target.value); this.setState(st => ({ form: { ...st.form, [k]: v } })); };
+
+    // trade detail
+    let d = { facts:[], factors:[], sizing:[], pnl:[] };
+    const tr = TRADES.find(x => x.id === S.trade);
+    if (tr) {
+      const late = tr.tf === '4H', present = tr.factors ? tr.factors.filter(([, c]) => c >= 0.7).length : 0;
+      const size = late || tr.fb ? tr.base : Math.min(100, tr.base + 20 * present);
+      const net = tr.gross + tr.fees + tr.funding;
+      const factorsSrc = tr.factors || [['channel', null], ['capit', null], ['hl', null]];
+      const FNAME = tr.side === 'short' ? { channel:'breakdown', capit:'euphoria', hl:'lh' } : { channel:'channel', capit:'capit', hl:'hl' };
+      const prevT = tr.flipFrom ? TRADES.find(x => x.id === tr.flipFrom) : null, nextT = tr.flipTo ? TRADES.find(x => x.id === tr.flipTo) : null;
+      const countP = x => x && x.factors ? x.factors.filter(([, c]) => c >= 0.7).length : 0;
+      const sideW = sd => sd === 'long' ? t.sideLong : t.sideShort, sideC = sd => sd === 'long' ? t.sideLongC : t.sideShortC;
+      const sigFor = sd => sd === 'long' ? t.sigRed : t.sigGreen;
+      d = {
+        id: tr.id, title: `${tr.pair} · ${mk(tr.market)} · ${t[tr.side]}`, time: tr.time, fallback: tr.fb,
+        facts: [
+          { k:t.tf, v: late ? t.late : '1D', icon:'fas fa-clock' },
+          { k:t.trend1w, v: t[tr.trend], icon: tr.trend === 'up' ? 'fas fa-arrow-trend-up' : 'fas fa-arrow-trend-down' },
+          { k:t.entry, v: f(tr.entry), icon:'fas fa-right-to-bracket' },
+          { k:t.exitReason, v: t[tr.reason], icon: REASON_ICON[tr.reason] }
+        ],
+        factors: factorsSrc.map(([k, c]) => {
+          const ok = c != null && c >= 0.7;
+          return { name: t['f_' + FNAME[k]], conf: c == null ? '—' : c.toFixed(2), w: c == null ? '0%' : Math.round(c * 100) + '%',
+            icon: c == null ? 'fas fa-minus' : ok ? 'fas fa-check' : 'fas fa-xmark', color: c == null ? 'var(--text-muted)' : ok ? pos : neg,
+            bar: ok ? 'var(--accent)' : 'var(--ink-400)', label: c == null ? '—' : ok ? t.present : t.absent };
+        }),
+        factorNoteShow: late || tr.fb, factorNote: tr.fb ? this.fill(t.fbNote, { timeout: String(S.jevTimeout || 3) }) : t.lateNote,
+        flipIn: !!prevT, flipInId: prevT ? prevT.id : '', flipInGo: () => prevT && this.setState({ trade: prevT.id }),
+        flipInNote: prevT ? this.fill(t.flipInNote, { prev: sideC(prevT.side), sig: sigFor(prevT.side), n: present, side: sideW(tr.side) }) : '',
+        flipOut: !!nextT, flipOutId: nextT ? nextT.id : '', flipOutGo: () => nextT && this.setState({ trade: nextT.id }),
+        flipOutNote: nextT ? this.fill(t.flipOutNote, { sig: sigFor(tr.side), n: countP(nextT), side: sideW(nextT.side) }) : '',
+        sizing: [
+          { k:t.resSize, v: late || tr.fb ? `base ${tr.base}% = ${size}%` : `base ${tr.base}% + ${present}×20% = ${size}%`, sub:'' },
+          { k:t.sizeMode, v: tr.mode ? (t['mode' + tr.mode]) : t.spot, sub:'' },
+          { k:t.levUsed, v: tr.lev || '—', sub: tr.lowered ? this.fill(t.lowered, { a:tr.lowered[0], b:tr.lowered[1] }) : '' }
+        ],
+        pnl: [
+          { k:t.gross, v: sg(tr.gross) + ' USDT', c: pc(tr.gross), w: 400 },
+          { k:t.fees, v: sg(tr.fees) + ' USDT', c: 'var(--text-primary)', w: 400 },
+          { k:t.funding, v: tr.market === 'spot' ? '—' : sg(tr.funding) + ' USDT', c: 'var(--text-primary)', w: 400 },
+          { k:t.net, v: sg(net) + ' USDT', c: pc(net), w: 600 }
+        ]
+      };
+    }
+
+    // modal
+    let m = {};
+    const MD = S.modal;
+    if (MD) {
+      if (MD.type === 'totp') {
+        const enable = MD.action === 'enable', regen = MD.action === 'regen';
+        m = { isTotp:true, icon:'fas fa-shield-halved', iconBg:'var(--accent-soft-bg)', iconFg:'var(--text-accent)',
+          title: enable ? this.fill(t.mEnableT, MD.ctx) : regen ? t.mRegenT : t.mTotpT, body: enable ? this.fill(t.mEnableB, MD.ctx) : regen ? t.mRegenB : t.mTotpB,
+          ok: enable ? t.enable : regen ? t.regen : t.verify, okIcon: enable ? 'fas fa-play' : regen ? 'fas fa-arrows-rotate' : 'fas fa-check', primary:true, okDisabled: S.modalCode.length !== 6 };
+      } else if (MD.type === 'close') {
+        m = { hasList:true, icon:'fas fa-xmark', iconBg:'var(--red-bg)', iconFg:'var(--red-fg)', title: this.fill(t.mCloseT, MD.ctx), body: t.mCloseB,
+          list: [{ text: this.fill(t.mCloseL1, MD.ctx), icon:'fas fa-arrow-right', color:'var(--text-secondary)' }, { text: t.mCloseL2, icon:'fas fa-ban', color:'var(--text-secondary)' }],
+          ok: t.mCloseOk, okIcon:'fas fa-xmark', danger:true };
+      } else if (MD.type === 'kill') {
+        m = { hasList:true, icon:'fas fa-power-off', iconBg:'var(--red-bg)', iconFg:'var(--red-fg)', title:t.mKillT, body:t.mKillB,
+          list: [
+            { text:t.mKillL1, icon:'fas fa-pause', color:neg }, { text:t.mKillL2, icon:'fas fa-ban', color:neg },
+            { text:t.mKillL3, icon:'fas fa-xmark', color:neg }, { text:t.mKillL4, icon:'fas fa-hand', color:'var(--text-secondary)' }
+          ], ok:t.mKillOk, okIcon:'fas fa-power-off', danger:true };
+      }
+      m.hasError = S.modalError; m.error = t.codeWrong; m.onOk = () => this.confirmModal();
+    }
+
+    const killRows = (S.killRows || []).map(r => ({ ...r, marketL: mk(r.market),
+      label: r.st === 'success' ? t.success : r.st === 'cancelled' ? t.cancelled : t.retrying,
+      icon: r.st === 'retrying' ? 'fas fa-rotate fa-spin' : 'fas fa-circle-check', color: r.st === 'retrying' ? 'var(--warning)' : pos }));
+    const okCount = killRows.filter(r => r.st !== 'retrying').length;
+
+    const RED = { icon:'fas fa-circle-xmark', bg:'var(--red-bg)', fg:'var(--red-fg)', role:'alert' };
+    const keyVal = ({
+      saved: { title:t.kOkT, body:t.kOkB, icon:'fas fa-circle-check', bg:'var(--green-bg)', fg:'var(--green-fg)', role:'status' },
+      withdraw: { ...RED, title:t.kBadT, body:t.kBadB },
+      noTrade: { ...RED, title:t.kNoTradeT, body:this.fill(t.kNoTradeB, { m:'Futures' }) }
+    })[S.keyMode] || { title:t.kNewT, body:t.kNewB, icon:'fas fa-circle-info', bg:'var(--surface)', fg:'var(--text-secondary)', role:'status' };
+
+    const notifCards = [['line', t.line, 'fab fa-line', t.token, t.target, 'Ch-token…', 'Uxxxxxxxx'], ['telegram', t.telegram, 'fab fa-telegram', t.botToken, t.chatId, '123456:ABC…', '-100123456']].map(([k, title, icon, f1, f2, p1, p2]) => {
+      const on = S.notif[k];
+      return { title, icon, f1, f2, p1, p2, on: String(on), stateL: on ? t.on : t.off, trackBg: on ? 'var(--accent-strong)' : 'var(--ink-500)', knobPos: on ? 'flex-end' : 'flex-start',
+        last: k === 'line' ? t.lastTest : t.never,
+        onToggle: () => this.setState(st => ({ notif: { ...st.notif, [k]: !st.notif[k] } })), onTest: () => this.toast(this.fill(t.tTest, { c:title })) };
+    });
+
+    const nav = [['dashboard', t.dashboard, 'fas fa-gauge'], ['strategies', t.strategies, 'fas fa-chess-knight'], ['settings', t.settings, 'fas fa-gear']].map(([k, l, icon]) => ({
+      label:l, icon, bg: page === k ? 'var(--surface)' : 'transparent', fg: page === k ? 'var(--text-primary)' : 'var(--text-secondary)',
+      onClick: () => this.setState({ page:k, form:null })
+    }));
+    const settingsNav = [['keys', t.exKeys, 'fas fa-key'], ['notif', t.notif, 'fas fa-bell'], ['trading', t.trading, 'fas fa-sliders'], ['security', t.security, 'fas fa-lock']].map(([k, l, icon]) => ({
+      label:l, icon, bg: S.settingsTab === k ? 'var(--surface)' : 'transparent', fg: S.settingsTab === k ? 'var(--text-primary)' : 'var(--text-secondary)', onClick: () => this.setState({ settingsTab:k })
+    }));
+
+    const HMC = [['var(--bg-base)','var(--border)'],['rgba(99,102,241,0.22)','rgba(99,102,241,0.3)'],['rgba(99,102,241,0.42)','rgba(99,102,241,0.5)'],['rgba(99,102,241,0.68)','rgba(99,102,241,0.75)'],['var(--indigo-500)','var(--indigo-400)']];
+    const lvl = c => c === 0 ? 0 : c === 1 ? 1 : c === 2 ? 2 : c <= 3 ? 3 : 4;
+    const hmBuild = (weeks, key) => {
+      const days = HM_DAYS.slice(HM_DAYS.length - weeks * 7);
+      const cells = days.map((d, i) => {
+        if (!d) return { bg:'transparent', bd:'transparent', ring:'none', onEnter: null };
+        const c = empty ? 0 : d.c, [bg, bd] = HMC[lvl(c)];
+        const hov = S.hmHover && S.hmHover.key === key && S.hmHover.i === i;
+        return { bg, bd, ring: hov ? '0 0 0 2px var(--indigo-400)' : 'none',
+          onEnter: e => { const r = e.currentTarget.getBoundingClientRect(); this.setState({ hmHover: { key, i, d, x: r.left + r.width / 2, y: r.top, b: r.bottom } }); } };
+      });
+      const months = []; let prev = -1;
+      for (let w = 0; w < weeks; w++) { const d = days[w * 7]; const m = d ? d.m : prev; months.push(m !== prev && w > 0 || (w === 0 && d && d.dom <= 7) ? MON[lang][m] : ''); prev = m; }
+      return { cells, months };
+    };
+    const hmD = hmBuild(53, 'd'), hmM = hmBuild(16, 'm');
+    let hmTip = {};
+    const HV = S.hmHover;
+    if (HV) {
+      const d = HV.d, c = empty ? 0 : d.c, pnl = empty ? 0 : d.pnl;
+      const date = lang === 'th' ? `${d.dom} ${MON.th[d.m]} ${String(d.y + 543).slice(-2)}` : `${MON.en[d.m].charAt(0) + MON.en[d.m].slice(1).toLowerCase()} ${d.dom}, ${d.y}`;
+      const vw = typeof window !== 'undefined' ? window.innerWidth : 1200;
+      const left = Math.min(Math.max(HV.x, 142), vw - 142), above = HV.y > 230;
+      hmTip = { date, weekday: t.hmWd[d.wd], count: this.fill(t.hmTradesN, { c }), pnl: c ? sg(pnl) + ' USDT' : '—', pnlColor: pc(pnl),
+        wl: c ? `${d.w}W / ${d.l}L · ${Math.round(d.w / c * 100)}%` : '—', level: t.hmLv[lvl(c)],
+        left: left + 'px', top: (above ? HV.y - 10 : HV.b + 10) + 'px', tf: above ? 'translate(-50%,-100%)' : 'translate(-50%,0)' };
+    }
+    const real = HM_DAYS.filter(Boolean);
+    let tradeDays = 0, streak = 0, best = 0;
+    real.forEach(d => { const c = empty ? 0 : d.c; if (c) { tradeDays++; streak++; best = Math.max(best, streak); } else streak = 0; });
+    const isApp = S.screen === 'app';
+    return {
+      t, themeClass: dark ? '' : 'light', themeIcon: dark ? 'fas fa-sun' : 'fas fa-moon', pageBg: mobile && isApp ? (dark ? 'var(--ink-900)' : 'var(--gray-200)') : 'var(--bg-base)',
+      neg, pos,
+      toggleTheme: () => this.setState(st => ({ theme: st.theme === 'dark' ? 'light' : 'dark' })),
+      langSeg: seg([['th', 'TH'], ['en', 'EN']], lang, v => this.setState({ lang:v })),
+
+      isLogin: S.screen === 'login', loginCreds: S.loginStep === 'creds', loginTotp: S.loginStep === 'totp',
+      email: S.email, password: S.password, isLocked: locked, lockLeft,
+      showWrongCreds: S.wrongShown && !locked, attemptsText: this.fill(t.attemptsLeft, { n: 5 - S.attempts }),
+      onEmail: e => this.setState({ email: e.target.value }), onPassword: e => this.setState({ password: e.target.value }),
+      submitCreds: () => {
+        if (locked) return;
+        if (S.password === 'cane') { this.setState({ loginStep:'totp', attempts:0, wrongShown:false, loginCode:'' }); return; }
+        const a = S.attempts + 1;
+        if (a >= 5) this.setState({ attempts:0, wrongShown:false, lockUntil: Date.now() + 15 * 60 * 1000, now: Date.now(), password:'' });
+        else this.setState({ attempts:a, wrongShown:true, password:'' });
+      },
+      loginCode: S.loginCode, loginCodeIncomplete: S.loginCode.length !== 6,
+      onLoginCode: e => this.setState({ loginCode: e.target.value.replace(/\D/g, '').slice(0, 6) }),
+      submitTotp: () => this.setState({ screen:'app', page:'dashboard' }), backToCreds: () => this.setState({ loginStep:'creds' }),
+
+      isApp, isDesktop: !mobile, isMobile: mobile,
+      frameMax: mobile ? '390px' : 'none', frameMargin: mobile ? '24px auto' : '0', frameMinH: mobile ? '844px' : '100vh',
+      frameBorder: mobile ? '1px solid var(--border-strong)' : '0', frameRadius: mobile ? '28px' : '0', mainPad: mobile ? '16px' : '32px 24px 64px',
+      h1Size: mobile ? '22px' : '28px', bannerPad: mobile ? '12px 16px' : '12px 24px',
+      status, killed: S.killed, notKilled: !S.killed, nav,
+      openKill: () => this.setState({ modal: { type:'kill' } }),
+      goStrategies: () => this.setState({ page:'strategies', form:null }), goDashboard: () => this.setState({ page:'dashboard' }),
+
+      showDashDesktop: page === 'dashboard' && !mobile, showDashMobile: page === 'dashboard' && mobile,
+      showKillPage: page === 'killswitch', showStrategies: page === 'strategies', showSettings: page === 'settings',
+      showMobileKill: mobile && page === 'dashboard' && !S.killed, showMobileBackDash: mobile && page === 'killswitch',
+      isLoading: loading, notLoading: !loading, skel5: [1, 2, 3, 4, 5], skel4: [1, 2, 3, 4],
+      syncText: loading ? t.syncing : err ? t.syncFail : t.synced, syncIcon: loading ? 'fas fa-circle-notch fa-spin' : err ? 'fas fa-triangle-exclamation' : 'fas fa-rotate',
+      staleOpacity: err ? 0.6 : 1,
+      stats, statsMobile: [stats[1], stats[0], stats[2], stats[3]], alerts, hasAlerts: alerts.length > 0,
+      dashTabs, tabPositions: S.dashTab === 'positions', tabHistory: S.dashTab === 'history', tabAudit: S.dashTab === 'audit',
+      positions, hasPositions: positions.length > 0, noPositions: positions.length === 0, posCount: String(positions.length),
+      emptyPosSub: S.strats.length ? t.emptyPosRun : t.emptyPosNone, noStrats: !S.strats.length,
+      trades, tradesShort: trades.slice(0, 4), hasTrades: trades.length > 0, noTrades: trades.length === 0, audit,
+
+      killRows, killSummary: `${okCount}/${killRows.length}`,
+
+      stratList: !F, stratFormOpen: !!F, strats, stratsReady: !loading && strats.length > 0, stratsEmpty: !loading && strats.length === 0, stratError: err,
+      newStrategy: () => this.setState({ page:'strategies', pairOpen:false, form: { id:null, pair:'', pairQuery:'', market:'futures', lev:5, margin:'isolated', mode:'B', base:10, thr:0.7, risk:2, locked:false } }),
+      cancelForm: () => this.setState({ form:null, pairOpen:false }),
+      saveForm: () => {
+        const x = S.form; if (!x.pair) return;
+        this.setState(st => {
+          const base = { pair:x.pair, market:x.market, lev:x.lev, margin:x.margin, mode:x.market === 'futures' ? x.mode : undefined, base:x.base, thr:x.thr, risk:x.risk };
+          const list = x.id ? st.strats.map(o => o.id === x.id ? { ...o, ...base } : o)
+            : [...st.strats, { id: 'S-' + String(st.strats.length + 1).padStart(2, '0'), state:'disabled', ...base }];
+          return { strats:list, form:null, pairOpen:false };
+        });
+        this.toast(t.tStrat);
+      },
+      onPairQuery: e => { const v = e.target.value.toUpperCase(); this.setState(st => ({ form: { ...st.form, pairQuery:v, pair: PAIRS.includes(v) ? v : '' }, pairOpen:true })); },
+      openPairList: () => this.setState({ pairOpen:true }),
+      onLev: updNum('lev'), onBase: updNum('base'), onThr: upd('thr'), onRisk: updNum('risk'),
+      ...formVals,
+
+      settingsNav, setKeys: S.settingsTab === 'keys', setNotif: S.settingsTab === 'notif', setTrading: S.settingsTab === 'trading', setSecurity: S.settingsTab === 'security',
+      keyMasked: S.keyMode === 'saved', keyEditing: S.keyMode !== 'saved', keyVal,
+      apiKey: S.apiKey, apiSecret: S.apiSecret, keysIncomplete: !S.apiKey || !S.apiSecret,
+      onApiKey: e => this.setState({ apiKey: e.target.value }), onApiSecret: e => this.setState({ apiSecret: e.target.value }),
+      replaceKeys: () => this.setState({ keyMode:'editing' }), cancelKeys: () => this.setState({ keyMode:'saved', apiKey:'', apiSecret:'' }),
+      saveKeys: () => this.openTotp('keys'), copyIp: () => this.toast(t.tCopied),
+      notifCards, saveNotif: () => this.openTotp('notif'),
+      jevTimeout: S.jevTimeout, onJevTimeout: e => this.setState({ jevTimeout: e.target.value }), saveTrading: () => this.toast(t.tSaved),
+      savePw: () => this.toast(t.tSaved), resetupTotp: () => this.openTotp('totp'),
+      regenCodes: () => this.openTotp('regen'),
+      showCodes: !!S.codes, codes: S.codes || [], copyCodes: () => this.toast(t.tCopied), downloadCodes: () => this.toast(t.tDownloaded),
+      sessionRows: [{ k:t.device, v:'macOS · Chrome' }, { k:t.ip, v:'203.0.113.24' }, { k:t.signedIn, v:'2026-09-27 09:14' }, { k:t.expires, v:'2026-09-27 21:14' }],
+      signOut: () => this.setState({ screen:'login', loginStep:'creds', password:'', loginCode:'' }),
+
+      drawerOpen: !!tr, d, closeDrawer: () => this.setState({ trade:null }),
+      modalOpen: !!MD, m, modalCode: S.modalCode,
+      onModalCode: e => this.setState({ modalCode: e.target.value.replace(/\D/g, '').slice(0, 6), modalError:false }),
+      closeModal: () => this.setState({ modal:null }),
+      toastOn: !!S.toast, toast: S.toast,
+      hmCols: 53, hmCells: hmD.cells, hmMonths: hmD.months, hmColsM: 16, hmCellsM: hmM.cells, hmMonthsM: hmM.months,
+      hmTipOn: !!S.hmHover, hmTip, hmLeave: () => this.setState({ hmHover: null }),
+      hmLegend: HMC.map(([bg, bd]) => ({ bg, bd })), hmSummary: this.fill(t.hmSum, { d: tradeDays, n: real.length, s: best })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+/* fonts.css — webfont declarations
+   Poppins is the brand typeface (matches the live portfolio, which loads it
+   from Google Fonts). Imported here so the whole token closure ships it. */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');

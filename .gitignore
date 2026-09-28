@@ -1,0 +1,28 @@
+# Reference material — never commit (intent: public repo)
+reference/
+*.pine
+uncle-chaloke-*.md
+*.zip
+uploads/
+fixtures/private/
+
+# Secrets / local env
+.env
+.env.*
+!.env.example
+
+# Build / deps / caches
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+data/
+.vite/
+playwright-report/
+test-results/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
