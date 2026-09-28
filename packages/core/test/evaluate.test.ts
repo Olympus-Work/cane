@@ -242,8 +242,8 @@ describe('B4 late entry (Cane Rule)', () => {
 });
 
 describe('B5.3 stop trailing and B7 exits (open position)', () => {
-  const long: OpenPosition = { side: 'long', kind: 'primary', stop: d(90) };
-  const short: OpenPosition = { side: 'short', kind: 'primary', stop: d(110) };
+  const long: OpenPosition = { side: 'long', kind: 'primary', stop: d(90), openedAt: NOW - 5 * DAY };
+  const short: OpenPosition = { side: 'short', kind: 'primary', stop: d(110), openedAt: NOW - 5 * DAY };
 
   it('long: first red on the closed 1D candle -> exit', () => {
     const dec = run(analyses({ '1d': fake('1d', 'bearish', { close: 95, zone: { firstRed: true } }) }), long);
@@ -282,6 +282,19 @@ describe('B5.3 stop trailing and B7 exits (open position)', () => {
     expect(run(analyses({ '1d': fake('1d', 'bearish', { close: 80, trail: 115 }) }), short)).toEqual({ type: 'none', reason: 'no_signal' });
   });
 
+  it('B5.3: a late entry is not trailed by the 1D candle that closed before it', () => {
+    // Late long opened mid-day (4H) after the last 1D close; that 1D trail (95) is above its 4H stop (90).
+    const lateLong: OpenPosition = { side: 'long', kind: 'late', stop: d(90), openedAt: NOW + 8 * 3600_000 };
+    const a = analyses({ '1d': fake('1d', 'bullish', { close: 120, trail: 95 }) });
+    expect(run(a, lateLong, futures, NOW + 12 * 3600_000)).toEqual({ type: 'none', reason: 'no_signal' });
+  });
+
+  it('B5.3: the next 1D close after the entry does trail it', () => {
+    const lateLong: OpenPosition = { side: 'long', kind: 'late', stop: d(90), openedAt: NOW - 16 * 3600_000 };
+    const dec = run(analyses({ '1d': fake('1d', 'bullish', { close: 120, trail: 95 }) }), lateLong);
+    expect(dec).toMatchObject({ type: 'move_stop', side: 'long' });
+  });
+
   it('late-entry positions also exit on the 1D signal', () => {
     const dec = run(analyses({ '1d': fake('1d', 'bearish', { zone: { firstRed: true } }) }), { ...long, kind: 'late' });
     expect(dec).toMatchObject({ type: 'exit', reason: 'first_red' });
@@ -308,7 +321,7 @@ describe('E4 market data gap', () => {
   });
 
   it('gap on 1D blocks position management too', () => {
-    const dec = run(analyses({ '1d': fake('1d', 'bearish', { zone: { firstRed: true } }) }), { side: 'long', kind: 'primary', stop: d(90) }, futures, NOW + 2 * DAY);
+    const dec = run(analyses({ '1d': fake('1d', 'bearish', { zone: { firstRed: true } }) }), { side: 'long', kind: 'primary', stop: d(90), openedAt: NOW - 5 * DAY }, futures, NOW + 2 * DAY);
     expect(dec).toMatchObject({ type: 'none', reason: 'data_gap' });
   });
 });

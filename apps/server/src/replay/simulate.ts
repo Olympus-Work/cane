@@ -69,9 +69,9 @@ function historyGaps(tf: Timeframe, candles: readonly Candle[]): ReplayResult['h
 /**
  * Replays the live decision rules (`decide` from @cane/core) at every 4H
  * close in [from, to). Uses the same pure functions as the live engine; it
- * has no exchange access and cannot place orders.
+ * has no exchange access and cannot place orders. `decideFn` is a test seam.
  */
-export function simulate(input: SimulateInput): ReplayResult {
+export function simulate(input: SimulateInput, decideFn: typeof decide = decide): ReplayResult {
   const { pair, market, candles, from, to } = input;
   const strategy = { id: input.strategyId ?? 'REPLAY', market };
   const analyses: Analyses = {
@@ -101,8 +101,8 @@ export function simulate(input: SimulateInput): ReplayResult {
     // 2) Evaluation right after the candle closed.
     const nowMs = c.closeTime + 1;
     evaluations++;
-    const position: OpenPosition | null = pos === null ? null : { side: pos.side, kind: pos.kind, stop: pos.finalStop };
-    const dec = decide({ strategy, analyses, position, nowMs });
+    const position: OpenPosition | null = pos === null ? null : { side: pos.side, kind: pos.kind, stop: pos.finalStop, openedAt: pos.entryTime };
+    const dec = decideFn({ strategy, analyses, position, nowMs });
 
     if (dec.type === 'enter') {
       const key = signalKey(strategy.id, dec.signal);
@@ -123,6 +123,9 @@ export function simulate(input: SimulateInput): ReplayResult {
         stopMoves: 0,
       };
     } else if (dec.type === 'exit' && pos !== null) {
+      // The exit candle is consumed: the opposite side may open on it only
+      // through the flip (B7.4, B7.5), never as a plain entry later.
+      seen.add(signalKey(strategy.id, dec.signal));
       trades.push(close(pos, nowMs, dec.refPrice, dec.reason));
       pos = null;
     } else if (dec.type === 'move_stop' && pos !== null) {

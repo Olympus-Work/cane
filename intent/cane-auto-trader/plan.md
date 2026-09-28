@@ -175,6 +175,14 @@ Each step ends with its proof passing in CI before the next starts. Steps
     data gap) keeps its exchange stop and waits for the next signal.
   - B4 late entries may repeat within one 1D regime after a stop / take-
     profit exit, each on a new 4H first signal (B7.4 "new signal").
+  - B7.4: the 1D candle that closed a position is consumed. A plain entry
+    keyed to it is never taken later (e.g. at the next 4H evaluation); the
+    opposite side opens on that candle only through the flip (B7.5, S03).
+    The live engine (S06) must record the exit's signal key like an entry's.
+  - B5.3: trailing uses only 1D candles that closed after the entry was
+    decided (`OpenPosition.openedAt`), so a 4H late entry is not tightened
+    by the 1D candle that closed before it.
+  Neither guard changed the 2024-09-29 → 2026-09-29 replay report.
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.

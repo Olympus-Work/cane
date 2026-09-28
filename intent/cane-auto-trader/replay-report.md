@@ -1,5 +1,5 @@
 # Replay report
-Generated: 2026-09-28T23:37:46.850Z
+Generated: 2026-09-28T23:44:06.914Z
 Decisions the live rules (packages/core `decide`) would have made on Binance closed candles, evaluated at every 4H close. Unsized, no fees, no funding, no Jev confluence (base rules only). Stops and take-profits are simulated on 4H highs/lows (a gap through the level fills at the 4H open; if stop and take-profit are both inside one 4H candle, the stop is assumed first). Entries fill at the signal candle close. This is evidence for spec AC1, not a performance forecast.
 
 ## Summary
