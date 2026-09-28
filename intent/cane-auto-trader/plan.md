@@ -159,6 +159,22 @@ Each step ends with its proof passing in CI before the next starts. Steps
   `high−low`), RMA first value = SMA of the first n TR; the trail uses the
   Pine `nz(trail[prev], 0)` start (first bar with ATR defined → `max(0, close − k·ATR)`).
   Values before a series is defined are "not available", never 0.
+- **Spec readings in S01 code (Claude Code, 2026-09-29; owner to confirm in
+  the S01 PR):**
+  - Regime is `null` until at least one buyCond and one sellCond exist
+    (Pine `barssince` = na). A null 1W regime blocks entries (B2).
+  - E4 "market data gap" = the newest candle that should have closed is
+    missing, or the last two closed candles are not adjacent. Older
+    exchange-side gaps in history do not block (they are listed in the
+    replay report).
+  - B5.3 trail move also requires the new trail to be on the protective
+    side of the last close (a trail that flipped above price is not placed
+    as a long stop).
+  - B7.1/7.2 exits trigger on `firstRed` / `firstGreen` exactly as defined.
+    A long still open while the 1D regime is already bearish (e.g. after a
+    data gap) keeps its exchange stop and waits for the next signal.
+  - B4 late entries may repeat within one 1D regime after a stop / take-
+    profit exit, each on a new 4H first signal (B7.4 "new signal").
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.
