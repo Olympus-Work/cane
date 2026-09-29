@@ -140,6 +140,15 @@ describe('B6.6 rounding and minimums', () => {
     });
   });
 
+  it('cap then below minimum -> both sizing_reduced and order_skipped_min_notional', () => {
+    // target margin 200 (5x, 1000 notional) but only 0.5 free -> notional 2.5 < 5
+    expect(planEntry(input({ freeBalance: d('0.5') }))).toMatchObject({
+      type: 'skip',
+      reason: 'min_notional',
+      events: ['sizing_reduced', 'order_skipped_min_notional'],
+    });
+  });
+
   it('below min quantity -> no order', () => {
     const filters = { ...FILTERS, stepSize: d(1), minQty: d(1) };
     // notional 50 at price 100 -> 0.5 -> rounds to 0
