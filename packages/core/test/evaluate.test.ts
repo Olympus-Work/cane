@@ -4,6 +4,7 @@ import type { TimeframeAnalysis } from '../src/signals/analyze.js';
 import {
   decide,
   evaluate,
+  primaryStop,
   signalKey,
   WARMUP_CANDLES,
   type Analyses,
@@ -354,5 +355,26 @@ describe('evaluate() with real indicators', () => {
     // Once it closes, the same candle is a first green and the long enters.
     const afterClose = evaluate({ ...input, nowMs: openCandle.closeTime + 1 });
     expect(afterClose).toMatchObject({ type: 'enter', side: 'long', kind: 'primary' });
+  });
+});
+
+describe('primaryStop (B5.2 stop for a B7.5 flip)', () => {
+  it('gives the 1D stop for the opposite side regardless of the 1W trend', () => {
+    // long closed on a first red; 1W still bullish; the short stop comes from the 1D trail above price
+    const d1 = fake('1d', 'bearish', { close: 100, trail: 107, zone: { firstRed: true } });
+    const s = primaryStop(d1, NOW, 'short');
+    expect(s).toMatchObject({ source: 'trail', signal: { timeframe: '1d', openTime: (N - 1) * DAY } });
+    expect(s!.stop.toString()).toBe('107');
+    expect(s!.refPrice.toString()).toBe('100');
+  });
+
+  it('falls back to close + 2*ATR(10) when the trail is on the wrong side', () => {
+    const s = primaryStop(fake('1d', 'bearish', { close: 100, trail: 95, atr: 4 }), NOW, 'short');
+    expect([s!.stop.toString(), s!.source]).toEqual(['108', 'atr_fallback']);
+  });
+
+  it('null while 1D is warming up or has a gap', () => {
+    expect(primaryStop(fake('1d', 'bearish', {}, 150), NOW, 'short')).toBeNull();
+    expect(primaryStop(fake('1d', 'bearish'), NOW + 3 * DAY, 'short')).toBeNull();
   });
 });

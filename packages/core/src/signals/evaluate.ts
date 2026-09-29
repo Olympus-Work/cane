@@ -104,6 +104,21 @@ function stopFor(side: Side, v: TfView): { stop: Decimal; source: 'trail' | 'atr
   return protective(stop) ? { stop, source: 'atr_fallback' } : null;
 }
 
+/**
+ * B5.2 initial stop on the last closed 1D candle for `side`, e.g. for a B7.5
+ * flip (which skips the 1W filter, so it does not come from `decide`).
+ */
+export function primaryStop(
+  d1: TimeframeAnalysis,
+  nowMs: number,
+  side: Side,
+): { stop: Decimal; source: 'trail' | 'atr_fallback'; signal: SignalRef; refPrice: Decimal } | null {
+  const v = view(d1, nowMs);
+  if (!v.usable) return null;
+  const s = stopFor(side, v);
+  return s === null ? null : { ...s, signal: ref(v), refPrice: v.a.candles[v.i]!.close };
+}
+
 function ref(v: TfView): SignalRef {
   return { timeframe: v.a.timeframe, openTime: v.a.candles[v.i]!.openTime };
 }
