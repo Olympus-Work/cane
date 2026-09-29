@@ -320,8 +320,10 @@ Each step ends with its proof passing in CI before the next starts. Steps
   - User data: spot via the WebSocket API `userDataStream.subscribe.signature`
     (HMAC works on Demo); USDⓈ-M via listenKey + 30-min keepalive. Every
     (re)connect calls `onConnected` so the engine reconciles missed events.
-- **Engine and reconciler choices in S06 (Claude Code, 2026-09-29; to
-  confirm with the owner in the PR):**
+- **Engine and reconciler choices in S06 (Claude Code, 2026-09-29; confirmed
+  by the owner 2026-09-29, all four: client order ID candle + `bail`, no
+  resend of an entry Binance never received, unknown/manual positions
+  flagged only, in-process AC6 kill):**
   - **Client order ID candle = the evaluated 4H candle** (spec Interfaces
     left "candle" open). Keying orders to the *signal* candle collides: a 4H
     late entry and a later 1D event can share an open time, and query-before-
