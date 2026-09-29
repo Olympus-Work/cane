@@ -370,23 +370,31 @@ Each step ends with its proof passing in CI before the next starts. Steps
   - AC6 proof: the "kill" is simulated in-process (the entry call dies right
     after Binance accepted the order) and a fresh set of objects over the
     same DB plays the restarted process; Demo + Postgres, local only.
-- **Jev client choices in S07 (Claude Code, 2026-09-29; to confirm with the
-  owner in the PR):**
+- **Jev client choices in S07 (Claude Code, 2026-09-29; confirmed by the
+  owner 2026-09-30, except retry and concurrency cap, which the owner made
+  configurable, see below):**
   - **`present` = Noul ≥ 0.5, `confidence` = the Noul value**, not
     `present` = Noul ≥ 0.70 as in step 7. The confidence threshold is a
     per-strategy setting (B10) and `presentFactorCount` already applies it to
     `confidence`; a fixed 0.70 in the client would silently raise any
     strategy threshold below 0.70.
-  - Plain `fetch`, no SDK; **no retry** (the SDK's backoff on 429 would
-    break the 3 s budget). The budget covers connect, response and body.
+  - Plain `fetch`, no SDK; **retry is off by default** (the SDK's backoff on
+    429 would break the 3 s budget). Owner 2026-09-30: `JEV_MAX_RETRIES`
+    (env, default 0) allows that many extra attempts on network error, 429
+    or 5xx, with no delay between them; the 3 s budget is one timer over all
+    attempts, so retries only spend what is left. The budget covers connect,
+    response and body.
     Timeout = `timeout`; network error or any non-2xx (incl. 429) = `error`;
     bad JSON, a missing factor, a non-Noul answer or a value outside [0,1] =
     `invalid_response`. All map to base size + `jev_fallback` (executor).
   - Model pinned to `jev-1.13.0`; the model string in the response is stored
     per call. The timeout is a constructor option (default 3 s) until S08 adds
     the Setting.
-  - No concurrency cap: 3 questions per signal, a few signals a day, against
-    1,200 requests/min.
+  - Concurrency cap is off by default (3 questions per signal, a few signals
+    a day, against 1,200 requests/min). Owner 2026-09-30:
+    `JEV_MAX_CONCURRENCY` (env, default 0 = unlimited) caps in-flight
+    calls; a call waiting for a slot does not start its 3 s budget until it
+    has one.
   - Stored request = model, state text and questions (never headers or the
     key). State is fixed-order `name: value` lines from the B8.1 features;
     question wording lives in `apps/server/src/jev/jev.client.ts` and is
