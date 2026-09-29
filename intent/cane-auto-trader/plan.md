@@ -185,10 +185,16 @@ Each step ends with its proof passing in CI before the next starts. Steps
   Neither guard changed the 2024-09-29 → 2026-09-29 replay report.
 - **Spec readings in S02 code (Claude Code, 2026-09-29; owner to confirm in
   the S02 PR):**
-  - Order of work in `planEntry`: size_pct → leverage (B9.2, ceiling down
-    to 1x) → free-balance cap (B6.5) → rounding + minimums (B6.6).
-  - Liquidation price = Binance isolated one-way formula with the symbol's
-    leverage bracket (MMR + maintenance amount), fees ignored. Cross margin
+  - Order of work in `planEntry`: size_pct → for each leverage from the
+    ceiling down to 1x, build the final order (target notional → free-
+    balance cap B6.5 → rounding B6.6) and run the B9.2 check on that final
+    size and its bracket; the first leverage that passes is used. (PR #3
+    review: checking before the cap missed a cap that crosses into a lower
+    bracket where liquidation sits closer.)
+  - Liquidation price = Binance isolated one-way formula
+    `(WB + cum − side·Q·EP) / (Q·MMR − side·Q)` with WB = initial margin and
+    the symbol's leverage bracket (maintenance margin = notional × MMR −
+    cum), fees ignored. Cross margin
     uses the same estimate (its real liquidation is the same or further
     away, so the check is conservative).
   - A leverage above the notional's bracket maximum is also lowered

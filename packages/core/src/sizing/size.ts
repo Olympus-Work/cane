@@ -112,6 +112,8 @@ export type EntryPlan =
       quantity: Decimal;
       notional: Decimal;
       margin: Decimal;
+      /** Unrounded notional before the free-balance cap (for the `sizing_reduced` message). */
+      targetNotional: Decimal;
       sizePct: Decimal;
       leverage: number;
       /** Set when B9.2 lowered leverage below the ceiling. */
@@ -128,15 +130,28 @@ export type EntryPlan =
       events: EntryPlanEvent[];
     };
 
+type Candidate =
+  | { ok: false; why: 'min_notional' | 'no_bracket' | 'bracket_max' | 'liquidation' }
+  | {
+      ok: true;
+      quantity: Decimal;
+      notional: Decimal;
+      targetNotional: Decimal;
+      reduced: boolean;
+      liquidationPrice: Decimal | null;
+    };
+
 /**
- * B6 + B9.2 for one entry. Order of work:
- * 1. size_pct from factors;
- * 2. futures: from the leverage ceiling down to 1x, the first leverage whose
- *    liquidation price sits at least 1% of entry beyond the stop (and that the
- *    notional's bracket allows); none → skip;
- * 3. cap to free balance (`sizing_reduced`);
- * 4. round quantity down to step, stop / TP to tick (away from price for the
- *    stop, towards price for the TP); below min qty / min notional → skip.
+ * B6 + B9.2 for one entry.
+ * 1. size_pct from factors; stop / TP rounded to tick (stop away from price,
+ *    TP towards it) so every check uses the prices actually sent;
+ * 2. for each leverage from the ceiling down to 1x, build the *final* order:
+ *    target notional (B6.4) -> free-balance cap (B6.5) -> quantity rounded
+ *    down to step (B6.6) -> bracket of that final notional; accept the first
+ *    leverage the bracket allows whose liquidation price sits at least 1% of
+ *    entry beyond the stop (B9.2). The cap and rounding can move the notional
+ *    into another bracket, so the check always runs on the final size;
+ * 3. below min qty / min notional -> skip; no leverage passes -> skip.
  */
 export function planEntry(input: EntryPlanInput): EntryPlan {
   const { market, side, entryPrice, filters } = input;
@@ -146,75 +161,63 @@ export function planEntry(input: EntryPlanInput): EntryPlan {
     throw new Error('stop must be on the protective side of the entry price');
   }
   const pct = sizePct(input.basePct, input.presentFactors);
-  const events: EntryPlanEvent[] = [];
   const mode: SizingMode = market === 'spot' ? 'B' : input.mode;
   const ceiling = market === 'spot' ? 1 : input.leverageCeiling;
   validateLeverage(ceiling);
 
-  // Stop / TP rounded first so the liquidation check uses the price actually sent.
   const stop = roundToTick(input.stop, filters.tickSize, side === 'long' ? 'down' : 'up');
   const takeProfit =
     input.takeProfit === null ? null : roundToTick(input.takeProfit, filters.tickSize, side === 'long' ? 'down' : 'up');
 
-  const target = (lev: number) =>
-    targetNotional({ mode, sizePct: pct, equity: input.equity, leverage: lev, entryPrice, stop, riskPct: input.riskPct });
-
-  let leverage = ceiling;
-  if (market === 'futures') {
-    const brackets = input.brackets ?? [];
-    let chosen: number | null = null;
-    for (let lev = ceiling; lev >= 1; lev--) {
-      const { notional } = target(lev);
-      const bracket = bracketFor(brackets, notional);
-      if (bracket === null) return { type: 'skip', reason: 'no_bracket', sizePct: pct, events };
-      if (lev > bracket.maxLeverage) continue;
-      if (notional.lte(0)) break;
-      const liq = liquidationPrice({ side, entryPrice, quantity: notional.div(entryPrice), leverage: lev, bracket });
-      if (stopInsideLiquidation(side, entryPrice, stop, liq)) {
-        chosen = lev;
-        break;
-      }
+  const candidate = (lev: number): Candidate => {
+    const t = targetNotional({ mode, sizePct: pct, equity: input.equity, leverage: lev, entryPrice, stop, riskPct: input.riskPct });
+    // B6.5: spot needs the full notional in quote balance, futures the margin.
+    const required = market === 'spot' ? t.notional : t.margin;
+    const reduced = required.gt(input.freeBalance);
+    const capped = reduced ? input.freeBalance.times(lev) : t.notional;
+    const quantity = roundDownToStep(capped.div(entryPrice), filters.stepSize);
+    const notional = quantity.times(entryPrice);
+    if (quantity.lte(0) || quantity.lt(filters.minQty) || notional.lt(filters.minNotional)) {
+      return { ok: false, why: 'min_notional' };
     }
-    if (chosen === null) return { type: 'skip', reason: 'liquidation', sizePct: pct, events };
-    if (chosen < ceiling) events.push('leverage_lowered');
-    leverage = chosen;
-  }
-
-  // B6.5: cap to the free balance (spot needs the full notional, futures the margin).
-  const t = target(leverage);
-  let notional = t.notional;
-  const required = market === 'spot' ? t.notional : t.margin;
-  if (required.gt(input.freeBalance)) {
-    events.push('sizing_reduced');
-    notional = input.freeBalance.times(leverage);
-  }
-
-  // B6.6: quantity rounded down to step; below minimums -> no order.
-  const quantity = roundDownToStep(notional.div(entryPrice), filters.stepSize);
-  const finalNotional = quantity.times(entryPrice);
-  if (quantity.lte(0) || quantity.lt(filters.minQty) || finalNotional.lt(filters.minNotional)) {
-    events.push('order_skipped_min_notional');
-    return { type: 'skip', reason: 'min_notional', sizePct: pct, events };
-  }
-
-  let liq: Decimal | null = null;
-  if (market === 'futures') {
-    const bracket = bracketFor(input.brackets ?? [], finalNotional);
-    if (bracket === null) return { type: 'skip', reason: 'no_bracket', sizePct: pct, events };
-    liq = liquidationPrice({ side, entryPrice, quantity, leverage, bracket });
-  }
-
-  return {
-    type: 'order',
-    quantity,
-    notional: finalNotional,
-    margin: finalNotional.div(leverage),
-    sizePct: pct,
-    leverage,
-    leverageLoweredFrom: leverage < ceiling ? ceiling : null,
-    stop,
-    takeProfit,
-    liquidationPrice: liq,
-    events,
+    if (market === 'spot') return { ok: true, quantity, notional, targetNotional: t.notional, reduced, liquidationPrice: null };
+    const bracket = bracketFor(input.brackets ?? [], notional);
+    if (bracket === null) return { ok: false, why: 'no_bracket' };
+    if (lev > bracket.maxLeverage) return { ok: false, why: 'bracket_max' };
+    const liq = liquidationPrice({ side, entryPrice, quantity, leverage: lev, bracket });
+    if (!stopInsideLiquidation(side, entryPrice, stop, liq)) return { ok: false, why: 'liquidation' };
+    return { ok: true, quantity, notional, targetNotional: t.notional, reduced, liquidationPrice: liq };
   };
+
+  let onlyNoBracket = true;
+  for (let lev = ceiling; lev >= 1; lev--) {
+    const c = candidate(lev);
+    if (!c.ok) {
+      // A lower leverage never gives a larger order (mode A shrinks, B/C only
+      // need more margin), so a size below the minimums stays below them.
+      if (c.why === 'min_notional') {
+        return { type: 'skip', reason: 'min_notional', sizePct: pct, events: ['order_skipped_min_notional'] };
+      }
+      if (c.why !== 'no_bracket') onlyNoBracket = false;
+      continue;
+    }
+    const events: EntryPlanEvent[] = [];
+    if (lev < ceiling) events.push('leverage_lowered');
+    if (c.reduced) events.push('sizing_reduced');
+    return {
+      type: 'order',
+      quantity: c.quantity,
+      notional: c.notional,
+      margin: c.notional.div(lev),
+      targetNotional: c.targetNotional,
+      sizePct: pct,
+      leverage: lev,
+      leverageLoweredFrom: lev < ceiling ? ceiling : null,
+      stop,
+      takeProfit,
+      liquidationPrice: c.liquidationPrice,
+      events,
+    };
+  }
+  return { type: 'skip', reason: onlyNoBracket ? 'no_bracket' : 'liquidation', sizePct: pct, events: [] };
 }

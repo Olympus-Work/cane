@@ -1,6 +1,6 @@
 import { Decimal } from 'decimal.js';
 import { describe, expect, it } from 'vitest';
-import type { LeverageBracket } from '../src/risk/leverage.js';
+import { liquidationPrice, stopInsideLiquidation, type LeverageBracket } from '../src/risk/leverage.js';
 import { planEntry, roundDownToStep, roundToTick, sizePct, type EntryPlanInput, type SizingMode } from '../src/sizing/size.js';
 
 const d = (v: number | string) => new Decimal(v);
@@ -200,6 +200,52 @@ describe('AC8 / B9.2 leverage auto-lowering', () => {
   it('no bracket for the notional -> skip', () => {
     const brackets = [{ ...BRACKETS[0]!, notionalCap: d(100) }];
     expect(planEntry(input({ brackets }))).toMatchObject({ type: 'skip', reason: 'no_bracket' });
+  });
+});
+
+describe('B9.2 holds on the final (capped, rounded) size across brackets', () => {
+  // Review repro (PR #3): the free-balance cap moves the notional into a lower bracket
+  // where liquidation sits closer to entry.
+  const TWO: LeverageBracket[] = [
+    { notionalFloor: d(0), notionalCap: d(500_000), maintMarginRatio: d('0.001'), cum: d(0), maxLeverage: 75 },
+    { notionalFloor: d(500_000), notionalCap: d('1e15'), maintMarginRatio: d('0.002'), cum: d(2000), maxLeverage: 75 },
+  ];
+  const repro = { mode: 'A' as const, leverageCeiling: 20, equity: d(250_000), freeBalance: d(24_000), brackets: TWO };
+
+  it('20x capped to 480,000 would break the 1% buffer -> 19x', () => {
+    // 20x: target margin 25,000 > free 24,000 -> notional 480,000 (lower bracket):
+    //      liq = (100 - 5) / 0.999 = 95.095 -> 0.905 from the stop (< 1) -> rejected
+    // 19x: notional 24,000 x 19 = 456,000: liq = (100 - 100/19) / 0.999 = 94.832 -> 1.168 -> OK
+    const plan = order(repro);
+    expect(plan.leverage).toBe(19);
+    expect(plan.notional.toString()).toBe('456000');
+    expect(plan.targetNotional.toString()).toBe('475000');
+    expect(plan.events).toEqual(['leverage_lowered', 'sizing_reduced']);
+    expect(stopInsideLiquidation('long', d(100), plan.stop, plan.liquidationPrice!)).toBe(true);
+  });
+});
+
+describe('liquidationPrice matches the Binance isolated one-way formula', () => {
+  // LP = (WB + cum - side*Q*EP) / (Q*MMR - side*Q), WB = isolated margin = Q*EP/lev, side = +1 long / -1 short.
+  // (Maintenance margin = notional x MMR - cum, so cum lowers the requirement.)
+  const bracket = { maintMarginRatio: d('0.004'), cum: d(4000) };
+  const q = d(20_000);
+  const ep = d(100);
+  const binance = (side: 1 | -1) => {
+    const wb = q.times(ep).div(5);
+    return wb.plus(bracket.cum).minus(q.times(ep).times(side)).div(q.times(bracket.maintMarginRatio).minus(q.times(side)));
+  };
+
+  it('long with a non-zero maintenance amount', () => {
+    const lp = liquidationPrice({ side: 'long', entryPrice: ep, quantity: q, leverage: 5, bracket });
+    expect(lp.toString()).toBe(binance(1).toString());
+    expect(lp.toFixed(4)).toBe('80.1205');
+  });
+
+  it('short with a non-zero maintenance amount', () => {
+    const lp = liquidationPrice({ side: 'short', entryPrice: ep, quantity: q, leverage: 5, bracket });
+    expect(lp.toString()).toBe(binance(-1).toString());
+    expect(lp.toFixed(4)).toBe('119.7211');
   });
 });
 
