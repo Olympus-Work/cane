@@ -320,6 +320,53 @@ Each step ends with its proof passing in CI before the next starts. Steps
   - User data: spot via the WebSocket API `userDataStream.subscribe.signature`
     (HMAC works on Demo); USDⓈ-M via listenKey + 30-min keepalive. Every
     (re)connect calls `onConnected` so the engine reconciles missed events.
+- **Engine and reconciler choices in S06 (Claude Code, 2026-09-29; to
+  confirm with the owner in the PR):**
+  - **Client order ID candle = the evaluated 4H candle** (spec Interfaces
+    left "candle" open). Keying orders to the *signal* candle collides: a 4H
+    late entry and a later 1D event can share an open time, and query-before-
+    send would then treat the old order as the new one (e.g. a trail move
+    cancelling the only stop). Each strategy is evaluated once per 4H candle,
+    so each action is used at most once per ID time. New action `bail` = the
+    E6 close of an entry whose fill already crossed its stop. Reconciler
+    repairs use the time of the repair.
+  - Evaluation: a 1-minute timer; each strategy is evaluated once per closed
+    4H candle, 30 s after the close, with `nowMs` = the 4H close — the
+    replay's evaluation time, so AC3 compares like with like. The evaluation
+    is recorded in `signals` (4H key); a 1D entry/exit also claims its 1D key
+    (B7.4, same as the replay). A data gap (E4) is not recorded and is
+    retried on the next tick. Candles come from the replay's `KlineCache`
+    (live public klines; Demo klines are identical). The `candles` table stays
+    unused for now. Plain `setInterval` instead of `@nestjs/schedule`.
+  - Crash safety (AC6): every order row is written before its send; the
+    entry plan is written into the signal's decision JSON before the send.
+    Only a Binance rejection marks an entry `REJECTED`; any other failure
+    leaves it `PENDING`. On start-up the reconciler asks Binance: filled →
+    record the position and place its stop; never received → `NOT_SENT` +
+    `order_rejected` (no resend: the signal may be stale). Unbooked exits are
+    finished the same way.
+  - Reconciler (B12): unknown position → mismatch only, no orders (B11.3);
+    quantity differs → mismatch, stop kept for what is held; missing stop →
+    mismatch + stop re-placed; position gone on Binance → booked as stop /
+    take-profit (from the protective order), liquidated (E9, force-order
+    history) or manual (mismatch). A mismatch is notified once per distinct
+    reason. Spot cannot see manual holdings (balances are not positions), so
+    it checks only that the recorded quantity is still held.
+  - "Is the stop open" uses Binance's open-order lists: the single algo-order
+    query reports NEW for ~2 s after a cancel (Demo check).
+  - PnL (trades): USDⓈ-M gross = Binance realised PnL of the fills, fees =
+    USDT commissions, net = gross − fees + funding (income history). Spot
+    gross = (avg sell − avg buy) × sold, fees include the base-asset entry
+    fee at its fill price; fees paid in a third asset (BNB) are not valued.
+    New columns on `positions` keep the entry details (size %, 1W trend, Jev
+    call, fallback, leverage ceiling) for the trade record (B16.6).
+  - Ports until later steps: Jev = "not configured" (B8.4 fallback, so no
+    flips) until S07; notifications are logged until S09. `EngineModule` is
+    not imported by `AppModule` until S08 provides the key from Settings;
+    with `TRADING_ENABLED` not `true` nothing starts, not even the reconciler.
+  - AC6 proof: the "kill" is simulated in-process (the entry call dies right
+    after Binance accepted the order) and a fresh set of objects over the
+    same DB plays the restarted process; Demo + Postgres, local only.
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.

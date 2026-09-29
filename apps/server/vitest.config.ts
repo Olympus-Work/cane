@@ -9,5 +9,6 @@ export default defineConfig({
       '@cane/core': fileURLToPath(new URL('../../packages/core/src/index.ts', import.meta.url)),
     },
   },
-  test: { include: ['test/**/*.test.ts'], exclude: ['**/node_modules/**', 'test/integration/**'] },
+  // DB test files share one Postgres (roles are cluster-wide), so files run one at a time.
+  test: { include: ['test/**/*.test.ts'], exclude: ['**/node_modules/**', 'test/integration/**'], fileParallelism: false },
 });
