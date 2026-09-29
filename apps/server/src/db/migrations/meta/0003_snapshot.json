@@ -1,0 +1,1672 @@
+{
+  "id": "a51f19ad-78d8-4b39-aedd-88094c48519d",
+  "prevId": "48f37bb1-564e-45d8-a0d8-5e3784f3406f",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.audit_log": {
+      "name": "audit_log",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "at": {
+          "name": "at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actor": {
+          "name": "actor",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "action": {
+          "name": "action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "target": {
+          "name": "target",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "before": {
+          "name": "before",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "after": {
+          "name": "after",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ip": {
+          "name": "ip",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "audit_log_at_idx": {
+          "name": "audit_log_at_idx",
+          "columns": [
+            {
+              "expression": "at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.candles": {
+      "name": "candles",
+      "schema": "",
+      "columns": {
+        "market": {
+          "name": "market",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pair": {
+          "name": "pair",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "timeframe": {
+          "name": "timeframe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "open_time": {
+          "name": "open_time",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "close_time": {
+          "name": "close_time",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "open": {
+          "name": "open",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "high": {
+          "name": "high",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "low": {
+          "name": "low",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "close": {
+          "name": "close",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "volume": {
+          "name": "volume",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "candles_pk": {
+          "name": "candles_pk",
+          "columns": [
+            "market",
+            "pair",
+            "timeframe",
+            "open_time"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "candles_market": {
+          "name": "candles_market",
+          "value": "\"candles\".\"market\" in ('spot', 'futures')"
+        },
+        "candles_timeframe": {
+          "name": "candles_timeframe",
+          "value": "\"candles\".\"timeframe\" in ('4h', '1d', '1w')"
+        },
+        "candles_times": {
+          "name": "candles_times",
+          "value": "\"candles\".\"close_time\" > \"candles\".\"open_time\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.jev_calls": {
+      "name": "jev_calls",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "strategy_id": {
+          "name": "strategy_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signal_id": {
+          "name": "signal_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "side": {
+          "name": "side",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "timeframe": {
+          "name": "timeframe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "model": {
+          "name": "model",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request": {
+          "name": "request",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "response": {
+          "name": "response",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error": {
+          "name": "error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "latency_ms": {
+          "name": "latency_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fallback": {
+          "name": "fallback",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "jev_calls_strategy_id_strategies_id_fk": {
+          "name": "jev_calls_strategy_id_strategies_id_fk",
+          "tableFrom": "jev_calls",
+          "tableTo": "strategies",
+          "columnsFrom": [
+            "strategy_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "jev_calls_signal_id_signals_id_fk": {
+          "name": "jev_calls_signal_id_signals_id_fk",
+          "tableFrom": "jev_calls",
+          "tableTo": "signals",
+          "columnsFrom": [
+            "signal_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "jev_calls_side": {
+          "name": "jev_calls_side",
+          "value": "\"jev_calls\".\"side\" in ('long', 'short')"
+        },
+        "jev_calls_timeframe": {
+          "name": "jev_calls_timeframe",
+          "value": "\"jev_calls\".\"timeframe\" in ('4h', '1d', '1w')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.notifications": {
+      "name": "notifications",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "event": {
+          "name": "event",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "channel": {
+          "name": "channel",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "attempts": {
+          "name": "attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "last_error": {
+          "name": "last_error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "sent_at": {
+          "name": "sent_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "notifications_pending_idx": {
+          "name": "notifications_pending_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"notifications\".\"status\" = 'pending'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "notifications_channel": {
+          "name": "notifications_channel",
+          "value": "\"notifications\".\"channel\" in ('line', 'telegram')"
+        },
+        "notifications_status": {
+          "name": "notifications_status",
+          "value": "\"notifications\".\"status\" in ('pending', 'sent', 'failed')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.orders": {
+      "name": "orders",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "strategy_id": {
+          "name": "strategy_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signal_id": {
+          "name": "signal_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "position_id": {
+          "name": "position_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "client_order_id": {
+          "name": "client_order_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "exchange_order_id": {
+          "name": "exchange_order_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "market": {
+          "name": "market",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pair": {
+          "name": "pair",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "side": {
+          "name": "side",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "purpose": {
+          "name": "purpose",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "qty": {
+          "name": "qty",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price": {
+          "name": "price",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stop_price": {
+          "name": "stop_price",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "filled_qty": {
+          "name": "filled_qty",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "avg_fill_price": {
+          "name": "avg_fill_price",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reduce_only": {
+          "name": "reduce_only",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "orders_client_order_id_uq": {
+          "name": "orders_client_order_id_uq",
+          "columns": [
+            {
+              "expression": "client_order_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "orders_strategy_idx": {
+          "name": "orders_strategy_idx",
+          "columns": [
+            {
+              "expression": "strategy_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "orders_strategy_id_strategies_id_fk": {
+          "name": "orders_strategy_id_strategies_id_fk",
+          "tableFrom": "orders",
+          "tableTo": "strategies",
+          "columnsFrom": [
+            "strategy_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "orders_signal_id_signals_id_fk": {
+          "name": "orders_signal_id_signals_id_fk",
+          "tableFrom": "orders",
+          "tableTo": "signals",
+          "columnsFrom": [
+            "signal_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "orders_position_id_positions_id_fk": {
+          "name": "orders_position_id_positions_id_fk",
+          "tableFrom": "orders",
+          "tableTo": "positions",
+          "columnsFrom": [
+            "position_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "orders_client_order_id_format": {
+          "name": "orders_client_order_id_format",
+          "value": "\"orders\".\"client_order_id\" ~ '^[.A-Z:/a-z0-9_-]{1,36}$'"
+        },
+        "orders_market": {
+          "name": "orders_market",
+          "value": "\"orders\".\"market\" in ('spot', 'futures')"
+        },
+        "orders_side": {
+          "name": "orders_side",
+          "value": "\"orders\".\"side\" in ('BUY', 'SELL')"
+        },
+        "orders_purpose": {
+          "name": "orders_purpose",
+          "value": "\"orders\".\"purpose\" in ('entry', 'stop', 'take_profit', 'exit', 'kill_switch', 'reconcile')"
+        },
+        "orders_qty_positive": {
+          "name": "orders_qty_positive",
+          "value": "\"orders\".\"qty\" > 0"
+        },
+        "orders_filled_qty": {
+          "name": "orders_filled_qty",
+          "value": "\"orders\".\"filled_qty\" >= 0 and \"orders\".\"filled_qty\" <= \"orders\".\"qty\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.owner": {
+      "name": "owner",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "default": 1
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "totp_secret_enc": {
+          "name": "totp_secret_enc",
+          "type": "bytea",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "totp_last_step": {
+          "name": "totp_last_step",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "failed_logins": {
+          "name": "failed_logins",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "locked_until": {
+          "name": "locked_until",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "owner_single_row": {
+          "name": "owner_single_row",
+          "value": "\"owner\".\"id\" = 1"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.positions": {
+      "name": "positions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "strategy_id": {
+          "name": "strategy_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "market": {
+          "name": "market",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pair": {
+          "name": "pair",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "side": {
+          "name": "side",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'open'"
+        },
+        "entry_kind": {
+          "name": "entry_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signal_timeframe": {
+          "name": "signal_timeframe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signal_candle_open_time": {
+          "name": "signal_candle_open_time",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "qty": {
+          "name": "qty",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entry_price": {
+          "name": "entry_price",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stop_price": {
+          "name": "stop_price",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "take_profit_price": {
+          "name": "take_profit_price",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "leverage": {
+          "name": "leverage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "leverage_ceiling": {
+          "name": "leverage_ceiling",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "size_pct": {
+          "name": "size_pct",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trend_1w": {
+          "name": "trend_1w",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "jev_call_id": {
+          "name": "jev_call_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "jev_fallback": {
+          "name": "jev_fallback",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "opened_at": {
+          "name": "opened_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "closed_at": {
+          "name": "closed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "positions_one_open_per_strategy": {
+          "name": "positions_one_open_per_strategy",
+          "columns": [
+            {
+              "expression": "strategy_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"positions\".\"status\" = 'open'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "positions_strategy_id_strategies_id_fk": {
+          "name": "positions_strategy_id_strategies_id_fk",
+          "tableFrom": "positions",
+          "tableTo": "strategies",
+          "columnsFrom": [
+            "strategy_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "positions_jev_call_id_jev_calls_id_fk": {
+          "name": "positions_jev_call_id_jev_calls_id_fk",
+          "tableFrom": "positions",
+          "tableTo": "jev_calls",
+          "columnsFrom": [
+            "jev_call_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "positions_market": {
+          "name": "positions_market",
+          "value": "\"positions\".\"market\" in ('spot', 'futures')"
+        },
+        "positions_side": {
+          "name": "positions_side",
+          "value": "\"positions\".\"side\" in ('long', 'short')"
+        },
+        "positions_status": {
+          "name": "positions_status",
+          "value": "\"positions\".\"status\" in ('open', 'closed')"
+        },
+        "positions_entry_kind": {
+          "name": "positions_entry_kind",
+          "value": "\"positions\".\"entry_kind\" in ('primary', 'late', 'flip')"
+        },
+        "positions_signal_timeframe": {
+          "name": "positions_signal_timeframe",
+          "value": "\"positions\".\"signal_timeframe\" in ('4h', '1d', '1w')"
+        },
+        "positions_spot_long_only": {
+          "name": "positions_spot_long_only",
+          "value": "\"positions\".\"market\" = 'futures' or \"positions\".\"side\" = 'long'"
+        },
+        "positions_qty_positive": {
+          "name": "positions_qty_positive",
+          "value": "\"positions\".\"qty\" > 0"
+        },
+        "positions_closed_at": {
+          "name": "positions_closed_at",
+          "value": "(\"positions\".\"status\" = 'closed') = (\"positions\".\"closed_at\" is not null)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.recovery_codes": {
+      "name": "recovery_codes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code_hash": {
+          "name": "code_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "used_at": {
+          "name": "used_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "recovery_codes_owner_id_owner_id_fk": {
+          "name": "recovery_codes_owner_id_owner_id_fk",
+          "tableFrom": "recovery_codes",
+          "tableTo": "owner",
+          "columnsFrom": [
+            "owner_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sessions": {
+      "name": "sessions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_hash": {
+          "name": "token_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "device": {
+          "name": "device",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ip": {
+          "name": "ip",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "last_seen_at": {
+          "name": "last_seen_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "sessions_token_hash_uq": {
+          "name": "sessions_token_hash_uq",
+          "columns": [
+            {
+              "expression": "token_hash",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "sessions_owner_id_owner_id_fk": {
+          "name": "sessions_owner_id_owner_id_fk",
+          "tableFrom": "sessions",
+          "tableTo": "owner",
+          "columnsFrom": [
+            "owner_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.settings": {
+      "name": "settings",
+      "schema": "",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "value_enc": {
+          "name": "value_enc",
+          "type": "bytea",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hint": {
+          "name": "hint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "settings_one_value": {
+          "name": "settings_one_value",
+          "value": "(\"settings\".\"value\" is null) <> (\"settings\".\"value_enc\" is null)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.signals": {
+      "name": "signals",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "strategy_id": {
+          "name": "strategy_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "timeframe": {
+          "name": "timeframe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "candle_open_time": {
+          "name": "candle_open_time",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "decision": {
+          "name": "decision",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "signals_idempotency_uq": {
+          "name": "signals_idempotency_uq",
+          "columns": [
+            {
+              "expression": "strategy_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "timeframe",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "candle_open_time",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "signals_strategy_id_strategies_id_fk": {
+          "name": "signals_strategy_id_strategies_id_fk",
+          "tableFrom": "signals",
+          "tableTo": "strategies",
+          "columnsFrom": [
+            "strategy_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "signals_timeframe": {
+          "name": "signals_timeframe",
+          "value": "\"signals\".\"timeframe\" in ('4h', '1d', '1w')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.strategies": {
+      "name": "strategies",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "pair": {
+          "name": "pair",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "market": {
+          "name": "market",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'disabled'"
+        },
+        "attention_reason": {
+          "name": "attention_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "leverage": {
+          "name": "leverage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sizing_mode": {
+          "name": "sizing_mode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'B'"
+        },
+        "margin_mode": {
+          "name": "margin_mode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "base_pct": {
+          "name": "base_pct",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'10'"
+        },
+        "confidence_threshold": {
+          "name": "confidence_threshold",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0.70'"
+        },
+        "risk_pct": {
+          "name": "risk_pct",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "strategies_one_active_per_pair": {
+          "name": "strategies_one_active_per_pair",
+          "columns": [
+            {
+              "expression": "pair",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"strategies\".\"status\" in ('enabled', 'needs_attention')",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "strategies_id_format": {
+          "name": "strategies_id_format",
+          "value": "\"strategies\".\"id\" ~ '^S-[0-9]{2,}$'"
+        },
+        "strategies_pair_usdt": {
+          "name": "strategies_pair_usdt",
+          "value": "\"strategies\".\"pair\" ~ '^[A-Z0-9]+USDT$'"
+        },
+        "strategies_market": {
+          "name": "strategies_market",
+          "value": "\"strategies\".\"market\" in ('spot', 'futures')"
+        },
+        "strategies_status": {
+          "name": "strategies_status",
+          "value": "\"strategies\".\"status\" in ('disabled', 'enabled', 'needs_attention', 'closed')"
+        },
+        "strategies_sizing_mode": {
+          "name": "strategies_sizing_mode",
+          "value": "\"strategies\".\"sizing_mode\" in ('A', 'B', 'C')"
+        },
+        "strategies_margin_mode": {
+          "name": "strategies_margin_mode",
+          "value": "\"strategies\".\"margin_mode\" in ('isolated', 'cross')"
+        },
+        "strategies_futures_fields": {
+          "name": "strategies_futures_fields",
+          "value": "(\"strategies\".\"market\" = 'futures' and \"strategies\".\"leverage\" between 1 and 20 and \"strategies\".\"margin_mode\" is not null)\n        or (\"strategies\".\"market\" = 'spot' and \"strategies\".\"leverage\" is null and \"strategies\".\"margin_mode\" is null and \"strategies\".\"sizing_mode\" = 'B')"
+        },
+        "strategies_base_pct": {
+          "name": "strategies_base_pct",
+          "value": "\"strategies\".\"base_pct\" between 5 and 20"
+        },
+        "strategies_confidence": {
+          "name": "strategies_confidence",
+          "value": "\"strategies\".\"confidence_threshold\" between 0 and 1"
+        },
+        "strategies_risk_pct": {
+          "name": "strategies_risk_pct",
+          "value": "(\"strategies\".\"sizing_mode\" = 'C') = (\"strategies\".\"risk_pct\" is not null) and (\"strategies\".\"risk_pct\" is null or \"strategies\".\"risk_pct\" > 0)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.trades": {
+      "name": "trades",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "position_id": {
+          "name": "position_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "strategy_id": {
+          "name": "strategy_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "jev_call_id": {
+          "name": "jev_call_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "market": {
+          "name": "market",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pair": {
+          "name": "pair",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "side": {
+          "name": "side",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entry_kind": {
+          "name": "entry_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signal_timeframe": {
+          "name": "signal_timeframe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trend_1w": {
+          "name": "trend_1w",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "qty": {
+          "name": "qty",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entry_price": {
+          "name": "entry_price",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "exit_price": {
+          "name": "exit_price",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "exit_reason": {
+          "name": "exit_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sizing_mode": {
+          "name": "sizing_mode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "size_pct": {
+          "name": "size_pct",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "leverage_configured": {
+          "name": "leverage_configured",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "leverage_used": {
+          "name": "leverage_used",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "jev_fallback": {
+          "name": "jev_fallback",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "gross_pnl": {
+          "name": "gross_pnl",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fees": {
+          "name": "fees",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "funding": {
+          "name": "funding",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "net_pnl": {
+          "name": "net_pnl",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "opened_at": {
+          "name": "opened_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "closed_at": {
+          "name": "closed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "trades_position_uq": {
+          "name": "trades_position_uq",
+          "columns": [
+            {
+              "expression": "position_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "trades_closed_at_idx": {
+          "name": "trades_closed_at_idx",
+          "columns": [
+            {
+              "expression": "closed_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "trades_position_id_positions_id_fk": {
+          "name": "trades_position_id_positions_id_fk",
+          "tableFrom": "trades",
+          "tableTo": "positions",
+          "columnsFrom": [
+            "position_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "trades_strategy_id_strategies_id_fk": {
+          "name": "trades_strategy_id_strategies_id_fk",
+          "tableFrom": "trades",
+          "tableTo": "strategies",
+          "columnsFrom": [
+            "strategy_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "trades_jev_call_id_jev_calls_id_fk": {
+          "name": "trades_jev_call_id_jev_calls_id_fk",
+          "tableFrom": "trades",
+          "tableTo": "jev_calls",
+          "columnsFrom": [
+            "jev_call_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "trades_market": {
+          "name": "trades_market",
+          "value": "\"trades\".\"market\" in ('spot', 'futures')"
+        },
+        "trades_side": {
+          "name": "trades_side",
+          "value": "\"trades\".\"side\" in ('long', 'short')"
+        },
+        "trades_entry_kind": {
+          "name": "trades_entry_kind",
+          "value": "\"trades\".\"entry_kind\" in ('primary', 'late', 'flip')"
+        },
+        "trades_signal_timeframe": {
+          "name": "trades_signal_timeframe",
+          "value": "\"trades\".\"signal_timeframe\" in ('4h', '1d', '1w')"
+        },
+        "trades_exit_reason": {
+          "name": "trades_exit_reason",
+          "value": "\"trades\".\"exit_reason\" in ('first_red', 'first_green', 'stop', 'take_profit', 'kill_switch', 'manual', 'liquidated')"
+        },
+        "trades_sizing_mode": {
+          "name": "trades_sizing_mode",
+          "value": "\"trades\".\"sizing_mode\" in ('A', 'B', 'C')"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

@@ -76,6 +76,8 @@ For local development copy `apps/server/.env.example` to `apps/server/.env` (git
 | BINANCE_ENV | testnet | `testnet` (Binance Demo Trading) or `live`; selects Binance endpoints. |
 | CANE_MASTER_KEY | (none) | Key used to encrypt secrets stored in the database. Set only in the hosting environment. Never commit it. |
 | TYPESAFE_API_KEY | (none) | Jev API key. Hosting environment only. |
+| JEV_MAX_RETRIES | 0 | Extra Jev attempts on network error, 429 or 5xx, inside the one 3 s budget. |
+| JEV_MAX_CONCURRENCY | 0 | Cap on in-flight Jev calls; 0 = no cap. |
 | PORT | 3000 | HTTP port. |
 
 Binance API keys and LINE/Telegram tokens are entered in the web UI Settings and stored encrypted; they are never put in environment files or the repository.

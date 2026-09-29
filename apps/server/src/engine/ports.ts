@@ -15,7 +15,8 @@ export type NotifyEvent =
   | 'reconcile_mismatch'
   | 'flip_to_short'
   | 'flip_to_long'
-  | 'system_started';
+  | 'system_started'
+  | 'login_failed_lockout';
 
 /**
  * Notification sink (B13). `details` holds only trade data (pair, side,

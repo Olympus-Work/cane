@@ -62,6 +62,8 @@ export const owner = pgTable(
     email: text('email').notNull(),
     passwordHash: text('password_hash').notNull(),
     totpSecretEnc: bytea('totp_secret_enc'),
+    /** Highest TOTP time step accepted so far; a code at or below it is a replay (RFC 6238 §5.2). */
+    totpLastStep: bigint('totp_last_step', { mode: 'number' }),
     failedLogins: integer('failed_logins').notNull().default(0),
     lockedUntil: timestamp('locked_until', { withTimezone: true }),
     createdAt: createdAt(),
