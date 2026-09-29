@@ -250,6 +250,8 @@ export const orders = pgTable(
     market: text('market', { enum: MARKETS }).notNull(),
     pair: text('pair').notNull(),
     side: text('side', { enum: ORDER_SIDES }).notNull(),
+    // `type` and `status` are Binance values stored as reported (spot, USDⓈ-M and
+    // Algo orders use different sets that Binance extends), so no CHECK.
     type: text('type').notNull(),
     purpose: text('purpose', { enum: ORDER_PURPOSES }).notNull(),
     status: text('status').notNull(),
