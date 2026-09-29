@@ -282,8 +282,9 @@ Each step ends with its proof passing in CI before the next starts. Steps
     on Demo, so AC12's "one testnet check" cannot run on Demo; S08 proves
     B15.2 with the mocked permission API only and one manual check with the
     live key at go-live (S12).
-- **Binance adapter choices in S05 (Claude Code, 2026-09-29; to confirm
-  with the owner in the PR):**
+- **Binance adapter choices in S05 (Claude Code, 2026-09-29; confirmed by
+  the owner 2026-09-29, incl. mark-price stops, the AC12 proof change and
+  local-only integration tests):**
   - Futures stops and take-profits trigger on **mark price**
     (`workingType=MARK_PRICE`): liquidation also uses mark price, so the
     B9.2 1% buffer between stop and liquidation holds. Spot stops trigger on
