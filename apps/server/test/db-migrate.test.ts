@@ -73,12 +73,12 @@ describe.skipIf(!url)('db migrations (fresh database)', () => {
       'strategies',
       'trades',
     ]);
-    expect(await count('select count(*)::int as n from drizzle.__drizzle_migrations')).toBe(2);
+    expect(await count('select count(*)::int as n from drizzle.__drizzle_migrations')).toBe(3);
   });
 
   it('up again is a no-op', async () => {
     await migrateUp(pool);
-    expect(await count('select count(*)::int as n from drizzle.__drizzle_migrations')).toBe(2);
+    expect(await count('select count(*)::int as n from drizzle.__drizzle_migrations')).toBe(3);
   });
 
   it('signals are idempotent per strategy, timeframe and candle', async () => {
