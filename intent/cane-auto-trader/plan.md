@@ -10,6 +10,13 @@ futures; DB backup and custom domain skipped (owner); handed to Claude Code.
 Rev 3.1 (2026-09-29, Claude Code, owner answers): repo =
 `github.com/Olympus-Work/cane` (already created; local root folder `cane`);
 indicator seeding pinned (see "Indicator seeding" below).
+**Approved by Zong (owner), 2026-09-29: plan rev 3 and the S04 DB choices.**
+Rev 3.2 (2026-09-29, owner): "testnet" in this plan means **Binance Demo
+Trading** (demo.binance.com; spot REST `demo-api.binance.com`, USDⓈ-M REST
+`demo-fapi.binance.com`). Binance now documents it as the USDⓈ-M testnet; for
+spot it has live-identical filters and limits, unlike testnet.binance.vision.
+Demo keys live only in the git-ignored `apps/server/.env` and are read by
+integration tests only.
 
 Money-affecting: yes (real capital, full auto). Repo holds only an initial
 README commit; every path below is new.
@@ -233,8 +240,8 @@ Each step ends with its proof passing in CI before the next starts. Steps
     signal index and cannot enforce B1.1 itself; the engine must pass the
     index from `lastClosedIndex(candles1d, nowMs)` (the signal candle of
     the decision), exactly as `decide()` does.
-- **DB choices in S04 (Claude Code, 2026-09-29; to confirm with the owner
-  in the PR):**
+- **DB choices in S04 (Claude Code, 2026-09-29; confirmed by the owner
+  2026-09-29):**
   - Schema in `apps/server/src/db/schema.ts`; drizzle-kit generates the
     up SQL, drizzle's migrator applies it. Drizzle has no down migrations,
     so each migration has a hand-written `migrations/down/<tag>.sql`, run
@@ -339,9 +346,8 @@ Playwright smoke + owner screenshot review for the UI.
 1. ~~GitHub repo name and account~~ — resolved 2026-09-29: repo
    `github.com/Olympus-Work/cane`; owner allowed pushing branches and
    opening PRs (owner merges).
-2. Formal approval of this plan — owner deferred and handed work to
-   Claude Code on 2026-09-28. Ask the owner to approve (Status line) before
-   any step that touches the exchange (S05+).
+2. ~~Formal approval of this plan~~ — resolved 2026-09-29: owner approved
+   plan rev 3 (Status line) before S05.
 
 Resolved 2026-09-28 (owner): TypeScript + NestJS; Jev docs =
 docs.typesafe.ai, key ready (Railway env only), limits ~1,200 RPM /

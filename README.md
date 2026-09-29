@@ -6,7 +6,7 @@ Cane is a personal, single-user auto-trader for Binance Spot (long only) and USD
 
 > **Not financial advice. Use at your own risk.**
 >
-> This software places real orders with real money, fully automatically. It can lose all capital in the account. There is no warranty (see LICENSE). The authors are not responsible for losses. Test on Binance testnet first. You are responsible for whether you may legally use Binance in your country.
+> This software places real orders with real money, fully automatically. It can lose all capital in the account. There is no warranty (see LICENSE). The authors are not responsible for losses. Test on Binance Demo Trading (demo.binance.com) first. You are responsible for whether you may legally use Binance in your country.
 
 ## Status
 
@@ -64,10 +64,12 @@ Roles: `cane_app` (the server; audit_log is SELECT + INSERT only) and `cane_read
 
 ## Configuration (environment variables)
 
+For local development copy `apps/server/.env.example` to `apps/server/.env` (git-ignored). Its Binance Demo Trading keys are read by integration tests only.
+
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | TRADING_ENABLED | false | Master switch. When not `true`, no order-placing call is made, in addition to per-strategy enable. |
-| BINANCE_ENV | testnet | `testnet` or `live`; selects Binance endpoints. |
+| BINANCE_ENV | testnet | `testnet` (Binance Demo Trading) or `live`; selects Binance endpoints. |
 | CANE_MASTER_KEY | (none) | Key used to encrypt secrets stored in the database. Set only in the hosting environment. Never commit it. |
 | TYPESAFE_API_KEY | (none) | Jev API key. Hosting environment only. |
 | PORT | 3000 | HTTP port. |
