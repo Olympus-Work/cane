@@ -21,7 +21,17 @@ import { LogNotifier, UnavailableJev, type JevClassifier } from './ports.js';
       // No key means B8.4 fallback (base size), not a crash. S08 moves the timeout into Settings.
       useFactory: (): JevClassifier => {
         const apiKey = process.env.TYPESAFE_API_KEY;
-        return apiKey ? new JevClient({ apiKey, fetch: (url, init) => fetch(url, init), now: Date.now }) : new UnavailableJev();
+        if (!apiKey) return new UnavailableJev();
+        // Owner 2026-09-30: retry and concurrency cap are env config, both off by default.
+        const maxRetries = Number(process.env.JEV_MAX_RETRIES ?? 0);
+        const maxConcurrent = Number(process.env.JEV_MAX_CONCURRENCY ?? 0);
+        return new JevClient({
+          apiKey,
+          fetch: (url, init) => fetch(url, init),
+          now: Date.now,
+          maxRetries: Number.isFinite(maxRetries) ? maxRetries : 0,
+          maxConcurrent: Number.isFinite(maxConcurrent) ? maxConcurrent : 0,
+        });
       },
     },
   ],

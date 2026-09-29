@@ -19,6 +19,10 @@ export interface JevClientDeps {
   now: () => number;
   timeoutMs?: number;
   model?: string;
+  /** Extra attempts on network error, 429 or 5xx, inside the one timeout budget (default 0). */
+  maxRetries?: number;
+  /** Cap on in-flight calls; 0 or unset = unlimited. */
+  maxConcurrent?: number;
 }
 
 /** The three Noul questions (B8). Wording is behaviour: change it only with a plan.md update. */
@@ -84,13 +88,42 @@ function parse(body: unknown, side: Side): Parsed | null {
 export class JevClient implements JevClassifier {
   private readonly timeoutMs: number;
   private readonly model: string;
+  private readonly maxRetries: number;
+  private readonly maxConcurrent: number;
+  private inFlight = 0;
+  private readonly waiting: Array<() => void> = [];
 
   constructor(private readonly d: JevClientDeps) {
     this.timeoutMs = d.timeoutMs ?? JEV_DEFAULT_TIMEOUT_MS;
     this.model = d.model ?? JEV_MODEL;
+    this.maxRetries = Math.max(0, Math.floor(d.maxRetries ?? 0));
+    this.maxConcurrent = Math.max(0, Math.floor(d.maxConcurrent ?? 0));
+  }
+
+  /** A waiting call does not start its timeout budget until it has a slot. */
+  private async acquire(): Promise<void> {
+    if (this.maxConcurrent === 0) return;
+    if (this.inFlight >= this.maxConcurrent) await new Promise<void>((resolve) => this.waiting.push(resolve));
+    else this.inFlight++;
+  }
+
+  private release(): void {
+    if (this.maxConcurrent === 0) return;
+    const next = this.waiting.shift();
+    if (next) next(); // the slot passes straight to the next waiter
+    else this.inFlight--;
   }
 
   async classify(input: { side: Side; timeframe: '1d'; features: ConfluenceFeatures }): Promise<JevCall> {
+    await this.acquire();
+    try {
+      return await this.run(input);
+    } finally {
+      this.release();
+    }
+  }
+
+  private async run(input: { side: Side; timeframe: '1d'; features: ConfluenceFeatures }): Promise<JevCall> {
     const questions: Record<string, unknown> = {};
     for (const name of FACTOR_NAMES[input.side]) questions[name] = { type: 'noul', instructions: QUESTIONS[name] };
     const request = { model: this.model, state: serialiseState(input.features), questions };
@@ -131,10 +164,23 @@ export class JevClient implements JevClassifier {
     });
 
     try {
-      const pending = call();
-      pending.catch(() => undefined); // a call that loses the race may still reject later
-      const out = await Promise.race([pending, timedOut]);
-      if (out === 'timeout') return fail('timeout', `no answer within ${this.timeoutMs} ms`);
+      let out: { status: number; body: unknown } | 'timeout' | undefined;
+      let netError: unknown;
+      for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+        netError = undefined;
+        const pending = call();
+        pending.catch(() => undefined); // a call that loses the race may still reject later
+        try {
+          out = await Promise.race([pending, timedOut]);
+        } catch (e) {
+          netError = e;
+          continue;
+        }
+        if (out === 'timeout' || (out.status >= 200 && out.status < 300)) break;
+        if (out.status !== 429 && out.status < 500) break; // other 4xx will not change on a retry
+      }
+      if (netError !== undefined) throw netError;
+      if (out === 'timeout' || out === undefined) return fail('timeout', `no answer within ${this.timeoutMs} ms`);
       if (out.status < 200 || out.status >= 300) return fail('error', `HTTP ${out.status}`, out.body);
       const parsed = parse(out.body, input.side);
       if (!parsed) return fail('invalid_response', 'unexpected response shape', out.body);
