@@ -67,6 +67,19 @@ export function parseKline(row: unknown): Candle {
       throw new Error(`Invalid kline row: ${name} must be a decimal string, got ${JSON.stringify(value)}`);
     }
   }
+  for (const [name, value] of [
+    ['open', open],
+    ['high', high],
+    ['low', low],
+    ['close', close],
+  ] as const) {
+    if (!new Decimal(value).gt(0)) {
+      throw new Error(`Invalid kline row: ${name} must be > 0, got ${JSON.stringify(value)}`);
+    }
+  }
+  if (!new Decimal(volume).gte(0)) {
+    throw new Error(`Invalid kline row: volume must be >= 0, got ${JSON.stringify(volume)}`);
+  }
   return {
     openTime,
     closeTime,

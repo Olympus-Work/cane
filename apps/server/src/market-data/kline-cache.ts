@@ -85,7 +85,7 @@ export class KlineCache {
       }
     }
 
-    const start = cached.length > 0 ? Math.max(...cached.map((c) => c.openTime)) + 1 : 0;
+    const start = cached.reduce((max, c) => (c.openTime > max ? c.openTime : max), -1) + 1;
     const fetched = start <= nowMs ? await this.client.fetchRange(market, symbol, interval, start, nowMs) : [];
 
     const byOpenTime = new Map<number, Candle>();

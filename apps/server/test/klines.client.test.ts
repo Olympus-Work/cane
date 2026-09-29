@@ -46,6 +46,29 @@ describe('parseKline', () => {
   it('throws on a non-array row', () => {
     expect(() => parseKline(['a'])).toThrow();
   });
+
+  it('throws when close is 0', () => {
+    expect(() => parseKline([1000, '1', '2', '1', '0', '10', 1999])).toThrow(
+      /close must be > 0/,
+    );
+  });
+
+  it('throws when open is negative', () => {
+    expect(() => parseKline([1000, '-1', '2', '1', '1', '10', 1999])).toThrow(
+      /open must be > 0/,
+    );
+  });
+
+  it('throws when volume is negative', () => {
+    expect(() => parseKline([1000, '1', '2', '1', '1', '-5', 1999])).toThrow(
+      /volume must be >= 0/,
+    );
+  });
+
+  it('accepts volume of 0', () => {
+    const candle = parseKline([1000, '1', '2', '1', '1', '0', 1999]);
+    expect(candle.volume.toString()).toBe('0');
+  });
 });
 
 describe('KlinesClient.fetchRange', () => {
