@@ -131,7 +131,8 @@ export type EntryPlan =
     };
 
 type Candidate =
-  | { ok: false; why: 'min_notional' | 'no_bracket' | 'bracket_max' | 'liquidation' }
+  | { ok: false; why: 'min_notional'; reduced: boolean }
+  | { ok: false; why: 'no_bracket' | 'bracket_max' | 'liquidation' }
   | {
       ok: true;
       quantity: Decimal;
@@ -178,7 +179,7 @@ export function planEntry(input: EntryPlanInput): EntryPlan {
     const quantity = roundDownToStep(capped.div(entryPrice), filters.stepSize);
     const notional = quantity.times(entryPrice);
     if (quantity.lte(0) || quantity.lt(filters.minQty) || notional.lt(filters.minNotional)) {
-      return { ok: false, why: 'min_notional' };
+      return { ok: false, why: 'min_notional', reduced };
     }
     if (market === 'spot') return { ok: true, quantity, notional, targetNotional: t.notional, reduced, liquidationPrice: null };
     const bracket = bracketFor(input.brackets ?? [], notional);
@@ -196,7 +197,8 @@ export function planEntry(input: EntryPlanInput): EntryPlan {
       // A lower leverage never gives a larger order (mode A shrinks, B/C only
       // need more margin), so a size below the minimums stays below them.
       if (c.why === 'min_notional') {
-        return { type: 'skip', reason: 'min_notional', sizePct: pct, events: ['order_skipped_min_notional'] };
+        const events: EntryPlanEvent[] = c.reduced ? ['sizing_reduced', 'order_skipped_min_notional'] : ['order_skipped_min_notional'];
+        return { type: 'skip', reason: 'min_notional', sizePct: pct, events };
       }
       if (c.why !== 'no_bracket') onlyNoBracket = false;
       continue;
