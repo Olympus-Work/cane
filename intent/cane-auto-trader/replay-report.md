@@ -1,5 +1,5 @@
 # Replay report
-Generated: 2026-09-28T23:44:06.914Z
+Generated: 2026-09-29T01:32:26.079Z
 Decisions the live rules (packages/core `decide`) would have made on Binance closed candles, evaluated at every 4H close. Unsized, no fees, no funding, no Jev confluence (base rules only). Stops and take-profits are simulated on 4H highs/lows (a gap through the level fills at the 4H open; if stop and take-profit are both inside one 4H candle, the stop is assumed first). Entries fill at the signal candle close. This is evidence for spec AC1, not a performance forecast.
 
 ## Summary
@@ -17,10 +17,10 @@ Decisions the live rules (packages/core `decide`) would have made on Binance clo
 
 History loaded:
 - 1w 369 candles from 2019-09-02
-- 1d 2577 candles from 2019-09-08
-- 4h 15463 candles from 2019-09-08
-- Evaluations: 4379
-- Skipped decisions: none:no_signal ×2509, none:trend_filter ×1762
+- 1d 2578 candles from 2019-09-08
+- 4h 15464 candles from 2019-09-08
+- Evaluations: 4380
+- Skipped decisions: none:no_signal ×2510, none:trend_filter ×1762
 
 History gaps: none
 
@@ -70,10 +70,10 @@ History gaps: none
 
 History loaded:
 - 1w 476 candles from 2017-08-14
-- 1d 3329 candles from 2017-08-17
-- 4h 19962 candles from 2017-08-17
-- Evaluations: 4379
-- Skipped decisions: none:no_signal ×3437, none:spot_ignores_short ×78, none:trend_filter ×804
+- 1d 3330 candles from 2017-08-17
+- 4h 19963 candles from 2017-08-17
+- Evaluations: 4380
+- Skipped decisions: none:no_signal ×1512, none:spot_ignores_short ×2004, none:trend_filter ×804
 
 History gaps (exchange side):
 - 4h after 2018-02-08 00:00 UTC: 7 candle(s) missing
@@ -110,10 +110,10 @@ History gaps (exchange side):
 
 History loaded:
 - 1w 357 candles from 2019-11-25
-- 1d 2497 candles from 2019-11-27
-- 4h 14986 candles from 2019-11-27
-- Evaluations: 4379
-- Skipped decisions: none:no_signal ×2067, none:trend_filter ×2242
+- 1d 2498 candles from 2019-11-27
+- 4h 14987 candles from 2019-11-27
+- Evaluations: 4380
+- Skipped decisions: none:no_signal ×2068, none:trend_filter ×2242
 
 History gaps: none
 
@@ -156,10 +156,10 @@ History gaps: none
 
 History loaded:
 - 1w 476 candles from 2017-08-14
-- 1d 3329 candles from 2017-08-17
-- 4h 19962 candles from 2017-08-17
-- Evaluations: 4379
-- Skipped decisions: none:no_signal ×2802, none:spot_ignores_short ×60, none:trend_filter ×1505
+- 1d 3330 candles from 2017-08-17
+- 4h 19963 candles from 2017-08-17
+- Evaluations: 4380
+- Skipped decisions: none:no_signal ×643, none:spot_ignores_short ×2220, none:trend_filter ×1505
 
 History gaps (exchange side):
 - 4h after 2018-02-08 00:00 UTC: 7 candle(s) missing
@@ -187,10 +187,10 @@ History gaps (exchange side):
 
 History loaded:
 - 1w 315 candles from 2020-09-14
-- 1d 2205 candles from 2020-09-14
-- 4h 13234 candles from 2020-09-14
-- Evaluations: 4379
-- Skipped decisions: none:no_signal ×2449, none:trend_filter ×1848
+- 1d 2206 candles from 2020-09-14
+- 4h 13235 candles from 2020-09-14
+- Evaluations: 4380
+- Skipped decisions: none:no_signal ×2450, none:trend_filter ×1848
 
 History gaps: none
 
@@ -234,10 +234,10 @@ History gaps: none
 
 History loaded:
 - 1w 320 candles from 2020-08-10
-- 1d 2239 candles from 2020-08-11
-- 4h 13438 candles from 2020-08-11
-- Evaluations: 4379
-- Skipped decisions: none:no_signal ×3194, none:spot_ignores_short ×72, none:trend_filter ×1086
+- 1d 2240 candles from 2020-08-11
+- 4h 13439 candles from 2020-08-11
+- Evaluations: 4380
+- Skipped decisions: none:no_signal ×993, none:spot_ignores_short ×2274, none:trend_filter ×1086
 
 History gaps: none
 

@@ -91,18 +91,17 @@ function view(a: TimeframeAnalysis, nowMs: number): TfView {
   return { a, i, usable: i + 1 >= WARMUP_CANDLES && !gap, gap };
 }
 
+/** Initial stop (B4.3, B5.2). Always strictly positive and on the protective side of the close, or null. */
 function stopFor(side: Side, v: TfView): { stop: Decimal; source: 'trail' | 'atr_fallback' } | null {
   const close = v.a.candles[v.i]!.close;
+  const protective = (s: Decimal) => s.gt(0) && (side === 'long' ? s.lt(close) : s.gt(close));
   const trail = v.a.trail[v.i] ?? null;
-  if (trail !== null && (side === 'long' ? trail.lt(close) : trail.gt(close))) {
-    return { stop: trail, source: 'trail' };
-  }
+  if (trail !== null && protective(trail)) return { stop: trail, source: 'trail' };
   const a = v.a.atr[v.i] ?? null;
   if (a === null) return null;
   const dist = a.times(FALLBACK_ATR_MULTIPLIER);
   const stop = side === 'long' ? close.minus(dist) : close.plus(dist);
-  if (stop.lte(0) || dist.lte(0)) return null;
-  return { stop, source: 'atr_fallback' };
+  return protective(stop) ? { stop, source: 'atr_fallback' } : null;
 }
 
 function ref(v: TfView): SignalRef {
@@ -186,7 +185,7 @@ export function decide(input: DecideInput): Decision {
   // signal is not the last closed 1D candle -> wait for a first signal on 4H.
   const side: Side | null = dBar.regime === 'bullish' ? 'long' : dBar.regime === 'bearish' ? 'short' : null;
   if (side === null) return { type: 'none', reason: 'no_signal' };
-  if (side === 'short' && !allowShort) return { type: 'none', reason: 'no_signal' };
+  if (side === 'short' && !allowShort) return { type: 'none', reason: 'spot_ignores_short' };
   if (trend1w !== (side === 'long' ? 'bullish' : 'bearish')) return { type: 'none', reason: 'trend_filter' };
   if (h.gap) return { type: 'none', reason: 'data_gap', timeframes: ['4h'] };
   if (!h.usable) return { type: 'warming_up', timeframes: ['4h'] };

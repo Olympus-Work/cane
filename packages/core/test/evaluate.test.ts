@@ -167,6 +167,15 @@ describe('B2 1W trend filter + B3 primary entry', () => {
     expect(dec.stopSource).toBe('atr_fallback');
   });
 
+  it('a non-positive trail is never used as a stop', () => {
+    const dec = run(analyses({ '1d': firstGreen1d({ close: 100, trail: 0, atr: 3 }) }));
+    expect(dec).toMatchObject({ type: 'enter', stopSource: 'atr_fallback' });
+  });
+
+  it('a fallback stop at or below zero -> no entry (invalid_stop)', () => {
+    expect(run(analyses({ '1d': firstGreen1d({ close: 10, trail: null, atr: 5 }) }))).toEqual({ type: 'none', reason: 'invalid_stop' });
+  });
+
   it('trail missing and ATR missing -> no entry (invalid_stop)', () => {
     expect(run(analyses({ '1d': firstGreen1d({ trail: null, atr: null }) }))).toEqual({ type: 'none', reason: 'invalid_stop' });
   });
@@ -230,7 +239,7 @@ describe('B4 late entry (Cane Rule)', () => {
       '1w': fake('1w', 'bearish', {}, 250),
       '4h': fake('4h', 'bearish', { zone: { firstRed: true } }, N * 6),
     });
-    expect(run(a, null, spot)).toEqual({ type: 'none', reason: 'no_signal' });
+    expect(run(a, null, spot)).toEqual({ type: 'none', reason: 'spot_ignores_short' });
   });
 
   it('4H warm-up gates late entries only', () => {
