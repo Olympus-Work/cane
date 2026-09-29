@@ -183,6 +183,27 @@ Each step ends with its proof passing in CI before the next starts. Steps
     decided (`OpenPosition.openedAt`), so a 4H late entry is not tightened
     by the 1D candle that closed before it.
   Neither guard changed the 2024-09-29 → 2026-09-29 replay report.
+- **Spec readings in S02 code (Claude Code, 2026-09-29; owner to confirm in
+  the S02 PR):**
+  - Order of work in `planEntry`: size_pct → leverage (B9.2, ceiling down
+    to 1x) → free-balance cap (B6.5) → rounding + minimums (B6.6).
+  - Liquidation price = Binance isolated one-way formula with the symbol's
+    leverage bracket (MMR + maintenance amount), fees ignored. Cross margin
+    uses the same estimate (its real liquidation is the same or further
+    away, so the check is conservative).
+  - A leverage above the notional's bracket maximum is also lowered
+    (`leverage_lowered`); no bracket for the notional → skip.
+  - Rounding: quantity down to step; stop to tick *away* from price
+    (long down, short up) and take-profit *towards* price, so the rounded
+    stop never crosses entry and the liquidation check uses the price sent.
+  - Minimums: below `minQty` or `minNotional` after rounding → skip with
+    `order_skipped_min_notional`.
+  - Free balance cap: spot compares the notional with free quote balance;
+    futures compares margin with available margin and reduces notional to
+    `free × leverage`. Fees are not reserved (to revisit in S05/S06 if
+    Binance rejects orders for margin).
+  - size_pct cap 100 is never reached with base ≤ 20 (max 80); kept as
+    written.
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.
