@@ -264,6 +264,24 @@ Each step ends with its proof passing in CI before the next starts. Steps
     a pair). One open position per strategy = partial unique index.
   - Secrets are stored only as AES-GCM `bytea` (`*_enc`) or hashes; session
     cookies are stored as a hash of the token.
+- **Binance Demo Trading probe (Claude Code, 2026-09-29, before S05 code):**
+  one Demo key works for both spot and USDⓈ-M (canTrade on both; one-way
+  mode). Server clock skew ~60 ms.
+  - USDⓈ-M Algo Order API works (`POST/GET/DELETE /fapi/v1/algoOrder`,
+    `algoType=CONDITIONAL`, `clientAlgoId`); STOP_MARKET on `/fapi/v1/order`
+    fails with -4120 exactly as on live.
+  - Spot OCO works (`POST /api/v3/orderList/oco`, `listClientOrderId`;
+    cancel via `DELETE /api/v3/orderList`). Prices far from market fail
+    `PERCENT_PRICE_BY_SIDE` (-1013); a 2R take-profit can hit this on
+    volatile pairs, so S05 surfaces -1013 as an order rejection (E3).
+  - **Spot user data stream:** the REST listenKey endpoints
+    (`/api/v3/userDataStream`) return HTTP 410; Binance retired them on
+    2026-02-20. S05 uses the WebSocket API `userDataStream.subscribe.signature`
+    for spot. USDⓈ-M still uses `POST /fapi/v1/listenKey` (works on Demo).
+  - `/sapi/v1/account/apiRestrictions` (B15.2 permission check) returns 404
+    on Demo, so AC12's "one testnet check" cannot run on Demo; S08 proves
+    B15.2 with the mocked permission API only and one manual check with the
+    live key at go-live (S12).
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.
@@ -336,7 +354,7 @@ optimisation.
 | 9 | `jev.client.test.ts`: timeout / error / bad shape → base size + `jev_fallback` | step 7 |
 | 10 | Testnet E2E: kill switch; manual position untouched | step 11 |
 | 11 | Auth tests + log-scan test | step 8 |
-| 12 | Key with withdrawal permission rejected (mocked Binance permission API + one testnet check) | step 8 |
+| 12 | Key with withdrawal permission rejected (mocked Binance permission API; Demo has no permission API, so one manual check with the live key at go-live) | step 8, step 12 |
 | 13 | CI run on a throwaway branch with a fake key fails at gitleaks | step 0 |
 | 14 | `flip.test.ts`: all cases in AC14 both directions | step 3 |
 Plus: `pnpm lint && pnpm typecheck && pnpm test` green on every PR;
