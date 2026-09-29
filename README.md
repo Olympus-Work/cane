@@ -43,6 +43,25 @@ pnpm test
 pnpm build
 ```
 
+## Database
+
+PostgreSQL. Schema: `apps/server/src/db/schema.ts` (Drizzle). SQL migrations: `apps/server/src/db/migrations/`, with a hand-written revert per migration in `migrations/down/<tag>.sql`.
+
+Local test database with Docker:
+
+```sh
+docker run -d --name cane-pg-test -e POSTGRES_PASSWORD=postgres -p 55432:5432 postgres:17
+DATABASE_URL=postgres://postgres:postgres@localhost:55432/postgres pnpm --filter @cane/server test
+```
+
+Migration tests are skipped when `DATABASE_URL` is unset, except in CI where it is required. The test drops and recreates the `public` schema, so never point it at a real database.
+
+After editing `schema.ts`: `pnpm --filter @cane/server db:generate`, then write the matching `down/<tag>.sql`.
+
+Run migrations: `pnpm --filter @cane/server build` then `pnpm --filter @cane/server db:migrate up` or `db:migrate down [steps]`.
+
+Roles: `cane_app` (the server; audit_log is SELECT + INSERT only) and `cane_readonly` (replay and daily replay-diff; SELECT on trading records and candles only). Both are NOLOGIN group roles; login users are created at deploy. A trigger also blocks UPDATE, DELETE and TRUNCATE on audit_log for every user. Every migration that adds a table must also GRANT it to these roles.
+
 ## Configuration (environment variables)
 
 | Variable | Default | Meaning |
