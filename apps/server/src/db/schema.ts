@@ -219,6 +219,12 @@ export const positions = pgTable(
     stopPrice: numeric('stop_price').notNull(),
     takeProfitPrice: numeric('take_profit_price'),
     leverage: integer('leverage'),
+    // Entry details kept for the trade record (B16.6).
+    leverageCeiling: integer('leverage_ceiling'),
+    sizePct: numeric('size_pct').notNull(),
+    trend1w: text('trend_1w'),
+    jevCallId: bigint('jev_call_id', { mode: 'number' }).references(() => jevCalls.id),
+    jevFallback: boolean('jev_fallback').notNull().default(false),
     openedAt: timestamp('opened_at', { withTimezone: true }).notNull(),
     closedAt: timestamp('closed_at', { withTimezone: true }),
     createdAt: createdAt(),
