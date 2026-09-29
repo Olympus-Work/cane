@@ -1,15 +1,15 @@
 # Handoff: Cane auto-trader → Claude Code (2026-09-28)
-Owner: Zong. Status: Stage 2 spec **approved** (rev 5.1). Stage 3 plan
+Owner: Zong. Status: Stage 2 spec **approved** (rev 5.2). Stage 3 plan
 **rev 3, handed to Claude Code** — formal approval still pending (see below).
 Process: AI-native SDLC (intent → spec → plan → build/proof → PR → maintain).
 
 ## Where things are
-Folder: `C:\Users\Zong\Desktop\cane-system\` (not a git repo yet).
+Repo: github.com/Olympus-Work/cane (public, AGPL-3.0); local clone `C:\Users\Zong\Gits\cane\`.
 
 | File | Stage | Status |
 |---|---|---|
 | `intent/cane-auto-trader/intent.md` | 1 Intent | approved 2026-09-25; amendment 1 (no IP whitelist) approved 2026-09-28 |
-| `intent/cane-auto-trader/spec.md` | 2 Spec | **approved** rev 5.1, 2026-09-28 — source of truth for behaviour |
+| `intent/cane-auto-trader/spec.md` | 2 Spec | **approved** rev 5.2, 2026-09-28 — source of truth for behaviour |
 | `intent/cane-auto-trader/plan.md` | 3 Plan | rev 3 draft; steps S00–S13, proof per step |
 | `intent/cane-auto-trader/design.md` | UI summary + change log | round 3, final |
 | `intent/cane-auto-trader/design_handoff_cane_auto_trader/` | UI handoff (README, prototype, tokens) | round 3, final |
@@ -34,8 +34,7 @@ Folder: `C:\Users\Zong\Desktop\cane-system\` (not a git repo yet).
 - Leverage max 20x; heatmap day boundary Asia/Bangkok.
 
 ## Still open (ask the owner when it becomes blocking)
-1. GitHub repo name/account — needed before first push (S00 can start with
-   local `git init`).
+1. ~~GitHub repo name/account~~ — resolved 2026-09-29: `Olympus-Work/cane`.
 2. Formal plan approval — get it before S05 (first exchange work).
 3. Owner prep: Binance Spot + Futures **testnet** keys (S05); LINE Official
    Account + Messaging API channel and Telegram bot (S09); Railway project
@@ -43,9 +42,9 @@ Folder: `C:\Users\Zong\Desktop\cane-system\` (not a git repo yet).
 
 ## Next steps for Claude Code
 1. Read spec.md, plan.md, design.md (+ handoff README) in full.
-2. Start **S00** (local repo, guardrails, monorepo skeleton), then **S01**
-   (indicators + signal engine + replay CLI) — both need no keys, no
-   exchange, no money.
+2. S00–S03 are merged (PRs #1–#4). S04 (DB schema + migrations) is on branch
+   `s04-db-schema`. Continue from the first plan.md step whose PR is not
+   merged.
 3. One step = one branch/PR; proof from plan.md must pass before the next
    step. A separate session reviews; the owner merges. Never self-merge.
 4. Update the ClickUp task for each step (status + PR link).

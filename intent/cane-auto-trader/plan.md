@@ -233,6 +233,30 @@ Each step ends with its proof passing in CI before the next starts. Steps
     signal index and cannot enforce B1.1 itself; the engine must pass the
     index from `lastClosedIndex(candles1d, nowMs)` (the signal candle of
     the decision), exactly as `decide()` does.
+- **DB choices in S04 (Claude Code, 2026-09-29; to confirm with the owner
+  in the PR):**
+  - Schema in `apps/server/src/db/schema.ts`; drizzle-kit generates the
+    up SQL, drizzle's migrator applies it. Drizzle has no down migrations,
+    so each migration has a hand-written `migrations/down/<tag>.sql`, run
+    by `src/db/migrate.ts` (newest first, one transaction each). CI checks
+    that `drizzle-kit generate` produces nothing (schema == migrations) and
+    runs up → down → up on a fresh Postgres service container.
+  - Value sets are `text` + CHECK, not pg enums (easier to extend).
+    Money/prices/quantities `numeric`; candle times `bigint` UTC ms.
+  - Append-only audit_log: a trigger blocks UPDATE/DELETE/TRUNCATE for
+    every user (the Railway user is a superuser, which bypasses GRANTs),
+    **and** the app role has only SELECT + INSERT on it.
+  - Roles `cane_app` (server) and `cane_readonly` (replay / replay-diff:
+    SELECT on strategies, signals, jev_calls, positions, orders, trades,
+    candles — no auth tables, no settings) are NOLOGIN group roles created
+    by the migration. S12 creates login users in them and points the
+    server and the replay-diff at those users. Each later migration that
+    adds a table grants it to these roles.
+  - B10.2 "one enabled strategy per pair" = partial unique index on `pair`
+    where status is `enabled` or `needs_attention` (spot and futures share
+    a pair). One open position per strategy = partial unique index.
+  - Secrets are stored only as AES-GCM `bytea` (`*_enc`) or hashes; session
+    cookies are stored as a hash of the token.
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.

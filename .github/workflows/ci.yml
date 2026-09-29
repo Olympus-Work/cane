@@ -30,6 +30,21 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    # Throwaway CI container, not a secret.
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -42,4 +57,8 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - name: Schema and migrations in sync
+        run: pnpm --filter @cane/server exec drizzle-kit generate --name drift && test -z "$(git status --porcelain)"
+      - name: Migrate up, down, up on a fresh database
+        run: pnpm --filter @cane/server db:migrate up && pnpm --filter @cane/server db:migrate down && pnpm --filter @cane/server db:migrate up
       - run: pnpm audit --prod --audit-level high

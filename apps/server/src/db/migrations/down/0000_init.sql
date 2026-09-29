@@ -1,0 +1,14 @@
+-- Reverts 0000_init.sql.
+DROP TABLE "trades";
+DROP TABLE "orders";
+DROP TABLE "positions";
+DROP TABLE "jev_calls";
+DROP TABLE "signals";
+DROP TABLE "sessions";
+DROP TABLE "recovery_codes";
+DROP TABLE "audit_log";
+DROP TABLE "candles";
+DROP TABLE "notifications";
+DROP TABLE "owner";
+DROP TABLE "settings";
+DROP TABLE "strategies";
