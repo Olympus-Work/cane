@@ -174,6 +174,16 @@ describe('B8.1 / B8.2 shape', () => {
     expect(FACTOR_NAMES.short).toEqual(['channel_breakdown', 'euphoria', 'lower_high']);
   });
 
+  it('zeroed bars from a bad feed give null features instead of throwing', () => {
+    // pivot highs at 0 on a line that is 0 at the signal; pivot lows at 0
+    const zero = { o: 0, h: 0, l: 0, c: 0 };
+    const bad = series(60, { o: -1, h: -1, l: -1, c: -1 }, { 20: zero, 32: zero, 44: zero, 59: zero });
+    const f = confluenceFeatures(bad, 59, 'long');
+    expect(f.channel).toEqual({ pivotCount: 3, slopePctPerBar: null, touches: 0, closeBeyondPct: null });
+    const lows = series(101, { o: 5, h: 5, l: 5, c: 5 }, { 30: { o: 5, h: 5, l: 0, c: 5 }, 60: { o: 5, h: 5, l: 1, c: 5 } });
+    expect(confluenceFeatures(lows, 100, 'long').swing).toEqual({ changePct: null, barsApart: 30 });
+  });
+
   it('rejects a signal index outside the candles', () => {
     expect(() => confluenceFeatures([], 0, 'long')).toThrow();
   });
