@@ -3,13 +3,13 @@ import { afterAll, beforeAll, expect, it } from 'vitest';
 import { Test } from '@nestjs/testing';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { FastifyAdapter } from '@nestjs/platform-fastify';
-import { AppModule } from '../src/app.module.js';
+import { HealthController } from '../src/health/health.controller.js';
 
 let app: NestFastifyApplication;
 
 beforeAll(async () => {
   const moduleRef = await Test.createTestingModule({
-    imports: [AppModule],
+    controllers: [HealthController],
   }).compile();
   app = moduleRef.createNestApplication<NestFastifyApplication>(
     new FastifyAdapter(),

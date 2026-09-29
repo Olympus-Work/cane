@@ -438,10 +438,14 @@ Each step ends with its proof passing in CI before the next starts. Steps
     with the fresh-TOTP guard, the B10.2 one-per-pair rule and an audit row.
     Create/edit/close and B1 warm-up stay with S10/S11. This is what AC11's
     "enable without fresh TOTP fails" is proved on.
-  - Keys move into Settings: `JevClient` and the Binance `CredentialsSource`
-    read them per call (getters), so a key change needs no restart; Jev
-    timeout is a Setting (default 3 s). EngineModule joins AppModule but
-    stays inert while `TRADING_ENABLED` is not `true`.
+  - Keys move into Settings. The Jev key and timeout are read per call, so a
+    change applies at once (default timeout 3 s; `TYPESAFE_API_KEY` stays as
+    a local-dev fallback). **The Binance key is read once when the engine
+    starts** (S06 builds its REST client and user-data streams from it), so
+    a new Binance key takes effect after a restart; the Settings screen must
+    say so. Making that live is left to S11/S12 (kill switch, deploy).
+    EngineModule joins AppModule but stays inert while `TRADING_ENABLED` is
+    not `true`.
   - Log-scan proof: a test replaces the Nest logger with a capturing sink for
     the whole run, uses fixture secrets (keys, password, TOTP secret, session
     token, recovery codes) and asserts none appears in any log line or any

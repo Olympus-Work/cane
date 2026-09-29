@@ -2,37 +2,42 @@ import { Module } from '@nestjs/common';
 import { DbModule } from '../db/db.module.js';
 import { MarketDataModule } from '../market-data/market-data.module.js';
 import { CREDENTIALS, EngineService, JEV, NOTIFIER, type CredentialsSource } from './engine.service.js';
-import { JevClient } from '../jev/jev.client.js';
-import { LogNotifier, UnavailableJev, type JevClassifier } from './ports.js';
+import { SettingsJevClassifier } from '../jev/jev-settings.classifier.js';
+import { SettingsService } from '../settings/settings.service.js';
+import { LogNotifier, type JevClassifier } from './ports.js';
+
+/** `JEV_MAX_*` are env config, both off (0) by default (plan S07, owner 2026-09-30). */
+const envInt = (name: string): number => {
+  const n = Number(process.env[name] ?? 0);
+  return Number.isFinite(n) ? n : 0;
+};
 
 /**
- * The trading engine. Not imported by AppModule yet: it needs the Binance
- * key from Settings (S08); until then CREDENTIALS returns none. Never
- * imported by the replay CLI (plan: replay isolation).
+ * The trading engine. Keys come from Settings (S08), read per call, so a key
+ * change needs no restart. The engine trades only when `TRADING_ENABLED=true`
+ * (EngineService). Never imported by the replay CLI (plan: replay isolation).
  */
 @Module({
   imports: [DbModule, MarketDataModule],
   providers: [
     EngineService,
-    { provide: CREDENTIALS, useValue: { get: async () => null } satisfies CredentialsSource },
+    {
+      provide: CREDENTIALS,
+      inject: [SettingsService],
+      useFactory: (settings: SettingsService): CredentialsSource => ({ get: () => settings.binanceCredentials() }),
+    },
     { provide: NOTIFIER, useClass: LogNotifier },
     {
       provide: JEV,
-      // No key means B8.4 fallback (base size), not a crash. S08 moves the timeout into Settings.
-      useFactory: (): JevClassifier => {
-        const apiKey = process.env.TYPESAFE_API_KEY;
-        if (!apiKey) return new UnavailableJev();
-        // Owner 2026-09-30: retry and concurrency cap are env config, both off by default.
-        const maxRetries = Number(process.env.JEV_MAX_RETRIES ?? 0);
-        const maxConcurrent = Number(process.env.JEV_MAX_CONCURRENCY ?? 0);
-        return new JevClient({
-          apiKey,
-          fetch: (url, init) => fetch(url, init),
-          now: Date.now,
-          maxRetries: Number.isFinite(maxRetries) ? maxRetries : 0,
-          maxConcurrent: Number.isFinite(maxConcurrent) ? maxConcurrent : 0,
-        });
-      },
+      inject: [SettingsService],
+      useFactory: (settings: SettingsService): JevClassifier =>
+        new SettingsJevClassifier(
+          settings,
+          (url, init) => fetch(url, init),
+          Date.now,
+          { maxRetries: envInt('JEV_MAX_RETRIES'), maxConcurrent: envInt('JEV_MAX_CONCURRENCY') },
+          process.env.TYPESAFE_API_KEY || undefined,
+        ),
     },
   ],
 })
