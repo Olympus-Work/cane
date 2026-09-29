@@ -122,14 +122,17 @@ function channel(candles: readonly Candle[], i: number): ChannelFeature {
   const slope = sxy.times(n).minus(sx.times(sy)).div(sxx.times(n).minus(sx.times(sx)));
   const intercept = sy.minus(slope.times(sx)).div(n);
   const line = (x: number) => intercept.plus(slope.times(x));
+  const meanPivot = sy.div(n).abs();
+  const atSignal = line(i);
+  // Zeroed bars from a bad feed: no line rather than a division by zero.
+  if (meanPivot.isZero() || atSignal.isZero()) return { pivotCount: n, slopePctPerBar: null, touches: 0, closeBeyondPct: null };
   const touches = pivots.filter((j) => {
     const l = line(j);
     return candles[j]!.high.minus(l).abs().lte(l.abs().times(CHANNEL_TOUCH_PCT).div(100));
   }).length;
-  const atSignal = line(i);
   return {
     pivotCount: n,
-    slopePctPerBar: slope.div(sy.div(n).abs()).times(100),
+    slopePctPerBar: slope.div(meanPivot).times(100),
     touches,
     closeBeyondPct: candles[i]!.close.minus(atSignal).div(atSignal.abs()).times(100),
   };
@@ -168,6 +171,7 @@ function swing(candles: readonly Candle[], i: number): SwingFeature {
   const a = lows[lows.length - 2]!;
   const b = lows[lows.length - 1]!;
   const la = candles[a]!.low;
+  if (la.isZero()) return { changePct: null, barsApart: b - a };
   return { changePct: candles[b]!.low.minus(la).div(la.abs()).times(100), barsApart: b - a };
 }
 

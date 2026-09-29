@@ -228,6 +228,10 @@ Each step ends with its proof passing in CI before the next starts. Steps
   - Flip: profit means realised PnL after fees and funding > 0 (zero is no
     flip); the flip's stop is the B5.2 stop on the same 1D candle
     (`primaryStop`), without the 1W filter.
+  - S06 wiring note (PR #4 review): `confluenceFeatures` takes a bare
+    signal index and cannot enforce B1.1 itself; the engine must pass the
+    index from `lastClosedIndex(candles1d, nowMs)` (the signal candle of
+    the decision), exactly as `decide()` does.
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.
