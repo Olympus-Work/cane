@@ -74,13 +74,25 @@ For local development copy `apps/server/.env.example` to `apps/server/.env` (git
 | --- | --- | --- |
 | TRADING_ENABLED | false | Master switch. When not `true`, no order-placing call is made, in addition to per-strategy enable. |
 | BINANCE_ENV | testnet | `testnet` (Binance Demo Trading) or `live`; selects Binance endpoints. |
-| CANE_MASTER_KEY | (none) | Key used to encrypt secrets stored in the database. Set only in the hosting environment. Never commit it. |
-| TYPESAFE_API_KEY | (none) | Jev API key. Hosting environment only. |
+| CANE_MASTER_KEY | (none) | Key used to encrypt secrets stored in the database: 32 bytes as base64 or 64 hex characters (`openssl rand -base64 32`). The server will not start without it. Set only in the hosting environment. Never commit it. |
+| CANE_OWNER_PASSWORD | (none) | Read only by the owner CLI (`seed-owner`, `reset-password`); never a command-line argument. Min 12 characters. |
+| TYPESAFE_API_KEY | (none) | Local-development fallback for the Jev key; the key saved in Settings wins. |
 | JEV_MAX_RETRIES | 0 | Extra Jev attempts on network error, 429 or 5xx, inside the one 3 s budget. |
 | JEV_MAX_CONCURRENCY | 0 | Cap on in-flight Jev calls; 0 = no cap. |
 | PORT | 3000 | HTTP port. |
 
 Binance API keys and LINE/Telegram tokens are entered in the web UI Settings and stored encrypted; they are never put in environment files or the repository.
+
+## Owner account (CLI)
+
+There is no sign-up route. After migrating, create the single owner and print the authenticator secret and recovery codes (shown once):
+
+```sh
+pnpm --filter @cane/server build
+CANE_OWNER_PASSWORD='<12+ characters>' pnpm --filter @cane/server owner seed-owner --email you@example.com
+```
+
+`owner reset-password` (also uses `CANE_OWNER_PASSWORD`) and `owner reset-totp` are the only ways to reset a password or authenticator; both sign every session out. On Railway run them with the Railway CLI. Login needs email + password + a 6-digit code; a TOTP code can be used once, so two actions in the same 30 s window need two different codes.
 
 ## Security
 

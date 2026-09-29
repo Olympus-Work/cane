@@ -10,6 +10,7 @@
     "test": "vitest run",
     "start": "node dist/main.js",
     "replay": "node dist/replay-cli.js replay",
+    "owner": "node dist/owner-cli.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node dist/db-cli.js",
     "test:integration": "vitest run -c vitest.integration.config.ts"
@@ -24,6 +25,7 @@
     "@node-rs/argon2": "2.2.1",
     "decimal.js": "10.6.0",
     "drizzle-orm": "0.45.3",
+    "fastify": "5.12.5",
     "nest-commander": "3.21.0",
     "otplib": "13.5.0",
     "pg": "8.23.0",

@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { Buffer } from 'node:buffer';
 import { describe, expect, it } from 'vitest';
-import { generateSecret, generateSync } from 'otplib';
+import { generateSync } from 'otplib';
 import { SecretBox, hintOf, parseMasterKey } from '../src/auth/secret-box.js';
 import { hashPassword, verifyPassword } from '../src/auth/password.js';
 import { checkTotp, newTotpSecret, totpUri } from '../src/auth/totp.js';
