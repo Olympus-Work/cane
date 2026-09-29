@@ -2,7 +2,6 @@ import { Logger } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
 import {
   TIMEFRAME_MS,
-  TIMEFRAMES,
   analyzeTimeframe,
   confluenceFeatures,
   decide,
@@ -87,8 +86,9 @@ export class Engine {
     const s = await this.d.store.strategy(strategyId);
     if (!s) return;
     const nowMs = key + H4; // the 4H close: the replay's evaluation time
-    const candles = {} as Record<Timeframe, Candle[]>;
-    for (const tf of TIMEFRAMES) candles[tf] = await this.d.candles(s.market, s.pair, tf, nowMs);
+    const load = (tf: Timeframe) => this.d.candles(s.market, s.pair, tf, nowMs);
+    const [h4, d1, w1] = await Promise.all([load('4h'), load('1d'), load('1w')]);
+    const candles: Record<Timeframe, Candle[]> = { '4h': h4, '1d': d1, '1w': w1 };
     const analyses: Analyses = {
       '4h': analyzeTimeframe('4h', candles['4h']),
       '1d': analyzeTimeframe('1d', candles['1d']),

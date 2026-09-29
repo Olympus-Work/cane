@@ -466,6 +466,20 @@ describe('BinanceTrading', () => {
     expect((await trading.spotEquityUsdt()).toString()).toBe('950');
   });
 
+  it('fills since the entry are paged past 1000 (PnL of a long-lived position)', async () => {
+    const raw = (id: number) => ({ id, orderId: 1, side: 'BUY', qty: '1', price: '1', quoteQty: '1', commission: '0', commissionAsset: 'USDT', realizedPnl: '0', time: id });
+    const { rest, calls } = fakeRest((c) => {
+      if (c.params.orderId !== undefined) return [raw(500), raw(501)];
+      const from = Number(c.params.fromId);
+      if (from === 500) return Array.from({ length: 1000 }, (_, i) => raw(500 + i));
+      if (from === 1500) return [raw(1500), raw(1501)];
+      return new Error(`unexpected fromId ${from}`);
+    });
+    const fills = await new BinanceTrading(rest, true, noSleep).fillsSince('futures', 'BTCUSDT', '1');
+    expect(fills).toHaveLength(1002);
+    expect(calls.map((c) => c.params.fromId)).toEqual([undefined, 500, 1500]);
+  });
+
   it('spot received quantity subtracts base-asset commission', async () => {
     const state = {
       ref: { market: 'spot' as const, kind: 'order' as const, symbol: 'BTCUSDT', clientId: 'c' },

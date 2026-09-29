@@ -67,6 +67,8 @@ export class Reconciler {
         await this.d.notifier.notify('order_rejected', s.id, { pair: s.pair, reason: 'entry was not sent before a restart' });
         continue;
       }
+      // Still working on Binance: keep it PENDING and look again next time.
+      if (st.status === 'NEW' || st.status === 'PARTIALLY_FILLED') continue;
       if (st.executedQty.isZero()) {
         await this.d.store.updateOrder(o.clientOrderId, { status: st.status, exchangeOrderId: st.exchangeId });
         continue;
