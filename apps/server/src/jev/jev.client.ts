@@ -8,6 +8,8 @@ export const JEV_MODEL = 'jev-1.13.0';
 export const JEV_DEFAULT_TIMEOUT_MS = 3000;
 /** A Noul at or above this is a "yes" (`present`); the strategy threshold is applied on `confidence`. */
 export const PRESENT_AT = 0.5;
+/** A non-JSON body (e.g. an error page) is stored cut to this many characters so it cannot bloat `jev_calls`. */
+export const MAX_STORED_BODY_CHARS = 4000;
 
 export type JevFetch = (url: string, init: { method: 'POST'; headers: Record<string, string>; body: string; signal: AbortSignal }) => Promise<Response>;
 
@@ -48,7 +50,7 @@ export function serialiseState(f: ConfluenceFeatures): string {
     `exhaustion.gap_count: ${f.exhaustion.gapCount}`,
     `exhaustion.volume_spike_ratio: ${n(f.exhaustion.volumeSpike)}`,
     `swing.change_pct: ${n(f.swing.changePct)}`,
-    `swing.bars_apart: ${f.swing.barsApart === null ? 'none' : f.swing.barsApart}`,
+    `swing.bars_apart: ${n(f.swing.barsApart)}`,
   ].join('\n');
 }
 
@@ -110,11 +112,11 @@ export class JevClient implements JevClassifier {
         signal: abort.signal,
       });
       const text = await res.text();
-      let body: unknown = text;
+      let body: unknown = text.slice(0, MAX_STORED_BODY_CHARS);
       try {
         body = JSON.parse(text);
       } catch {
-        /* keep the raw text as the stored response */
+        /* keep the cut raw text as the stored response */
       }
       return { status: res.status, body };
     };

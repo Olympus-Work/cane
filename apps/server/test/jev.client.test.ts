@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { describe, expect, it, vi } from 'vitest';
 import { Decimal } from 'decimal.js';
 import { FACTOR_NAMES, presentFactorCount, type ConfluenceFeatures, type Side } from '@cane/core';
-import { JEV_MODEL, JEV_URL, JevClient, serialiseState, type JevFetch } from '../src/jev/jev.client.js';
+import { JEV_MODEL, JEV_URL, MAX_STORED_BODY_CHARS, JevClient, serialiseState, type JevFetch } from '../src/jev/jev.client.js';
 import { UnavailableJev } from '../src/engine/ports.js';
 
 const KEY = 'test-key-not-real';
@@ -119,6 +119,12 @@ describe('JevClient (AC9)', () => {
     const call = await client(reply(200, body)).classify(input('long'));
     expect(call.result).toEqual({ ok: false, reason: 'invalid_response' }); expect(presentFactorCount(call.result)).toBe(0); // B8.4: base size
     expect(call.response).toEqual(body);
+  });
+
+  it('cuts a huge non-JSON body before it is stored', async () => {
+    const call = await client(reply(502, 'x'.repeat(MAX_STORED_BODY_CHARS * 5))).classify(input('long'));
+    expect(call.result).toEqual({ ok: false, reason: 'error' });
+    expect(call.response).toBe('x'.repeat(MAX_STORED_BODY_CHARS));
   });
 
   it('never stores the key in the request it returns', async () => {
