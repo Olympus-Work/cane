@@ -27,3 +27,28 @@ export {
   type SignalRef,
   type StrategyInput,
 } from './signals/evaluate.js';
+export {
+  MAX_LEVERAGE,
+  LIQUIDATION_BUFFER,
+  bracketFor,
+  liquidationPrice,
+  stopInsideLiquidation,
+  validateLeverage,
+  type LeverageBracket,
+} from './risk/leverage.js';
+export {
+  FACTOR_BONUS_PCT,
+  MAX_SIZE_PCT,
+  BASE_PCT_MIN,
+  BASE_PCT_MAX,
+  planEntry,
+  roundDownToStep,
+  roundToTick,
+  sizePct,
+  targetNotional,
+  type EntryPlan,
+  type EntryPlanEvent,
+  type EntryPlanInput,
+  type SizingMode,
+  type SymbolFilters,
+} from './sizing/size.js';
