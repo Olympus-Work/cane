@@ -11,6 +11,9 @@ Revision 5 (2026-09-28): IP restriction dropped (Railway Hobby, no static
 outbound IP); intent amendment 1.
 Revision 5.1 (2026-09-28, owner decision): E10 wording fixed; AC1–2 no
 longer use a TradingView export (owner: skip, trade live directly).
+Revision 5.2 (2026-09-29, owner decision in the S03 PR review): B8.1
+feature details completed (the "lookbacks and thresholds" sentence was cut
+off); B7.5 "with realised profit" means net PnL > 0. No other change.
 Author: Claude (drafted for owner review). Approver: Zong (owner).
 
 Defaults below were confirmed by the owner on 2026-09-25. Numeric defaults are configurable unless stated otherwise.
@@ -168,15 +171,19 @@ Given an enabled strategy with no open position on its pair:
 1. Code computes features from the 1D candles up to and including the
    signal candle (long side; short side mirrored):
    - **Channel breakout**: pivot highs (5 bars left / 5 right) in the last
-     60 bars; line through the last ≥ 3 pivot highs; slope; touch count;
-     % that close is above the line.
+     60 bars; least-squares line through all of them (at least 3); slope
+     (% of the mean pivot price per bar); touch count (pivots within 1% of
+     the line); % that close is above the line.
    - **Capitulation**: within the 10 bars before the signal: longest run of
-     bearish candles with body ≥ 1.5 × ATR(14); count of gap-downs
-     (open < previous low); max volume ÷ 20-bar average volume.
+     bearish candles with body ≥ 1.5 × ATR(14) (ATR at that bar); count of
+     gap-downs (open < previous low); max volume of those 10 bars ÷ average
+     volume of the 20 bars before them.
    - **Higher low**: last two pivot lows (5/5) within 120 bars; % change.
    - Short mirrors: ascending-channel breakdown; euphoria (bullish big
      bodies, gap-ups, volume spike); lower high.
-   Lookbacks and thresholds above are.
+   A pivot is strictly higher (lower) than the 5 bars on each side and
+   counts only once 5 bars after it have closed, up to the signal candle.
+   Lookbacks and thresholds above are fixed in code (owner, 2026-09-29).
 2. Jev receives only these market-derived features plus side and
    timeframe — never balances, keys, account IDs or order data.
 3. Jev returns, per factor: `present: bool`, `confidence: 0..1`.

@@ -159,8 +159,8 @@ Each step ends with its proof passing in CI before the next starts. Steps
   `high−low`), RMA first value = SMA of the first n TR; the trail uses the
   Pine `nz(trail[prev], 0)` start (first bar with ATR defined → `max(0, close − k·ATR)`).
   Values before a series is defined are "not available", never 0.
-- **Spec readings in S01 code (Claude Code, 2026-09-29; owner to confirm in
-  the S01 PR):**
+- **Spec readings in S01 code (Claude Code, 2026-09-29; confirmed by the
+  owner 2026-09-29):**
   - Regime is `null` until at least one buyCond and one sellCond exist
     (Pine `barssince` = na). A null 1W regime blocks entries (B2).
   - E4 "market data gap" = the newest candle that should have closed is
@@ -183,8 +183,8 @@ Each step ends with its proof passing in CI before the next starts. Steps
     decided (`OpenPosition.openedAt`), so a 4H late entry is not tightened
     by the 1D candle that closed before it.
   Neither guard changed the 2024-09-29 → 2026-09-29 replay report.
-- **Spec readings in S02 code (Claude Code, 2026-09-29; owner to confirm in
-  the S02 PR):**
+- **Spec readings in S02 code (Claude Code, 2026-09-29; confirmed by the
+  owner 2026-09-29):**
   - Order of work in `planEntry`: size_pct → for each leverage from the
     ceiling down to 1x, build the final order (target notional → free-
     balance cap B6.5 → rounding B6.6) and run the B9.2 check on that final
@@ -210,9 +210,10 @@ Each step ends with its proof passing in CI before the next starts. Steps
     Binance rejects orders for margin).
   - size_pct cap 100 is never reached with base ≤ 20 (max 80); kept as
     written.
-- **Spec readings in S03 code (Claude Code, 2026-09-29; owner to confirm in
-  the S03 PR):** B8.1 leaves details open ("Lookbacks and thresholds above
-  are." is cut off in spec.md); the code uses:
+- **Spec readings in S03 code (Claude Code, 2026-09-29; confirmed by the
+  owner 2026-09-29):** B8.1 details were cut off in spec.md ("Lookbacks and
+  thresholds above are."); the owner confirmed these and spec.md rev 5.2
+  now states them:
   - Pivot high/low (5/5): strictly higher/lower than the 5 bars on each
     side; confirmed only when 5 bars exist after it up to the signal candle.
   - Channel: least-squares line through *all* pivot highs in the last 60
