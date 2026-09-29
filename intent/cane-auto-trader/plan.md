@@ -115,7 +115,8 @@ Each step ends with its proof passing in CI before the next starts. Steps
 7. **Jev client.** `POST /v1/systemone` with `state` = the B8.1 features
    serialised as text (side, timeframe, numbers only), three **Noul**
    questions (one per factor). Mapping to spec B8.3: `confidence` = Noul
-   probability of yes; `present` = probability ≥ threshold (0.70). Model
+   probability of yes; `present` = probability ≥ 0.5 (the strategy threshold
+   applies to `confidence`; see "Jev client choices in S07"). Model
    pinned. 3 s default timeout (setting), fallback to base size, request +
    response stored per trade. Proof: AC9 (timeout, 5xx, invalid shape,
    valid), plus one live call from a dev shell with the owner's key.
@@ -369,6 +370,36 @@ Each step ends with its proof passing in CI before the next starts. Steps
   - AC6 proof: the "kill" is simulated in-process (the entry call dies right
     after Binance accepted the order) and a fresh set of objects over the
     same DB plays the restarted process; Demo + Postgres, local only.
+- **Jev client choices in S07 (Claude Code, 2026-09-29; to confirm with the
+  owner in the PR):**
+  - **`present` = Noul ≥ 0.5, `confidence` = the Noul value**, not
+    `present` = Noul ≥ 0.70 as in step 7. The confidence threshold is a
+    per-strategy setting (B10) and `presentFactorCount` already applies it to
+    `confidence`; a fixed 0.70 in the client would silently raise any
+    strategy threshold below 0.70.
+  - Plain `fetch`, no SDK; **no retry** (the SDK's backoff on 429 would
+    break the 3 s budget). The budget covers connect, response and body.
+    Timeout = `timeout`; network error or any non-2xx (incl. 429) = `error`;
+    bad JSON, a missing factor, a non-Noul answer or a value outside [0,1] =
+    `invalid_response`. All map to base size + `jev_fallback` (executor).
+  - Model pinned to `jev-1.13.0`; the model string in the response is stored
+    per call. The timeout is a constructor option (default 3 s) until S08 adds
+    the Setting.
+  - No concurrency cap: 3 questions per signal, a few signals a day, against
+    1,200 requests/min.
+  - Stored request = model, state text and questions (never headers or the
+    key). State is fixed-order `name: value` lines from the B8.1 features;
+    question wording lives in `apps/server/src/jev/jev.client.ts` and is
+    behaviour: change it only with a plan update.
+  - No `JevModule`: the client is one class built by a factory in
+    `EngineModule` (key from env `TYPESAFE_API_KEY`; no key = the
+    `UnavailableJev` fallback). S08 moves the key into Settings.
+  - AC9 proof: `jev.client.test.ts` covers the client side (timeout, 5xx/429,
+    network error, invalid shapes, valid, factor order) and that every failure
+    counts as 0 factors. The `jev_fallback` notification and the `jev_calls`
+    row are written by the executor (S06 code), which has no unit test
+    without Binance; the live call is `test/integration/jev-live.test.ts`
+    (local only, like S05/S06).
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.
