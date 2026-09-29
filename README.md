@@ -62,6 +62,10 @@ Run migrations: `pnpm --filter @cane/server build` then `pnpm --filter @cane/ser
 
 Roles: `cane_app` (the server; audit_log is SELECT + INSERT only) and `cane_readonly` (replay and daily replay-diff; SELECT on trading records and candles only). Both are NOLOGIN group roles; login users are created at deploy. A trigger also blocks UPDATE, DELETE and TRUNCATE on audit_log for every user. Every migration that adds a table must also GRANT it to these roles.
 
+## Binance Demo integration tests
+
+`pnpm --filter @cane/server test:integration` places small real orders on the Binance Demo Trading account (spot and USDⓈ-M BTCUSDT) and checks entry → stop → trail move → exit, the OCO late entry, and "no exit when already closed". It reads the Demo keys from `apps/server/.env` and is skipped without them. It is not part of `pnpm test` or CI. It cancels what it placed; a failed run can leave a small Demo position or order to clean up by hand.
+
 ## Configuration (environment variables)
 
 For local development copy `apps/server/.env.example` to `apps/server/.env` (git-ignored). Its Binance Demo Trading keys are read by integration tests only.

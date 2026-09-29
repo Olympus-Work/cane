@@ -73,6 +73,12 @@ export {
   type SwingFeature,
 } from './features/confluence.js';
 export {
+  CLIENT_ORDER_ID_RE,
+  ORDER_ACTIONS,
+  clientOrderId,
+  type OrderAction,
+} from './orders/client-order-id.js';
+export {
   DEFAULT_CONFIDENCE_THRESHOLD,
   FLIP_MIN_FACTORS,
   decideFlip,

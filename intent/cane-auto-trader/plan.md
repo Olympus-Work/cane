@@ -282,6 +282,43 @@ Each step ends with its proof passing in CI before the next starts. Steps
     on Demo, so AC12's "one testnet check" cannot run on Demo; S08 proves
     B15.2 with the mocked permission API only and one manual check with the
     live key at go-live (S12).
+- **Binance adapter choices in S05 (Claude Code, 2026-09-29; to confirm
+  with the owner in the PR):**
+  - Futures stops and take-profits trigger on **mark price**
+    (`workingType=MARK_PRICE`): liquidation also uses mark price, so the
+    B9.2 1% buffer between stop and liquidation holds. Spot stops trigger on
+    last price (spot has no mark price).
+  - Every placement is **query-before-send** by client ID (E1): one extra
+    signed GET per order, and a restart or a timeout never sends a second
+    order. A duplicate-ID rejection (spot -2010, USDⓈ-M -4116) is resolved
+    by the same query. Binance only rejects duplicate IDs among *open*
+    orders, so the query is what stops a filled market order being re-sent.
+  - Spot BUY fees are charged in the bought coin (Demo check: 0.1% of BTC).
+    The spot position and its stop use the **received** quantity (filled −
+    base-asset commission, from `myTrades`), rounded down to the step; the
+    dust left over stays in the wallet.
+  - Exits: USDⓈ-M closes the whole one-way position reduce-only and sends
+    nothing if it is already flat (E7). Spot cancels its stop / OCO first,
+    subtracts what those orders already sold (E7), and never sells more
+    than the free balance, so the owner's other holdings stay untouched
+    (B11.3). A reduce-only algo stop is **not** cancelled by Binance when
+    the position closes (Demo check), so B7.3 cancelling is always done.
+  - `TRADING_ENABLED` is checked inside the adapter: every order-placing
+    call and every margin/leverage change throws unless it is true. Reads
+    and cancels are allowed. Integration tests pass `tradingEnabled: true`
+    to the adapter in-process with `BINANCE_ENV=testnet` endpoints; no env
+    var is set.
+  - Retries (E3): reads and cancels retry 429/418/5xx/network with back-off
+    (5 attempts, `Retry-After` honoured); placements are sent once and an
+    unclear outcome is resolved by query-before-resend (3 attempts). The
+    10-minute retry loop for exits and stops belongs to the engine (S06).
+  - E2 partial fill: Demo market orders always fill in full, so the proof
+    is a unit test — the adapter reports the filled quantity of an
+    EXPIRED/partial order and a retry never re-sends the rest. Sizing the
+    stop to that quantity is the engine's job (S06).
+  - User data: spot via the WebSocket API `userDataStream.subscribe.signature`
+    (HMAC works on Demo); USDⓈ-M via listenKey + 30-min keepalive. Every
+    (re)connect calls `onConnected` so the engine reconciles missed events.
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.
