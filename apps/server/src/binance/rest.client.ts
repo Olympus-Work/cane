@@ -60,6 +60,10 @@ const TIMESTAMP_OUTSIDE_RECV_WINDOW = -1021;
 const BACKEND_TIMEOUT = -1007;
 
 const MAX_SAFE_ATTEMPTS = 5;
+// Binance rejects a signed request that arrives more than this after its
+// timestamp. Kept at Binance's recommended 5 s on purpose: an order delayed
+// longer should be rejected, not filled late. The rejection (-1021) is
+// definite, so it is resynced and resent once, and placements query first (E1).
 const RECV_WINDOW_MS = 5000;
 const TIME_PATH: Record<BinanceMarket, string> = { spot: '/api/v3/time', futures: '/fapi/v1/time' };
 
