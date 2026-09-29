@@ -24,6 +24,8 @@ jobs:
           sudo mv gitleaks /usr/local/bin/gitleaks
       - name: Scan full history of this commit
         # HEAD only: other fetched branches are scanned by their own runs.
+        # HEAD's history includes main, and a PR run checks out the merge commit,
+        # so a secret already on main still fails every later run until removed.
         run: gitleaks git --redact --no-banner --config .gitleaks.toml --verbose --log-opts="HEAD" .
 
   build:
