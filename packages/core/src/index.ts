@@ -14,6 +14,7 @@ export { analyzeTimeframe, lastClosedIndex, type TimeframeAnalysis } from './sig
 export {
   decide,
   evaluate,
+  primaryStop,
   signalKey,
   WARMUP_CANDLES,
   LATE_ENTRY_TP_R,
@@ -52,3 +53,33 @@ export {
   type SizingMode,
   type SymbolFilters,
 } from './sizing/size.js';
+export {
+  BIG_BODY_ATR,
+  BIG_BODY_ATR_LENGTH,
+  CHANNEL_LOOKBACK,
+  CHANNEL_MIN_PIVOTS,
+  CHANNEL_TOUCH_PCT,
+  EXHAUSTION_BARS,
+  FACTOR_NAMES,
+  PIVOT_LEFT,
+  PIVOT_RIGHT,
+  SWING_LOOKBACK,
+  VOLUME_AVG_BARS,
+  confluenceFeatures,
+  type ChannelFeature,
+  type ConfluenceFeatures,
+  type ExhaustionFeature,
+  type FactorName,
+  type SwingFeature,
+} from './features/confluence.js';
+export {
+  DEFAULT_CONFIDENCE_THRESHOLD,
+  FLIP_MIN_FACTORS,
+  decideFlip,
+  presentFactorCount,
+  type FlipDecision,
+  type FlipInput,
+  type JevFactor,
+  type JevResult,
+  type PositionExitReason,
+} from './signals/flip.js';

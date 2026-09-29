@@ -210,6 +210,24 @@ Each step ends with its proof passing in CI before the next starts. Steps
     Binance rejects orders for margin).
   - size_pct cap 100 is never reached with base ≤ 20 (max 80); kept as
     written.
+- **Spec readings in S03 code (Claude Code, 2026-09-29; owner to confirm in
+  the S03 PR):** B8.1 leaves details open ("Lookbacks and thresholds above
+  are." is cut off in spec.md); the code uses:
+  - Pivot high/low (5/5): strictly higher/lower than the 5 bars on each
+    side; confirmed only when 5 bars exist after it up to the signal candle.
+  - Channel: least-squares line through *all* pivot highs in the last 60
+    bars (≥ 3 needed); slope as % of the mean pivot price per bar; a
+    "touch" is a pivot within 1% of the line; % that the signal close is
+    above the line.
+  - Capitulation: the 10 bars before the signal; big body = bearish body ≥
+    1.5 × ATR(14) at that bar; gap-down = open < previous low; volume spike
+    = max volume of the 10 bars ÷ average volume of the 20 bars before them.
+  - Higher low: last two confirmed pivot lows within 120 bars, % change.
+  - Short side = the same code on the price mirror (highs ↔ lows, negated),
+    so every feature reads "more / > 0 favours the side".
+  - Flip: profit means realised PnL after fees and funding > 0 (zero is no
+    flip); the flip's stop is the B5.2 stop on the same 1D candle
+    (`primaryStop`), without the 1W filter.
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.
