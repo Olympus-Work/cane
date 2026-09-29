@@ -137,7 +137,7 @@ describe.skipIf(!futuresCreds)('USDⓈ-M on Demo: entry → stop → trail → e
     const entry = await trading.placeMarket({ market: 'futures', symbol: SYMBOL, side: 'SELL', quantity: qty, clientId: id('entry') });
     expect(entry.status).toBe('FILLED');
     // Stand-in for "the stop filled between candle close and exit": close it with another order.
-    await trading.placeMarket({ market: 'futures', symbol: SYMBOL, side: 'BUY', quantity: qty, clientId: id('fix'), reduceOnly: true });
+    await trading.placeMarket({ market: 'futures', symbol: SYMBOL, side: 'BUY', quantity: qty, clientId: id('bail'), reduceOnly: true });
 
     expect(await trading.closeFuturesPosition(SYMBOL, id('exit'))).toEqual({ kind: 'already_closed' });
     expect(await trading.query({ market: 'futures', kind: 'order', symbol: SYMBOL, clientId: id('exit') })).toBeNull();

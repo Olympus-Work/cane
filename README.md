@@ -64,7 +64,7 @@ Roles: `cane_app` (the server; audit_log is SELECT + INSERT only) and `cane_read
 
 ## Binance Demo integration tests
 
-`pnpm --filter @cane/server test:integration` places small real orders on the Binance Demo Trading account (spot and USDⓈ-M BTCUSDT) and checks entry → stop → trail move → exit, the OCO late entry, and "no exit when already closed". It reads the Demo keys from `apps/server/.env` and is skipped without them. It is not part of `pnpm test` or CI. It cancels what it placed; a failed run can leave a small Demo position or order to clean up by hand.
+`pnpm --filter @cane/server test:integration` places small real orders on the Binance Demo Trading account (spot and USDⓈ-M BTCUSDT) and checks entry → stop → trail move → exit, the OCO late entry, and "no exit when already closed". With `DATABASE_URL` set it also runs the engine against Demo + Postgres: an entry killed right after its send is finished by the reconciler (AC6), a missing stop is re-placed, and positions closed or opened outside the system are flagged. It reads the Demo keys from `apps/server/.env` and is skipped without them. It is not part of `pnpm test` or CI. It cancels what it placed; a failed run can leave a small Demo position or order to clean up by hand.
 
 ## Configuration (environment variables)
 

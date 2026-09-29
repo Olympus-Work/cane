@@ -31,7 +31,35 @@ export interface OrderState {
   avgPrice: Decimal | null;
 }
 
-export type ExitResult = { kind: 'closed'; order: OrderState } | { kind: 'already_closed' };
+/** One own fill (spot `myTrades` / USDⓈ-M `userTrades`). */
+export interface Fill {
+  orderId: string;
+  buy: boolean;
+  qty: Decimal;
+  price: Decimal;
+  quoteQty: Decimal;
+  commission: Decimal;
+  commissionAsset: string;
+  /** USDⓈ-M only: Binance's realised PnL of this fill (fees not included). */
+  realizedPnl: Decimal | null;
+  time: number;
+}
+
+interface RawFill {
+  id: number;
+  orderId: number;
+  isBuyer?: boolean;
+  side?: string;
+  qty: string;
+  price: string;
+  quoteQty: string;
+  commission: string;
+  commissionAsset: string;
+  realizedPnl?: string;
+  time: number;
+}
+
+export type ExitResult ={ kind: 'closed'; order: OrderState } | { kind: 'already_closed' };
 
 export class TradingDisabledError extends Error {
   constructor(action: string) {
@@ -323,6 +351,53 @@ export class BinanceTrading {
     return received;
   }
 
+  /**
+   * Fills of the symbol from the first fill of `orderId` onward (the entry),
+   * so a position's whole life is covered without Binance's 24 h (spot) /
+   * 7 day (USDⓈ-M) time-window limits.
+   */
+  async fillsSince(market: BinanceMarket, symbol: string, orderId: string): Promise<Fill[]> {
+    const path = market === 'spot' ? '/api/v3/myTrades' : '/fapi/v1/userTrades';
+    const first = (await this.rest.request(market, 'GET', path, { symbol, orderId }, 'signed', 'safe')) as RawFill[];
+    if (!Array.isArray(first)) throw new Error('Invalid trades response');
+    if (first.length === 0) return [];
+    const fromId = Math.min(...first.map((t) => t.id));
+    const all = (await this.rest.request(market, 'GET', path, { symbol, fromId, limit: 1000 }, 'signed', 'safe')) as RawFill[];
+    if (!Array.isArray(all)) throw new Error('Invalid trades response');
+    return all.map((t) => ({
+      orderId: String(t.orderId),
+      buy: market === 'spot' ? t.isBuyer === true : t.side === 'BUY',
+      qty: dec(t.qty),
+      price: dec(t.price),
+      quoteQty: dec(t.quoteQty),
+      commission: dec(t.commission),
+      commissionAsset: String(t.commissionAsset),
+      realizedPnl: market === 'futures' ? dec(t.realizedPnl) : null,
+      time: t.time,
+    }));
+  }
+
+  /** E9: whether Binance liquidated a USDⓈ-M position on the symbol since `startTime`. */
+  async futuresLiquidatedSince(symbol: string, startTime: number): Promise<boolean> {
+    const rows = (await this.rest.request('futures', 'GET', '/fapi/v1/forceOrders', { symbol, startTime, autoCloseType: 'LIQUIDATION' }, 'signed', 'safe')) as unknown[];
+    if (!Array.isArray(rows)) throw new Error('Invalid forceOrders response');
+    return rows.length > 0;
+  }
+
+  /** USDⓈ-M funding paid (< 0) or received (> 0) for the symbol in [startTime, endTime]. */
+  async futuresFunding(symbol: string, startTime: number, endTime: number): Promise<Decimal> {
+    const rows = (await this.rest.request(
+      'futures',
+      'GET',
+      '/fapi/v1/income',
+      { symbol, incomeType: 'FUNDING_FEE', startTime, endTime, limit: 1000 },
+      'signed',
+      'safe',
+    )) as { income: string }[];
+    if (!Array.isArray(rows)) throw new Error('Invalid income response');
+    return rows.reduce((sum, r) => sum.plus(dec(r.income)), new Decimal(0));
+  }
+
   // --- Exchange rules ---
 
   /** Symbol status and filters (B6.6 rounding, min notional; E8 halted when status is not TRADING). */
@@ -337,6 +412,32 @@ export class BinanceTrading {
   /** USDⓈ-M leverage brackets for the B9.2 liquidation check. */
   async leverageBrackets(symbol: string): Promise<LeverageBracket[]> {
     return parseLeverageBrackets(await this.rest.request('futures', 'GET', '/fapi/v1/leverageBracket', { symbol }, 'signed', 'safe'), symbol);
+  }
+
+  /**
+   * Client IDs of the symbol's open orders (plain, algo and OCO lists). This
+   * is the check for "is the stop still there" (B12.2): the single algo-order
+   * query can report NEW for about two seconds after a cancel (Demo check),
+   * while the open lists are current.
+   */
+  async openClientIds(market: BinanceMarket, symbol: string): Promise<Set<string>> {
+    const ids = new Set<string>();
+    if (market === 'futures') {
+      const [orders, algos] = await Promise.all([
+        this.rest.request('futures', 'GET', '/fapi/v1/openOrders', { symbol }, 'signed', 'safe') as Promise<{ clientOrderId: string }[]>,
+        this.rest.request('futures', 'GET', '/fapi/v1/openAlgoOrders', { symbol }, 'signed', 'safe') as Promise<{ clientAlgoId: string }[]>,
+      ]);
+      for (const o of orders) ids.add(o.clientOrderId);
+      for (const a of algos) ids.add(a.clientAlgoId);
+      return ids;
+    }
+    const [orders, lists] = await Promise.all([
+      this.rest.request('spot', 'GET', '/api/v3/openOrders', { symbol }, 'signed', 'safe') as Promise<{ clientOrderId: string }[]>,
+      this.rest.request('spot', 'GET', '/api/v3/openOrderList', {}, 'signed', 'safe') as Promise<{ symbol: string; listClientOrderId: string }[]>,
+    ]);
+    for (const o of orders) ids.add(o.clientOrderId);
+    for (const l of lists) if (l.symbol === symbol) ids.add(l.listClientOrderId);
+    return ids;
   }
 
   // --- Account ---
