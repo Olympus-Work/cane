@@ -59,7 +59,7 @@ interface RawFill {
   time: number;
 }
 
-export type ExitResult ={ kind: 'closed'; order: OrderState } | { kind: 'already_closed' };
+export type ExitResult = { kind: 'closed'; order: OrderState } | { kind: 'already_closed' };
 
 export class TradingDisabledError extends Error {
   constructor(action: string) {
@@ -78,6 +78,7 @@ const DUPLICATE = new Set([-2010, -4116]);
 const MARGIN_TYPE_UNCHANGED = -4046;
 
 const PLACE_ATTEMPTS = 3;
+const FILLS_PAGE = 1000;
 const RESEND_DELAY_MS = 1000;
 
 /**
@@ -361,9 +362,14 @@ export class BinanceTrading {
     const first = (await this.rest.request(market, 'GET', path, { symbol, orderId }, 'signed', 'safe')) as RawFill[];
     if (!Array.isArray(first)) throw new Error('Invalid trades response');
     if (first.length === 0) return [];
-    const fromId = Math.min(...first.map((t) => t.id));
-    const all = (await this.rest.request(market, 'GET', path, { symbol, fromId, limit: 1000 }, 'signed', 'safe')) as RawFill[];
-    if (!Array.isArray(all)) throw new Error('Invalid trades response');
+    const all: RawFill[] = [];
+    for (let fromId = Math.min(...first.map((t) => t.id)); ; ) {
+      const page = (await this.rest.request(market, 'GET', path, { symbol, fromId, limit: FILLS_PAGE }, 'signed', 'safe')) as RawFill[];
+      if (!Array.isArray(page)) throw new Error('Invalid trades response');
+      all.push(...page);
+      if (page.length < FILLS_PAGE) break;
+      fromId = Math.max(...page.map((t) => t.id)) + 1;
+    }
     return all.map((t) => ({
       orderId: String(t.orderId),
       buy: market === 'spot' ? t.isBuyer === true : t.side === 'BUY',
