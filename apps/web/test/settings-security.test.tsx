@@ -162,6 +162,7 @@ describe('Settings > Security', () => {
     // The modal closes and the secret + uri are shown for scanning.
     expect(await screen.findByText('SECRET123')).toBeTruthy();
     expect(screen.getByText('otpauth://totp/Cane:owner?secret=SECRET123')).toBeTruthy();
+    expect(screen.getByRole('img', { name: 'QR code for adding the account to your authenticator app' })).toBeTruthy(); // scannable setup
     expect(screen.queryByRole('dialog')).toBeNull();
 
     fireEvent.change(screen.getByLabelText('Two-factor code'), { target: { value: '234567' } });

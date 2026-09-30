@@ -4,6 +4,7 @@ import { Badge } from '../../components/Badge.js';
 import { Button } from '../../components/Button.js';
 import { Field } from '../../components/Field.js';
 import { Icon } from '../../components/Icon.js';
+import { QrCode } from '../../components/QrCode.js';
 import { TotpModal } from '../../components/TotpModal.js';
 import { useToast } from '../../components/Toast.js';
 import { errorText } from '../../components/errors.js';
@@ -237,6 +238,9 @@ export function Security({ onSignedOut }: { onSignedOut(): void }) {
         {setup && (
           <div className="security-setup">
             <p className="security-setup-scan">{t('totpSetupScan')}</p>
+            <div className="security-qr">
+              <QrCode value={setup.uri} label={t('totpQrLabel')} />
+            </div>
             <div className="security-setup-row">
               <span className="security-setup-label">{t('totpSetupSecret')}</span>
               <code className="mono security-setup-value">{setup.secret}</code>
