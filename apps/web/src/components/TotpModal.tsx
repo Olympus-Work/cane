@@ -30,12 +30,9 @@ export function TotpModal({ title, body, confirmLabel, confirmIcon, destructive,
       await onConfirm(code);
       // On success the caller closes the modal.
     } catch (err) {
-      if (err instanceof ApiError && err.status === 403) {
-        setError(t('codeRejected'));
-        setCode('');
-      } else {
-        setError(errorText(err, t));
-      }
+      // A code is single-use, so it is cleared after any failed attempt.
+      setError(err instanceof ApiError && err.status === 403 ? t('codeRejected') : errorText(err, t));
+      setCode('');
     } finally {
       setPending(false);
     }

@@ -103,6 +103,7 @@ describe('UI kit', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).toBe('Something went wrong on the server. Try again.');
+    expect(input.value).toBe(''); // a code is single-use: cleared after any failed attempt
   });
 
   it('Modal: Escape calls onClose', () => {

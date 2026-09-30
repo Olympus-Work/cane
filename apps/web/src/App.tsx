@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ApiError, NetworkError, listSessions } from './api.js';
+import { ApiError, listSessions } from './api.js';
 import { Button } from './components/Button.js';
 import { Icon } from './components/Icon.js';
 import { LangSwitch, ThemeToggle } from './components/HeaderControls.js';
@@ -24,7 +24,8 @@ export function App() {
       await listSessions();
       setPhase('app');
     } catch (err) {
-      setPhase(err instanceof ApiError && err.status === 401 ? 'login' : err instanceof NetworkError || err instanceof ApiError ? 'unreachable' : 'login');
+      // Only a 401 means "signed out"; anything unexpected shows the retry screen rather than a login wall.
+      setPhase(err instanceof ApiError && err.status === 401 ? 'login' : 'unreachable');
     }
   }, []);
 
