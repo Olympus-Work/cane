@@ -8,6 +8,8 @@ import { ctxOf, optStr, str, type AuthedRequest } from '../auth/http.js';
 import { hintOf } from '../auth/secret-box.js';
 import { DB } from '../db/db.module.js';
 import { strategies } from '../db/schema.js';
+import { NOTIFIER } from '../engine/engine.service.js';
+import type { Notifier } from '../engine/ports.js';
 import { KeyCheckError, judgeKey, PERMISSION_CHECKER, type BinancePermissionChecker, type KeyVerdict } from './binance-permissions.js';
 import { JEV_TIMEOUT_MAX_MS, JEV_TIMEOUT_MIN_MS, SettingsService, type SecretKey } from './settings.service.js';
 
@@ -20,6 +22,7 @@ export class SettingsController {
     private readonly audit: AuditService,
     @Inject(DB) private readonly db: NodePgDatabase,
     @Inject(PERMISSION_CHECKER) private readonly permissions: BinancePermissionChecker,
+    @Inject(NOTIFIER) private readonly notifier: Notifier,
   ) {}
 
   @Get()
@@ -46,6 +49,7 @@ export class SettingsController {
     const before = (await this.settings.hints()).binance_api_key;
     await this.settings.setSecrets({ binance_api_key: apiKey, binance_api_secret: apiSecret });
     await this.audit.record({ actor: 'owner', action: 'key_change', target: 'binance', before: { apiKey: before }, after: { apiKey: hintOf(apiKey) }, ip: ctxOf(req).ip });
+    await this.notifier.notify('settings_changed', null, { what: 'Binance key' });
     return { apiKey: hintOf(apiKey) };
   }
 
@@ -74,6 +78,7 @@ export class SettingsController {
       after: Object.fromEntries(changes.map((c) => [c.key, hintOf(c.v)])),
       ip: ctxOf(req).ip,
     });
+    await this.notifier.notify('settings_changed', null, { what: 'Notification targets' });
     return { changed: changes.map((c) => c.key) };
   }
 
@@ -93,6 +98,7 @@ export class SettingsController {
     if (raw !== undefined) await this.settings.setJevTimeoutMs(raw as number);
     const after = { apiKey: apiKey === undefined ? before.apiKey : hintOf(apiKey), timeoutMs: (raw as number | undefined) ?? before.timeoutMs };
     await this.audit.record({ actor: 'owner', action: 'jev_change', before, after, ip: ctxOf(req).ip });
+    await this.notifier.notify('settings_changed', null, { what: 'Jev settings' });
     return after;
   }
 }

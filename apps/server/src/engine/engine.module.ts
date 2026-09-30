@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { DbModule } from '../db/db.module.js';
 import { MarketDataModule } from '../market-data/market-data.module.js';
-import { CREDENTIALS, EngineService, JEV, NOTIFIER, type CredentialsSource } from './engine.service.js';
+import { CREDENTIALS, EngineService, JEV, type CredentialsSource } from './engine.service.js';
 import { SettingsJevClassifier } from '../jev/jev-settings.classifier.js';
 import { SettingsService } from '../settings/settings.service.js';
-import { LogNotifier, type JevClassifier } from './ports.js';
+import type { JevClassifier } from './ports.js';
 
 /** `JEV_MAX_*` are env config, both off (0) by default (plan S07, owner 2026-09-30). */
 const envInt = (name: string): number => {
@@ -28,7 +28,6 @@ const envInt = (name: string): number => {
       inject: [SettingsService],
       useFactory: (settings: SettingsService): CredentialsSource => ({ get: () => settings.binanceCredentials() }),
     },
-    { provide: NOTIFIER, useClass: LogNotifier },
     {
       provide: JEV,
       inject: [SettingsService],
