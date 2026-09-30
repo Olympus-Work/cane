@@ -504,7 +504,8 @@ Each step ends with its proof passing in CI before the next starts. Steps
     market-closing goes through `Executor.exit` and arrives with the kill
     switch in S11, so no order code is added in S09.5.
   - `POST /v1/strategies` creates `S-NN` (max + 1, at least 2 digits, inside
-    one transaction; a unique-violation retry covers a race), status
+    one transaction under a Postgres advisory lock, so two creates never
+    race), status
     `disabled`. Validation gives 400 with `{code, message}` (never a CHECK
     500): spot has no leverage or margin mode and sizing B; futures default
     5x, `isolated`, mode B; `base_pct` 5–20; threshold 0–1; `risk_pct` only in

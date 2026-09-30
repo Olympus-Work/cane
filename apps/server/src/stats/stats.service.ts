@@ -47,8 +47,8 @@ export class StatsService {
     const rows = await this.rows<{ strategy_id: string; day: string; pnl: string }>(sql`
       select strategy_id, to_char(closed_at at time zone 'Asia/Bangkok', 'YYYY-MM-DD') as day, sum(net_pnl)::text as pnl
       from trades
-      where to_char(closed_at at time zone 'Asia/Bangkok', 'YYYY-MM-DD') >= ${list[0]}
-        and to_char(closed_at at time zone 'Asia/Bangkok', 'YYYY-MM-DD') <= ${list[list.length - 1]}
+      where closed_at >= (${list[0]}::date)::timestamp at time zone 'Asia/Bangkok'
+        and closed_at < ((${list[list.length - 1]}::date) + 1)::timestamp at time zone 'Asia/Bangkok'
       group by strategy_id, day`);
     const byStrategy = new Map<string, Map<string, string>>();
     for (const r of rows) {
@@ -87,8 +87,8 @@ export class StatsService {
              (count(*) filter (where net_pnl < 0))::text as losses,
              sum(net_pnl)::text as pnl
       from trades
-      where to_char(closed_at at time zone 'Asia/Bangkok', 'YYYY-MM-DD') >= ${list[0]}
-        and to_char(closed_at at time zone 'Asia/Bangkok', 'YYYY-MM-DD') <= ${list[list.length - 1]}
+      where closed_at >= (${list[0]}::date)::timestamp at time zone 'Asia/Bangkok'
+        and closed_at < ((${list[list.length - 1]}::date) + 1)::timestamp at time zone 'Asia/Bangkok'
       group by day
       order by day`);
     return rows.map((r) => ({ day: r.day, trades: Number(r.trades), wins: Number(r.wins), losses: Number(r.losses), pnl: r.pnl, level: heatLevel(Number(r.trades)) }));
