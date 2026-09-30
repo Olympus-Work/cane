@@ -94,6 +94,16 @@ CANE_OWNER_PASSWORD='<12+ characters>' pnpm --filter @cane/server owner seed-own
 
 `owner reset-password` (also uses `CANE_OWNER_PASSWORD`) and `owner reset-totp` are the only ways to reset a password or authenticator; both sign every session out. On Railway run them with the Railway CLI. Login needs email + password + a 6-digit code; a TOTP code can be used once, so two actions in the same 30 s window need two different codes.
 
+## Web app (development)
+
+The web app is React + Vite in `apps/web` (fonts and icons are self-hosted; no third-party CDN). Login and Settings exist so far; Dashboard, Strategies and Kill switch follow.
+
+1. Start Postgres and migrate (see "Database"), then seed the owner (see "Owner account (CLI)").
+2. Start the server: `DATABASE_URL=... CANE_MASTER_KEY=<32 bytes base64> pnpm --filter @cane/server build && node apps/server/dist/main.js` (port 3000; the trading engine stays off unless `TRADING_ENABLED=true`).
+3. Start the web app: `pnpm --filter @cane/web dev` and open http://localhost:5173. Vite proxies `/v1` to the server. The session cookie is `Secure`; browsers accept it on `localhost`.
+
+Browser smoke tests (mocked API): `pnpm --filter @cane/web e2e` (set `PW_CHANNEL=msedge` to use an installed Edge). Screenshots land in `apps/web/e2e/screenshots/` for comparison with the design prototype.
+
 ## Security
 
 - This is a public repository. Security must not depend on secrecy of the code.

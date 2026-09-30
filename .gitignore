@@ -26,3 +26,9 @@ test-results/
 Thumbs.db
 .idea/
 .vscode/
+
+# Web e2e artefacts (screenshots are for the owner to compare with the prototype)
+apps/web/e2e/screenshots/
+apps/web/e2e/results/
+apps/web/playwright-report/
+test-results/

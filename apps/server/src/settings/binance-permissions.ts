@@ -17,21 +17,23 @@ export interface BinancePermissionChecker {
   check(credentials: BinanceCredentials): Promise<KeyPermissions>;
 }
 
-export type KeyVerdict = { ok: true } | { ok: false; message: string };
+/** `code` lets the web app show its own (translated) copy; `message` is the English fallback. */
+export type KeyRejection = 'withdrawals_enabled' | 'universal_transfer_enabled' | 'no_trading' | 'market_not_enabled' | 'unusable';
+export type KeyVerdict = { ok: true } | { ok: false; code: KeyRejection; message: string; markets?: Market[] };
 
 /**
  * B15.2: reject a key that can withdraw or transfer, and one that cannot trade
  * in every market in use (or, with none in use yet, in at least one).
  */
 export function judgeKey(p: KeyPermissions, marketsInUse: readonly Market[]): KeyVerdict {
-  if (p.withdrawals) return { ok: false, message: 'Withdrawals are enabled on this key. Turn off "Enable Withdrawals" on Binance and try again.' };
-  if (p.universalTransfer) return { ok: false, message: 'Universal transfer is enabled on this key. Turn it off on Binance and try again.' };
+  if (p.withdrawals) return { ok: false, code: 'withdrawals_enabled', message: 'Withdrawals are enabled on this key. Turn off "Enable Withdrawals" on Binance and try again.' };
+  if (p.universalTransfer) return { ok: false, code: 'universal_transfer_enabled', message: 'Universal transfer is enabled on this key. Turn it off on Binance and try again.' };
   const can = (m: Market): boolean => (m === 'spot' ? p.spotTrading : p.futuresTrading);
   if (marketsInUse.length === 0) {
-    if (!p.spotTrading && !p.futuresTrading) return { ok: false, message: 'This key cannot trade. Enable Spot & Margin Trading and/or Futures on Binance.' };
+    if (!p.spotTrading && !p.futuresTrading) return { ok: false, code: 'no_trading', message: 'This key cannot trade. Enable Spot & Margin Trading and/or Futures on Binance.' };
   } else {
     const missing = marketsInUse.filter((m) => !can(m));
-    if (missing.length > 0) return { ok: false, message: `This key cannot trade ${missing.join(' and ')}, which a strategy uses. Enable it on Binance.` };
+    if (missing.length > 0) return { ok: false, code: 'market_not_enabled', markets: missing, message: `This key cannot trade ${missing.join(' and ')}, which a strategy uses. Enable it on Binance.` };
   }
   return { ok: true };
 }
@@ -58,4 +60,6 @@ export class BinanceApiPermissionChecker implements BinancePermissionChecker {
 }
 
 /** A message that is safe to show the owner: it never contains the key or secret. */
-export class KeyCheckError extends Error {}
+export class KeyCheckError extends Error {
+  readonly code = 'unusable' as const;
+}

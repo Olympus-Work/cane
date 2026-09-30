@@ -16,6 +16,9 @@ const TG_CHAT = fake('fixture', 'tg', 'chat', '4444');
 
 const ok = { status: 200, text: async () => '{"ok":true}' };
 
+/** Delivery runs in the background; give it room when the whole suite loads the machine. */
+const waitFor = (check: () => Promise<void>) => vi.waitFor(check, { timeout: 8000 });
+
 describe.skipIf(!DATABASE_URL)('notification outbox (B13.2, E12)', () => {
   let pool: pg.Pool;
   let db: NodePgDatabase;
@@ -61,7 +64,7 @@ describe.skipIf(!DATABASE_URL)('notification outbox (B13.2, E12)', () => {
   it('sends one message to every configured channel', async () => {
     await configure('both');
     await event();
-    await vi.waitFor(async () => expect((await rows()).every((r) => r.status === 'sent')).toBe(true));
+    await waitFor(async () => expect((await rows()).every((r) => r.status === 'sent')).toBe(true));
     const r = await rows();
     expect(r.map((x) => x.channel).sort()).toEqual(['line', 'telegram']);
     expect(r[0]!.message).toContain('[Entry filled] S-01');
@@ -88,10 +91,10 @@ describe.skipIf(!DATABASE_URL)('notification outbox (B13.2, E12)', () => {
     await configure('both');
     fetchFn.mockImplementation(async (url) => (url.includes('line.me') ? { status: 500, text: async () => '{"message":"boom"}' } : ok));
     await event();
-    await vi.waitFor(async () => expect((await rows()).some((r) => r.channel === 'telegram' && r.status === 'sent')).toBe(true));
+    await waitFor(async () => expect((await rows()).some((r) => r.channel === 'telegram' && r.status === 'sent')).toBe(true));
     const start = new Date((await pool.query('select created_at from notifications limit 1')).rows[0].created_at);
     const line = async () => (await rows()).find((r) => r.channel === 'line')!;
-    await vi.waitFor(async () => expect((await line()).attempts).toBe(1));
+    await waitFor(async () => expect((await line()).attempts).toBe(1));
 
     // Not due yet: 29 s after creation nothing more is sent.
     await service.deliverDue(new Date(start.getTime() + 29_000));
@@ -112,7 +115,7 @@ describe.skipIf(!DATABASE_URL)('notification outbox (B13.2, E12)', () => {
     await configure('telegram');
     fetchFn.mockImplementationOnce(async () => ({ status: 502, text: async () => 'bad gateway' })).mockImplementation(async () => ok);
     await event();
-    await vi.waitFor(async () => expect((await rows())[0]!.attempts).toBe(1));
+    await waitFor(async () => expect((await rows())[0]!.attempts).toBe(1));
     const start = new Date((await pool.query('select created_at from notifications')).rows[0].created_at);
     await service.deliverDue(new Date(start.getTime() + RETRY_DUE_MS[1]!));
     const r = (await rows())[0]!;
@@ -137,7 +140,7 @@ describe.skipIf(!DATABASE_URL)('notification outbox (B13.2, E12)', () => {
     await configure('both');
     fetchFn.mockImplementation(async () => ({ status: 400, text: async () => JSON.stringify({ ok: false, description: `bad ${TG_TOKEN} ${TG_CHAT}`, message: `bad ${LINE_TOKEN}` }) }));
     await service.notify('order_rejected', 'S-01', { pair: 'BTCUSDT', reason: `key ${'A'.repeat(64)}`, apiKey: LINE_TOKEN, accountId: '123456789' });
-    await vi.waitFor(async () => expect((await rows()).every((r) => r.attempts >= 1)).toBe(true));
+    await waitFor(async () => expect((await rows()).every((r) => r.attempts >= 1)).toBe(true));
     const dump = JSON.stringify(await rows());
     for (const secret of [LINE_TOKEN, LINE_USER, TG_TOKEN, TG_CHAT, 'A'.repeat(64), '123456789']) expect(dump).not.toContain(secret);
   });

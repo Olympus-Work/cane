@@ -42,10 +42,10 @@ export class SettingsController {
     try {
       verdict = judgeKey(await this.permissions.check({ apiKey, apiSecret }), used.map((r) => r.market as Market));
     } catch (e) {
-      if (e instanceof KeyCheckError) throw new UnprocessableEntityException(e.message);
+      if (e instanceof KeyCheckError) throw new UnprocessableEntityException({ message: e.message, code: e.code });
       throw e;
     }
-    if (!verdict.ok) throw new UnprocessableEntityException(verdict.message);
+    if (!verdict.ok) throw new UnprocessableEntityException({ message: verdict.message, code: verdict.code, markets: verdict.markets });
     const before = (await this.settings.hints()).binance_api_key;
     await this.settings.setSecrets({ binance_api_key: apiKey, binance_api_secret: apiSecret });
     await this.audit.record({ actor: 'owner', action: 'key_change', target: 'binance', before: { apiKey: before }, after: { apiKey: hintOf(apiKey) }, ip: ctxOf(req).ip });

@@ -1,0 +1,198 @@
+/* Security section (Settings > Security). Layout only; colours come from design tokens. */
+
+.security-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.security-card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.security-card-sub {
+  margin: 4px 0 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ---- Change password ---- */
+.security-pw-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.security-pw-submit {
+  align-self: flex-start;
+}
+
+/* ---- Authenticator setup ---- */
+.security-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.security-setup-scan {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.security-setup-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.security-setup-label {
+  flex: none;
+  width: 90px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.security-setup-value {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 13px;
+  user-select: all;
+}
+
+.security-setup-uri {
+  word-break: break-all;
+  white-space: normal;
+}
+
+.security-setup-confirm {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.security-setup-confirm .totp-input {
+  flex: 1;
+}
+
+/* ---- Recovery codes ---- */
+.security-regen {
+  margin-top: 16px;
+}
+
+.security-codes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.security-codes-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.security-codes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+}
+
+.security-codes-grid > span {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 13px;
+  text-align: center;
+  letter-spacing: 0.08em;
+  user-select: all;
+}
+
+.security-codes-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* ---- Sessions ---- */
+.security-sessions {
+  display: flex;
+  flex-direction: column;
+  margin-top: 16px;
+}
+
+.security-sessions-head,
+.security-sessions-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 2fr) minmax(90px, 1fr) minmax(150px, 1.4fr) minmax(150px, 1.4fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+
+.security-sessions-head {
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.security-sessions-row:hover {
+  background: var(--surface-hover);
+}
+
+.security-sessions-device {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.security-sessions-device > :first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.security-sessions-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 800px) {
+  .security-sessions-head {
+    display: none;
+  }
+
+  .security-sessions-row {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'device action'
+      'ip action'
+      'signedin expires';
+    row-gap: 6px;
+  }
+
+  .security-sessions-row > :nth-child(1) { grid-area: device; }
+  .security-sessions-row > :nth-child(2) { grid-area: ip; }
+  .security-sessions-row > :nth-child(3) { grid-area: signedin; }
+  .security-sessions-row > :nth-child(4) { grid-area: expires; }
+  .security-sessions-row > :nth-child(5) { grid-area: action; }
+}
