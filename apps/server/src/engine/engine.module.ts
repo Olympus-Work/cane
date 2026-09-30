@@ -13,9 +13,11 @@ const envInt = (name: string): number => {
 };
 
 /**
- * The trading engine. Keys come from Settings (S08), read per call, so a key
- * change needs no restart. The engine trades only when `TRADING_ENABLED=true`
- * (EngineService). Never imported by the replay CLI (plan: replay isolation).
+ * The trading engine. Keys come from Settings (S08). The Jev key and timeout
+ * are read per call; the Binance key is read once when the engine starts
+ * (EngineService.onModuleInit), so a new Binance key needs a restart (plan.md,
+ * S08). The engine trades only when `TRADING_ENABLED=true`. Never imported by
+ * the replay CLI (plan: replay isolation).
  */
 @Module({
   imports: [DbModule, MarketDataModule],

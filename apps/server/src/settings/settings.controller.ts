@@ -44,8 +44,7 @@ export class SettingsController {
     }
     if (!verdict.ok) throw new UnprocessableEntityException(verdict.message);
     const before = (await this.settings.hints()).binance_api_key;
-    await this.settings.setSecret('binance_api_key', apiKey);
-    await this.settings.setSecret('binance_api_secret', apiSecret);
+    await this.settings.setSecrets({ binance_api_key: apiKey, binance_api_secret: apiSecret });
     await this.audit.record({ actor: 'owner', action: 'key_change', target: 'binance', before: { apiKey: before }, after: { apiKey: hintOf(apiKey) }, ip: ctxOf(req).ip });
     return { apiKey: hintOf(apiKey) };
   }
@@ -67,7 +66,7 @@ export class SettingsController {
     });
     if (changes.length === 0) throw new BadRequestException('Nothing to change');
     const before = await this.settings.hints();
-    for (const c of changes) await this.settings.setSecret(c.key, c.v);
+    await this.settings.setSecrets(Object.fromEntries(changes.map((c) => [c.key, c.v])));
     await this.audit.record({
       actor: 'owner',
       action: 'notification_change',
