@@ -192,14 +192,18 @@ export class StrategiesController {
   @HttpCode(200)
   async close(@Param('id') id: string, @Req() req: AuthedRequest) {
     const s = await this.load(id);
-    const [position] = await this.db.select({ id: positions.id }).from(positions).where(and(eq(positions.strategyId, id), eq(positions.status, 'open')));
-    if (position) throw new ConflictException({ code: 'position_open', message: 'Close the open position first' });
-    const [live] = await this.db
-      .select({ id: orders.id })
-      .from(orders)
-      .where(and(eq(orders.strategyId, id), inArray(orders.status, [PENDING, ...OPEN_STATUSES])));
-    if (live) throw new ConflictException({ code: 'orders_open', message: 'The strategy still has live orders' });
-    await this.db.update(strategies).set({ status: 'closed', attentionReason: null, updatedAt: new Date() }).where(eq(strategies.id, id));
+    // Mark it closed first, then look for anything live and roll back if found: an engine tick that
+    // starts after the update no longer sees an enabled strategy, so nothing slips in behind the check.
+    await this.db.transaction(async (tx) => {
+      await tx.update(strategies).set({ status: 'closed', attentionReason: null, updatedAt: new Date() }).where(eq(strategies.id, id));
+      const [position] = await tx.select({ id: positions.id }).from(positions).where(and(eq(positions.strategyId, id), eq(positions.status, 'open')));
+      if (position) throw new ConflictException({ code: 'position_open', message: 'Close the open position first' });
+      const [live] = await tx
+        .select({ id: orders.id })
+        .from(orders)
+        .where(and(eq(orders.strategyId, id), inArray(orders.status, [PENDING, ...OPEN_STATUSES])));
+      if (live) throw new ConflictException({ code: 'orders_open', message: 'The strategy still has live orders' });
+    });
     await this.audit.record({ actor: 'owner', action: 'strategy_close', target: id, before: { status: s.status }, after: { status: 'closed' }, ip: ctxOf(req).ip });
     return { id, status: 'closed' };
   }

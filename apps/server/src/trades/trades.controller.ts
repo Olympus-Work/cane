@@ -65,7 +65,7 @@ export class TradesController {
           confidence: f.confidence,
           present: f.present,
           /** True when it also cleared the strategy threshold, i.e. it grew the position (B6.1). */
-          counted: f.present && threshold !== null && f.confidence >= Number(threshold),
+          counted: f.present && threshold !== null && new Decimal(f.confidence).gte(threshold),
         }))
       : null;
     return {
