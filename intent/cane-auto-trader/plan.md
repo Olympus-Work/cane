@@ -494,6 +494,71 @@ Each step ends with its proof passing in CI before the next starts. Steps
     HTTP failure), outbox tests on Postgres (retry schedule, one channel down,
     `notify` never throws), and the manual test message to both channels
     (owner, once, with real tokens).
+- **Strategy + Dashboard choices in S09.5 (Claude Code, 2026-09-30; close
+  scope given by the owner 2026-09-30, the rest awaits owner confirmation):**
+  - All routes need a session (`SessionGuard`); none needs fresh TOTP except
+    the existing enable. Money, prices and quantities are JSON **strings**.
+  - **Close (owner choice):** `POST /v1/strategies/:id/close` closes only a
+    strategy with no open position (status `closed` + audit row). With an
+    open position it answers 409 `position_open`; cancelling orders and
+    market-closing goes through `Executor.exit` and arrives with the kill
+    switch in S11, so no order code is added in S09.5.
+  - `POST /v1/strategies` creates `S-NN` (max + 1, at least 2 digits, inside
+    one transaction; a unique-violation retry covers a race), status
+    `disabled`. Validation gives 400 with `{code, message}` (never a CHECK
+    500): spot has no leverage or margin mode and sizing B; futures default
+    5x, `isolated`, mode B; `base_pct` 5–20; threshold 0–1; `risk_pct` only in
+    mode C. The pair must be listed and TRADING on the chosen market (B10.6),
+    checked through the `ExchangeReader` port.
+  - `PATCH /v1/strategies/:id`: with an open position, pair, market, leverage
+    and margin mode answer 409 `locked_field` naming the field; other fields
+    apply from the next entry. A `closed` strategy cannot be edited (404).
+    Changing pair on an enabled strategy is refused (disable first).
+  - `GET /v1/strategies` (B10.8): per strategy the row, `attentionReason`,
+    price and 24h change, position summary (qty, entry, side, unrealised PnL
+    when the exchange answered), `pnl30d` = `{total, daily:[{day,pnl}]}` for
+    the last 30 Bangkok days (days without trades give `"0"`), leverage in
+    use (open position's leverage, else null). `closed` strategies are listed
+    last.
+  - `GET /v1/strategies/sizing-preview?market&sizingMode&basePct&leverage` (B10.1): current
+    equity of the market plus, for 0 / 2 / 3 present factors, `sizePct` (core
+    `sizePct`) and `notional` / `margin` (core `targetNotional`). Mode C
+    depends on the stop distance, so its notional and margin are `null`.
+    While Binance is unreachable the last good equity is used and `stale` is
+    true (B16.9).
+  - **Exchange reads go through an `ExchangeReader` port** (like
+    `PERMISSION_CHECKER`): `snapshot()` returns spot and futures equity,
+    24h ticker per symbol, and per-position mark, liquidation price and
+    unrealised PnL; `isListed(market, pair)`. The real adapter reads the key
+    from Settings on each call and uses `BinanceTrading` with trading off
+    (reads only); tests use a fake. The adapter caches a good snapshot for
+    15 s; a small state service keeps the last good snapshot and its time, and
+    when a refresh fails it returns those values with `stale: true` (B16.9)
+    and the error kind: `no_key` (nothing saved), `key_rejected` (Binance
+    refused the key) or `unreachable`. The first two show the key-error alert.
+  - `GET /v1/dashboard`: `{status, lastSyncAt, stale, cards, alerts,
+    positions}`. `status` is `running` or `exchange_unreachable`;
+    `stopped_by_kill_switch` arrives with S11. Cards: spot and futures equity,
+    today's and total realised PnL (Bangkok day, sum of `trades.net_pnl` in
+    SQL), trade count, open positions per market. Alerts: `needs_attention`
+    strategies (with reason), Jev fallback used **in the last 24 h**,
+    exchange unreachable, key error; each carries a `link` route name.
+  - `GET /v1/trades?limit&before` (newest first, `before` = trade id, limit
+    1–100, default 50) and `GET /v1/trades/:id` (B16.5–16.6, including the
+    three factors and Jev confidence read from the stored Jev call, PnL
+    breakdown, "lowered from X to Y"). `GET /v1/audit-log?limit&before`
+    likewise; rows are stored redacted already.
+  - `GET /v1/dashboard/heatmap?days` (default 365, max 400): per Bangkok day
+    with at least one trade, `{day, trades, wins, losses, pnl, level}`; win
+    = net PnL > 0, loss = < 0, a flat trade counts as a trade only; level is
+    0 / 1 / 2 / 3 / 4 for 0 / 1 / 2 / 3 / >= 4 trades. Grouping and summing
+    are done in SQL on `numeric` (`closed_at AT TIME ZONE 'Asia/Bangkok'`).
+  - B1 warm-up needs no API: the engine already reports `warming_up` from the
+    candle count every tick, and enabling stays as in S08.
+  - Proof: API tests on Postgres against B10 and B16 (create/edit/close,
+    B10.2 conflict, locked fields, PnL and heatmap on hand-computed trades
+    around the 00:00 ICT boundary), exchange faked, plus a test that no
+    response contains a key fixture.
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.

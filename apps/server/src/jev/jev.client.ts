@@ -64,7 +64,7 @@ interface Parsed {
 }
 
 /** Hand-checked shape: three Noul answers under the factor names, each a finite number in [0,1]. */
-function parse(body: unknown, side: Side): Parsed | null {
+export function parse(body: unknown, side: Side): Parsed | null {
   if (typeof body !== 'object' || body === null) return null;
   const answers = (body as { answers?: unknown }).answers;
   if (typeof answers !== 'object' || answers === null) return null;
