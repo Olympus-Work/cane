@@ -259,6 +259,7 @@ describe.skipIf(!DATABASE_URL)('Auth + Settings API (AC11, AC12)', () => {
       const res = await call('PUT', '/v1/settings/binance-key', { token, code: freshCode(), body: { apiKey: BINANCE_KEY, apiSecret: BINANCE_SECRET } });
       expect(res.statusCode).toBe(422);
       expect(res.payload).toMatch(/withdraw/i);
+      expect(JSON.parse(res.payload)).toMatchObject({ code: 'withdrawals_enabled' });
       expect((await pool.query("select 1 from settings where key like 'binance_%'")).rowCount).toBe(0);
     });
 
@@ -270,6 +271,7 @@ describe.skipIf(!DATABASE_URL)('Auth + Settings API (AC11, AC12)', () => {
       const res = await call('PUT', '/v1/settings/binance-key', { token, code: freshCode(), body: { apiKey: BINANCE_KEY, apiSecret: BINANCE_SECRET } });
       expect(res.statusCode).toBe(422);
       expect(res.payload).toMatch(/futures/);
+      expect(JSON.parse(res.payload)).toMatchObject({ code: 'market_not_enabled', markets: ['futures'] });
       expect((await pool.query("select 1 from settings where key like 'binance_%'")).rowCount).toBe(0);
     });
 

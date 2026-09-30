@@ -131,7 +131,17 @@ Each step ends with its proof passing in CI before the next starts. Steps
 9. **Notifications.** LINE push + Telegram, retry without blocking trading,
    test-message endpoint, message redaction. Proof: unit tests on templates
    (no secrets, no full IDs); manual test message to both channels.
-10. **Web app.** Rebuild screens from the design handoff (not copy the
+9.5. **Strategy + Dashboard API** (owner choice B, 2026-09-30: S09 left
+    no step for the backend the web screens call). Strategy list/create/
+    edit/close (B10), Dashboard data (status, equity, PnL, open positions,
+    trade history, trade detail, audit log, 30-day strategy PnL, daily
+    activity for the heatmap), needs-attention list. The kill switch API
+    stays in step 11. Proof: API tests on Postgres against spec B10, B16.
+10. **Web app**, delivered in two PRs (owner, 2026-09-30):
+    **10a** app shell, TH/EN + theme, Login and Settings (their API exists
+    since S08/S09); **10b** Dashboard, Strategies, Kill switch screens on
+    top of step 9.5. 10a ships before 9.5 so the owner can test Settings.
+    Rebuild screens from the design handoff (not copy the
     prototype): Login, Dashboard (+ heatmap Asia/Bangkok, trade drawer),
     Strategies, Kill switch, Settings. Self-host Poppins, Noto Sans Thai,
     JetBrains Mono, Font Awesome. Proof: Playwright smoke per page in TH/EN,
@@ -409,8 +419,8 @@ Each step ends with its proof passing in CI before the next starts. Steps
     without Binance; the live call is `test/integration/jev-live.test.ts`
     (local only, like S05/S06).
 - **Auth and Settings choices in S08 (Claude Code, 2026-09-30; fresh-TOTP
-  and strategy-enable choices given by the owner 2026-09-30, the rest to
-  confirm in the PR):**
+  and strategy-enable choices given by the owner 2026-09-30, all the rest
+  confirmed by the owner 2026-09-30):**
   - **Fresh TOTP = a code sent with the request itself** (header
     `x-totp-code`), checked against the owner's secret, on top of a valid
     session. No step-up window and no state in `sessions`.
@@ -453,8 +463,8 @@ Each step ends with its proof passing in CI before the next starts. Steps
     the whole run, uses fixture secrets (keys, password, TOTP secret, session
     token, recovery codes) and asserts none appears in any log line or any
     API response body.
-- **Notification choices in S09 (Claude Code, 2026-09-30; to confirm with the
-  owner in the PR):**
+- **Notification choices in S09 (Claude Code, 2026-09-30; confirmed by the
+  owner 2026-09-30):**
   - `Notifier.notify` only writes one `notifications` outbox row per
     configured channel and returns; it never throws and never waits for the
     network, so trading cannot be blocked (B13.2). A worker (every 15 s)
