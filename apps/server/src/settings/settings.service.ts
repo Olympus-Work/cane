@@ -32,12 +32,21 @@ export class SettingsService {
   ) {}
 
   async setSecret(key: SecretKey, plain: string): Promise<void> {
-    const valueEnc = this.box.encrypt(plain);
-    const hint = hintOf(plain);
-    await this.db
-      .insert(settings)
-      .values({ key, valueEnc, hint })
-      .onConflictDoUpdate({ target: settings.key, set: { valueEnc, value: null, hint, updatedAt: new Date() } });
+    await this.setSecrets({ [key]: plain });
+  }
+
+  /** All-or-nothing, so a pair such as the Binance key and secret is never half saved. */
+  async setSecrets(entries: Partial<Record<SecretKey, string>>): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      for (const [key, plain] of Object.entries(entries) as Array<[SecretKey, string]>) {
+        const valueEnc = this.box.encrypt(plain);
+        const hint = hintOf(plain);
+        await tx
+          .insert(settings)
+          .values({ key, valueEnc, hint })
+          .onConflictDoUpdate({ target: settings.key, set: { valueEnc, value: null, hint, updatedAt: new Date() } });
+      }
+    });
   }
 
   async getSecret(key: SecretKey): Promise<string | null> {

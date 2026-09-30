@@ -446,6 +446,9 @@ Each step ends with its proof passing in CI before the next starts. Steps
     say so. Making that live is left to S11/S12 (kill switch, deploy).
     EngineModule joins AppModule but stays inert while `TRADING_ENABLED` is
     not `true`.
+  - `trustProxy` is on (Fastify trusts `X-Forwarded-For` from any peer) so the
+    session list and audit log show the client IP behind Railway. S12 must
+    check the service is reachable only through Railway's proxy.
   - Log-scan proof: a test replaces the Nest logger with a capturing sink for
     the whole run, uses fixture secrets (keys, password, TOTP secret, session
     token, recovery codes) and asserts none appears in any log line or any
