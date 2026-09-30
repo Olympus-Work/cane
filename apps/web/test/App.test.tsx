@@ -66,6 +66,13 @@ describe('App session gate', () => {
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Settings' })).toBeTruthy());
   });
 
+  it('shows the retry screen, not the login wall, when the probe fails with a server error', async () => {
+    setFetchForTests(vi.fn(async () => json(500, { message: 'boom' })));
+    renderApp();
+    expect(await screen.findByRole('button', { name: 'Try again' })).toBeTruthy();
+    expect(screen.queryByText('Sign in to Cane')).toBeNull();
+  });
+
   it('switches to Thai', async () => {
     setFetchForTests(vi.fn(async () => json(401, {})));
     renderApp('th');

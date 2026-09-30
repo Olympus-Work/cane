@@ -72,6 +72,8 @@ export function Login({ onSignedIn }: { onSignedIn(): void }) {
       setMode('totp');
       setStep(1);
       if (err instanceof ApiError && err.status === 423) {
+        // The server does not say how much of the lock is left, so every 423 restarts the full 15:00;
+        // after a retry the countdown can overstate the remaining lock.
         setError(null);
         setLockRemaining(LOCK_SECONDS);
       } else {
