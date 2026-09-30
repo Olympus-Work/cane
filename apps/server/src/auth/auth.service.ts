@@ -95,6 +95,7 @@ export class AuthService {
     await this.db.update(owner).set({ failedLogins: 0, lockedUntil: null }).where(eq(owner.id, 1));
     const session = await this.createSession(ctx, now);
     await this.audit.record({ actor: 'owner', action: 'login_success', target: session.id, ip: ctx.ip });
+    await this.notifier.notify('login_success', null, {});
     return { ok: true, token: session.token, expiresAt: session.expiresAt };
   }
 

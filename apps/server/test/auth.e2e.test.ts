@@ -349,6 +349,19 @@ describe.skipIf(!DATABASE_URL)('Auth + Settings API (AC11, AC12)', () => {
     });
   });
 
+  describe('test message (B13.4)', () => {
+    it('needs a session, rejects an unknown channel, and reports an unset channel without queueing anything', async () => {
+      expect((await call('POST', '/v1/settings/notifications/test', { body: { channel: 'line' } })).statusCode).toBe(401);
+      const token = cookieToken(await login(freshCode(), NEW_PASSWORD))!; // the password was changed above
+      expect((await call('POST', '/v1/settings/notifications/test', { token, body: { channel: 'sms' } })).statusCode).toBe(400);
+      // Only the LINE token was saved above (no user ID), so LINE is not set up.
+      const res = await call('POST', '/v1/settings/notifications/test', { token, body: { channel: 'line' } });
+      expect(res.statusCode).toBe(200);
+      expect(JSON.parse(res.payload)).toEqual({ ok: false, error: 'This channel is not set up in Settings.' });
+      expect((await pool.query('select 1 from notifications')).rowCount).toBe(0);
+    });
+  });
+
   describe('log scan (AC11: keys never appear in API responses or logs)', () => {
     it('no fixture secret appears in any log line or any API response', async () => {
       const allLogs = logged.join('\n');

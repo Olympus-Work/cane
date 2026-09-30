@@ -1,6 +1,4 @@
 import { Global, Module } from '@nestjs/common';
-import { NOTIFIER } from '../engine/engine.service.js';
-import { LogNotifier } from '../engine/ports.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { FreshTotpGuard, SessionGuard } from './guards.js';
@@ -9,7 +7,7 @@ import { FreshTotpGuard, SessionGuard } from './guards.js';
 @Global()
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, SessionGuard, FreshTotpGuard, { provide: NOTIFIER, useClass: LogNotifier }],
+  providers: [AuthService, SessionGuard, FreshTotpGuard],
   exports: [AuthService, SessionGuard, FreshTotpGuard],
 })
 export class AuthModule {}

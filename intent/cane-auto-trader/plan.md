@@ -453,6 +453,37 @@ Each step ends with its proof passing in CI before the next starts. Steps
     the whole run, uses fixture secrets (keys, password, TOTP secret, session
     token, recovery codes) and asserts none appears in any log line or any
     API response body.
+- **Notification choices in S09 (Claude Code, 2026-09-30; to confirm with the
+  owner in the PR):**
+  - `Notifier.notify` only writes one `notifications` outbox row per
+    configured channel and returns; it never throws and never waits for the
+    network, so trading cannot be blocked (B13.2). A worker (every 15 s)
+    delivers pending rows.
+  - Retry: 5 attempts in total, due at 0, 30 s, 2 min, 5 min and 15 min after
+    the row was created; then `failed` with the last error. A channel that is
+    down does not delay the other channel or later events.
+  - A channel is "configured" when its two Settings exist (LINE: channel token
+    + user ID; Telegram: bot token + chat ID). No channel configured = the
+    event is only logged.
+  - Messages are English plain text built by one pure function per event from
+    a whitelist of fields (pair, side, qty, prices, PnL, reason, ...). Values
+    are cut to 200 characters and anything that looks like a token (32+
+    token characters) becomes `[redacted]`; unknown fields are dropped. Keys,
+    tokens, TOTP data, account IDs and the owner email are never fields.
+  - Stored `last_error` is the HTTP status plus the provider's short error
+    text, with every configured secret replaced by `***`; the request URL
+    (Telegram's contains the bot token) is never stored or logged.
+  - Test message: `POST /v1/settings/notifications/test` `{channel}` (session
+    only, no fresh TOTP, since it changes nothing) sends at once and returns
+    `{ok}` or the error text.
+  - New events from B13.1: `login_success` (from S08's login) and
+    `settings_changed` (key, notification and Jev changes, saying which
+    setting, never the value). `kill_switch` arrives with S11.
+  - Proof: template unit tests (whitelist, redaction, no secrets or full
+    IDs), channel tests with a fake fetch (LINE push body, Telegram body,
+    HTTP failure), outbox tests on Postgres (retry schedule, one channel down,
+    `notify` never throws), and the manual test message to both channels
+    (owner, once, with real tokens).
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.
