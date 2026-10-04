@@ -13,7 +13,8 @@ test('TOTP re-setup shows a scannable QR code', async ({ page }) => {
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ secret: 'JBSWY3DPEHPK3PXP', uri: URI }) }),
   );
   await page.goto('/');
-  await page.getByRole('button', { name: en.security ?? '' }).click();
+  await page.getByRole('button', { name: en.settings ?? '' }).click();
+  await page.locator('nav.settings-subnav').getByRole('button', { name: en.security ?? '' }).click();
   await page.getByRole('button', { name: securityEn.setupAuthenticator ?? '' }).click();
   await page.getByLabel(en.totpTitle ?? '').fill('123456');
   await page.getByRole('dialog').getByRole('button', { name: en.save ?? '' }).click();
