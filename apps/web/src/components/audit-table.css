@@ -1,0 +1,35 @@
+/* Audit log grid (see grid-table.css for the shared row classes). */
+.audit-head,
+.audit-row {
+  grid-template-columns: 190px 220px 1fr;
+  min-width: 640px;
+}
+
+.audit-time {
+  font-family: var(--font-mono);
+}
+
+.audit-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.audit-action .fa-solid {
+  font-size: 11px;
+  color: var(--text-accent);
+}
+
+.audit-details {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.audit-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 12px 16px;
+}

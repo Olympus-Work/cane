@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { en } from './en.js';
+import * as dashboardX from './extra-dashboard.js';
 import * as exchange from './extra-exchange.js';
 import * as login from './extra-login.js';
 import * as notifications from './extra-notifications.js';
@@ -10,8 +11,8 @@ import { th } from './th.js';
 export type Lang = 'en' | 'th';
 
 const dictionaries: Record<Lang, Record<string, string>> = {
-  en: { ...en, ...extraEn, ...login.en, ...exchange.en, ...notifications.en, ...security.en },
-  th: { ...th, ...extraTh, ...login.th, ...exchange.th, ...notifications.th, ...security.th },
+  en: { ...en, ...extraEn, ...login.en, ...exchange.en, ...notifications.en, ...security.en, ...dashboardX.en },
+  th: { ...th, ...extraTh, ...login.th, ...exchange.th, ...notifications.th, ...security.th, ...dashboardX.th },
 };
 
 /** Fills `{name}` placeholders; a missing value leaves the placeholder as is. */

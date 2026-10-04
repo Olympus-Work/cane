@@ -478,3 +478,20 @@ body {
     animation: none !important;
   }
 }
+
+/* ---- Modal list (kill switch / close confirmations) ---- */
+.modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.modal-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}

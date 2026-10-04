@@ -36,7 +36,7 @@ describe('App session gate', () => {
     expect(await screen.findByText('Sign in to Cane')).toBeTruthy();
   });
 
-  it('shows Settings (Exchange keys first) when signed in, with the saved key masked', async () => {
+  it('opens on the Dashboard when signed in, and Settings shows the saved key masked', async () => {
     setFetchForTests(
       vi.fn(async (input: RequestInfo | URL) => {
         const url = String(input);
@@ -46,6 +46,8 @@ describe('App session gate', () => {
       }),
     );
     renderApp();
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
     expect(await screen.findByRole('heading', { name: 'Settings' })).toBeTruthy();
     expect(await screen.findByText(/4F2A/)).toBeTruthy();
     expect(screen.queryByText(/9Z9Z/)).toBeNull(); // only the key's own hint is shown
@@ -63,7 +65,7 @@ describe('App session gate', () => {
     const retry = await screen.findByRole('button', { name: 'Try again' });
     up = true;
     fireEvent.click(retry);
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Settings' })).toBeTruthy());
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeTruthy());
   });
 
   it('shows the retry screen, not the login wall, when the probe fails with a server error', async () => {

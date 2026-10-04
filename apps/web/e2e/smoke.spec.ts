@@ -47,6 +47,12 @@ async function completeLogin(page: Page, dict: Record<string, string>) {
   return loginReq;
 }
 
+/** The app lands on the Dashboard after sign-in; Settings is a header nav button. */
+async function openSettings(page: Page, dict: Record<string, string>) {
+  await expect(page.getByRole('heading', { name: dict.dashboard })).toBeVisible();
+  await page.getByRole('button', { name: dict.settings }).click();
+}
+
 /** Click through the Settings sub-nav in order, screenshotting each tab. */
 async function visitSettingsTabs(page: Page, dict: Record<string, string>, lang: Lang) {
   for (const tab of TABS) {
@@ -89,6 +95,7 @@ for (const lang of LANGS) {
     await mockApi(page, { signedIn: true });
     await page.goto('/');
 
+    await openSettings(page, dict);
     await expect(page.getByRole('heading', { name: dict.settings, level: 1 })).toBeVisible();
 
     // Exchange keys is the default tab: the masked hint is shown, the secret is not.
@@ -109,7 +116,7 @@ for (const lang of LANGS) {
     await (await completeLogin(page, dict));
 
     // (b) the settings flow, exercising every tab so all fonts are requested
-    await expect(page.getByRole('heading', { name: dict.settings, level: 1 })).toBeVisible();
+    await openSettings(page, dict);
     await visitSettingsTabs(page, dict, lang);
 
     await page.evaluate(() => document.fonts.ready);
@@ -129,6 +136,7 @@ for (const lang of LANGS) {
     await setLang(page, lang);
     await mockApi(page, { signedIn: true });
     await page.goto('/');
+    await openSettings(page, dict);
     await expect(page.getByRole('heading', { name: dict.settings, level: 1 })).toBeVisible();
 
     const toggle = page.getByRole('button', { name: dict.theme });

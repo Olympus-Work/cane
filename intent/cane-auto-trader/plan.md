@@ -560,6 +560,48 @@ Each step ends with its proof passing in CI before the next starts. Steps
     B10.2 conflict, locked fields, PnL and heatmap on hand-computed trades
     around the 00:00 ICT boundary), exchange faked, plus a test that no
     response contains a key fixture.
+- **Web Dashboard / Strategies / Kill switch choices in S10b (Claude Code,
+  2026-10-04; awaits owner confirmation):**
+  - No router library: the shell keeps the current page in state (Dashboard,
+    Strategies, Settings, Kill switch). The shell owns the 10 s dashboard poll
+    so the status pill and the page share one request. Below 768 px only
+    Dashboard and Kill switch exist (B16.10): no nav, a sticky kill bar, a
+    16-week heatmap, 2-column stat cards and position cards instead of the
+    wide table.
+  - **Kill switch endpoint is S11's.** The screen and confirm modal are built
+    against a proposed contract: `POST /v1/kill-switch` (session only, no
+    TOTP) → `{activatedAt, results:[{pair, market, what, status:
+    closed|cancelled|failed}], untouched:[{pair, market}]}`. Until S11 the
+    server answers 404 and the modal says it is not available yet. The
+    Dashboard also understands `status: 'stopped_by_kill_switch'` (S11 will
+    return it); the "Trading stopped" banner shows for that or for a result
+    received in this tab, and clears when a strategy is enabled from the UI.
+    S11 may change the contract; it updates this plan first.
+  - **State badge** comes from the API's `status` plus the position: enabled
+    without a position = "Waiting for signal". "Warming up" is not shown:
+    the engine knows it (S06) but no API field carries it. Add one when the
+    owner wants it.
+  - **Close** is offered on every non-closed strategy. With an open position
+    the server answers 409 `position_open` (S09.5) and the dialog says to use
+    the kill switch until S11 adds the market close.
+  - **Pair input** is free text, upper-cased, checked against `^[A-Z0-9]+USDT$`
+    in the browser and against Binance by the server (B10.6). There is no
+    pair-list endpoint, so no search dropdown. A pair already used by an
+    enabled / needs-attention strategy is flagged from the loaded list.
+  - **Trade drawer**: the API has no previous / next trade id, so the flip
+    note is shown for `entryKind: 'flip'` without the "Previous trade" link,
+    and the "Flipped" note on the closing trade is not shown (no `flip` exit
+    reason exists; the closing trade's reason is first red / first green).
+    Factor names are the core codes (`channel_breakout`, …) mapped to labels.
+    The Jev timeout in the fallback note is the current Setting; the trade
+    record does not store the one that applied (B8.5 asks for it; add the
+    column if the owner wants exactness).
+  - Exit reasons `manual` and `liquidated` (in the DB, not in the design)
+    get the labels "Manual" / "Liquidated".
+  - Proof: component tests per screen (Vitest), plus Playwright smoke per
+    page in TH and EN with the API mocked, a same-origin network assertion
+    on every authenticated page, and screenshots for the owner to compare
+    with the prototype.
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.

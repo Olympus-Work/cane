@@ -272,6 +272,9 @@ importers:
       '@fortawesome/fontawesome-free':
         specifier: 6.7.2
         version: 6.7.2
+      decimal.js:
+        specifier: ^10.6.0
+        version: 10.6.0
       qrcode:
         specifier: 1.5.4
         version: 1.5.4
@@ -3311,7 +3314,8 @@ snapshots:
       '@eslint/core': 1.2.1
       levn: 0.4.1
 
-  '@exodus/bytes@1.16.0': {}
+  '@exodus/bytes@1.16.0':
+    optional: true
 
   '@exodus/bytes@1.16.0(@noble/hashes@2.4.0)':
     optionalDependencies:
@@ -4024,6 +4028,7 @@ snapshots:
       whatwg-url: 16.0.1
     transitivePeerDependencies:
       - '@noble/hashes'
+    optional: true
 
   data-urls@7.0.0(@noble/hashes@2.4.0):
     dependencies:
@@ -4367,6 +4372,7 @@ snapshots:
       '@exodus/bytes': 1.16.0
     transitivePeerDependencies:
       - '@noble/hashes'
+    optional: true
 
   html-encoding-sniffer@7.0.0(@noble/hashes@2.4.0):
     dependencies:
@@ -4465,6 +4471,7 @@ snapshots:
       xml-name-validator: 5.0.0
     transitivePeerDependencies:
       - '@noble/hashes'
+    optional: true
 
   jsdom@30.1.1(@noble/hashes@2.4.0):
     dependencies:
@@ -5148,6 +5155,7 @@ snapshots:
       webidl-conversions: 8.0.1
     transitivePeerDependencies:
       - '@noble/hashes'
+    optional: true
 
   whatwg-url@16.0.1(@noble/hashes@2.4.0):
     dependencies:
@@ -5164,6 +5172,7 @@ snapshots:
       webidl-conversions: 8.0.1
     transitivePeerDependencies:
       - '@noble/hashes'
+    optional: true
 
   whatwg-url@17.1.2(@noble/hashes@2.4.0):
     dependencies:

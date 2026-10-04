@@ -98,3 +98,18 @@
   --accent-strong:  var(--indigo-700);
   --accent-soft-bg: var(--indigo-100);
 }
+
+/* Positive / negative text and chart colours: bright on dark, deep on light (spec: Colour semantics). */
+:root {
+  --pos: var(--success);
+  --neg: var(--danger);
+  --sparkline-up: var(--success);
+  --sparkline-down: var(--danger);
+}
+:root.light,
+.light {
+  --pos: var(--green-fg);
+  --neg: var(--red-fg);
+  --sparkline-up: var(--green-fg);
+  --sparkline-down: var(--red-fg);
+}

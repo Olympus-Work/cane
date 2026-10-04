@@ -1,0 +1,58 @@
+/* Strategies grid (see grid-table.css for the shared row classes). */
+.strat-head,
+.strat-row {
+  grid-template-columns: 1.1fr 130px .7fr 1.3fr 1.4fr 170px 1fr .7fr .7fr 250px;
+  min-width: 1380px;
+}
+
+/* The shared .badge (styles/app.css) gives padding, radius and layout; this adds the neutral colour. */
+.badge-neutral {
+  background: var(--surface);
+  color: var(--text-secondary);
+}
+
+.strat-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding-right: 16px;
+}
+
+.strat-price .gt-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.strat-note {
+  display: block;
+  white-space: normal;
+}
+
+.strat-pos {
+  font-size: 12px;
+}
+
+.strat-pnl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.strat-pnl .mono {
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.strat-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.strategy-close {
+  color: var(--neg);
+  border-color: var(--danger);
+}
