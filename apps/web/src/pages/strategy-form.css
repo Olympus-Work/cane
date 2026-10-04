@@ -1,0 +1,134 @@
+.link-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-accent);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+
+.form-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-value {
+  margin-left: 8px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.form-range {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.mode-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mode-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mode-card[aria-checked='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft-bg);
+}
+
+.mode-card-title {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.mode-card-desc {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.form-lock {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.seg-btn:disabled,
+.field-input:disabled,
+.form-range:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.form-preview {
+  position: sticky;
+  top: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-preview-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.form-preview-headline {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--accent-soft-bg);
+  font-size: 13px;
+}
+
+.form-preview-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+
+.form-preview-rows li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}

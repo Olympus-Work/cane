@@ -1,0 +1,85 @@
+/* Card tables built from CSS grids (spec: Card pattern). A row sets its own grid-template-columns and min-width. */
+.gt-scroll {
+  overflow-x: auto;
+}
+
+.gt-head,
+.gt-row {
+  display: grid;
+  align-items: center;
+  column-gap: 8px;
+  padding: 12px 16px;
+}
+
+.gt-head {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.gt-row {
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  width: 100%;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.gt-row:hover {
+  background: var(--surface-hover);
+}
+
+button.gt-row {
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.gt-num {
+  text-align: right;
+  font-family: var(--font-mono);
+}
+
+.gt-strong {
+  font-weight: 600;
+}
+
+.gt-sub {
+  display: block;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.pnl-up {
+  color: var(--pos);
+}
+
+.pnl-down {
+  color: var(--neg);
+}
+
+.pnl-flat {
+  color: var(--text-secondary);
+}
+
+.gt-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.gt-empty-title {
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+}

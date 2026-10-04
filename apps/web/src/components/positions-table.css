@@ -1,0 +1,6 @@
+/* Open positions grid. The head and every body row share the same columns. */
+.positions-table .gt-head,
+.positions-table .gt-row {
+  grid-template-columns: 1.1fr .8fr .7fr .7fr 1fr 1fr 1.3fr 1fr 1fr 1fr .6fr;
+  min-width: 1120px;
+}

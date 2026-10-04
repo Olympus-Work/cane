@@ -80,3 +80,133 @@
   min-height: 100vh;
   padding: 24px;
 }
+
+.shell-divider {
+  flex: none;
+  width: 1px;
+  height: 28px;
+  background: var(--border-strong);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: 6px;
+  max-width: 220px;
+  padding: 6px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-pill-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-running {
+  color: var(--pos);
+}
+
+.status-stoppedKill {
+  color: var(--neg);
+}
+
+.status-unreachable {
+  color: var(--warning);
+}
+
+.kill-button {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1.5px solid var(--danger);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--neg);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.kill-button:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.kill-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  background: var(--red-bg);
+  color: var(--red-fg);
+}
+
+.kill-banner-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+.kill-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--bg-base) 90%, transparent);
+}
+
+.kill-bar-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 56px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--danger);
+  color: #fff;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 767px) {
+  .shell-header {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 12px 16px;
+    gap: 10px;
+  }
+
+  .shell-brand {
+    font-size: 17px;
+  }
+
+  .status-pill {
+    order: 10;
+    flex-basis: auto;
+    max-width: none;
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+
+  .shell-main {
+    padding: 16px 16px 24px;
+  }
+
+  .kill-banner {
+    padding: 12px 16px;
+  }
+}

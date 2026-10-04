@@ -1,0 +1,67 @@
+/* Mobile position cards: one card per open position. */
+.position-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.position-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.position-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.position-card-pair {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.position-card-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.position-card-pnl {
+  text-align: right;
+  font-family: var(--font-mono);
+}
+
+.position-card-pnl-pct {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+}
+
+.position-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.position-card-label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.position-card-value {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.position-card-chg {
+  display: block;
+  font-size: 11px;
+}

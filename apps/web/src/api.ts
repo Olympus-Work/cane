@@ -33,7 +33,7 @@ export function setFetchForTests(f: typeof fetch): void {
   fetchImpl = f;
 }
 
-export async function api<T = unknown>(method: 'GET' | 'POST' | 'PUT', url: string, opts: RequestOptions = {}): Promise<T> {
+export async function api<T = unknown>(method: 'GET' | 'POST' | 'PUT' | 'PATCH', url: string, opts: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = {};
   if (opts.body !== undefined) headers['content-type'] = 'application/json';
   if (opts.totp) headers['x-totp-code'] = opts.totp;
@@ -97,3 +97,204 @@ export const saveNotifications = (fields: { lineChannelToken?: string; lineUserI
   api<{ changed: string[] }>('PUT', '/v1/settings/notifications', { body: fields, totp });
 export const saveJev = (fields: { apiKey?: string; timeoutMs?: number }, totp: string) => api<{ apiKey: string | null; timeoutMs: number | null }>('PUT', '/v1/settings/jev', { body: fields, totp });
 export const sendTestMessage = (channel: 'line' | 'telegram') => api<{ ok: boolean; error?: string }>('POST', '/v1/settings/notifications/test', { body: { channel } });
+
+// --- Dashboard, strategies, trades, audit (mirror apps/server: dashboard, strategies, trades, audit controllers). Money, prices and quantities are decimal strings. ---
+
+export type Market = 'spot' | 'futures';
+export type Side = 'long' | 'short';
+export type SizingMode = 'A' | 'B' | 'C';
+export type MarginMode = 'isolated' | 'cross';
+export type StrategyStatus = 'enabled' | 'disabled' | 'needs_attention' | 'closed';
+export type ExchangeError = 'no_key' | 'key_rejected' | 'unreachable' | null;
+
+export type DashboardAlert =
+  | { kind: 'needs_attention'; strategyId: string; pair: string; reason: string | null; link: 'strategies' }
+  | { kind: 'jev_fallback'; count: number; link: 'trades' }
+  | { kind: 'exchange_unreachable'; link: 'settings' }
+  | { kind: 'key_error'; link: 'settings' };
+
+export interface DashboardPosition {
+  strategyId: string;
+  sizingMode: SizingMode | null;
+  pair: string;
+  market: Market;
+  side: Side;
+  qty: string;
+  entryPrice: string;
+  markPrice: string | null;
+  change24hPct: string | null;
+  unrealizedPnl: string | null;
+  unrealizedPnlPct: string | null;
+  stopPrice: string;
+  takeProfitPrice: string | null;
+  liquidationPrice: string | null;
+  leverage: number | null;
+  openedAt: string;
+}
+
+export interface Dashboard {
+  status: 'running' | 'exchange_unreachable' | 'stopped_by_kill_switch';
+  lastSyncAt: string | null;
+  stale: boolean;
+  cards: {
+    spotEquity: string | null;
+    futuresEquity: string | null;
+    realisedToday: string;
+    realisedTotal: string;
+    tradeCount: number;
+    openPositions: { spot: number; futures: number };
+  };
+  alerts: DashboardAlert[];
+  positions: DashboardPosition[];
+}
+
+export interface HeatmapDay {
+  day: string; // YYYY-MM-DD, Asia/Bangkok
+  trades: number;
+  wins: number;
+  losses: number;
+  pnl: string;
+  level: 0 | 1 | 2 | 3 | 4;
+}
+
+export type ExitReason = 'first_red' | 'first_green' | 'stop' | 'take_profit' | 'kill_switch' | 'flip' | string;
+
+export interface TradeSummary {
+  id: number;
+  strategyId: string;
+  pair: string;
+  market: Market;
+  side: Side;
+  entryPrice: string;
+  exitPrice: string;
+  qty: string;
+  netPnl: string;
+  exitReason: ExitReason;
+  openedAt: string;
+  closedAt: string;
+}
+
+export interface TradeDetail extends TradeSummary {
+  entryKind: string;
+  signalTimeframe: string;
+  trend1w: string | null;
+  factors: { name: string; confidence: string; present: boolean; counted: boolean }[] | null;
+  threshold: string | null;
+  jevFallback: boolean;
+  sizingMode: SizingMode;
+  sizePct: string;
+  leverage: { configured: number | null; used: number | null; lowered: boolean };
+  pnl: { gross: string; fees: string; funding: string; net: string };
+}
+
+export interface AuditItem {
+  id: number;
+  at: string;
+  actor: string;
+  action: string;
+  target: string | null;
+  before: unknown;
+  after: unknown;
+  ip: string | null;
+}
+
+export interface Paged<T> {
+  items: T[];
+  nextBefore: number | null;
+}
+
+export interface StrategyItem {
+  id: string;
+  pair: string;
+  market: Market;
+  status: StrategyStatus;
+  attentionReason: string | null;
+  sizingMode: SizingMode;
+  marginMode: MarginMode | null;
+  leverageCeiling: number | null;
+  leverageInUse: number | null;
+  basePct: string;
+  confidenceThreshold: string;
+  riskPct: string | null;
+  price: string | null;
+  change24hPct: string | null;
+  position: {
+    side: Side;
+    qty: string;
+    entryPrice: string;
+    stopPrice: string;
+    takeProfitPrice: string | null;
+    leverage: number | null;
+    openedAt: string;
+    unrealizedPnl: string | null;
+  } | null;
+  /** B10.7: pair, market, leverage and margin mode cannot be edited while true. */
+  locked: boolean;
+  pnl30d: { total: string; daily: { day: string; pnl: string }[] };
+}
+
+export interface StrategyList {
+  items: StrategyItem[];
+  lastSyncAt: string | null;
+  stale: boolean;
+  exchangeError: ExchangeError;
+}
+
+export interface StrategyInput {
+  pair: string;
+  market: Market;
+  leverage: number | null;
+  sizingMode: SizingMode;
+  marginMode: MarginMode | null;
+  basePct: string;
+  confidenceThreshold: string;
+  riskPct: string | null;
+}
+
+export interface SizingPreview {
+  market: Market;
+  sizingMode: SizingMode;
+  equity: string | null;
+  stale: boolean;
+  exchangeError: ExchangeError;
+  rows: { factors: 0 | 2 | 3; sizePct: string; notional: string | null; margin: string | null }[];
+}
+
+const qs = (params: Record<string, string | number | undefined>): string => {
+  const p = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) if (v !== undefined) p.set(k, String(v));
+  const s = p.toString();
+  return s ? `?${s}` : '';
+};
+
+export const readDashboard = () => api<Dashboard>('GET', '/v1/dashboard');
+export const readHeatmap = (days: number) => api<{ days: number; items: HeatmapDay[] }>('GET', `/v1/dashboard/heatmap${qs({ days })}`);
+export const listTrades = (limit = 50, before?: number) => api<Paged<TradeSummary>>('GET', `/v1/trades${qs({ limit, before })}`);
+export const readTrade = (id: number) => api<TradeDetail>('GET', `/v1/trades/${id}`);
+export const listAudit = (limit = 50, before?: number) => api<Paged<AuditItem>>('GET', `/v1/audit-log${qs({ limit, before })}`);
+export const listStrategies = () => api<StrategyList>('GET', '/v1/strategies');
+export const sizingPreview = (q: { market: Market; sizingMode: SizingMode; basePct: string; leverage?: number }) => api<SizingPreview>('GET', `/v1/strategies/sizing-preview${qs(q)}`);
+export const createStrategy = (input: StrategyInput) => api<{ id: string; status: StrategyStatus }>('POST', '/v1/strategies', { body: input });
+export const editStrategy = (id: string, patch: Partial<StrategyInput>) => api<StrategyInput & { id: string }>('PATCH', `/v1/strategies/${id}`, { body: patch });
+export const enableStrategy = (id: string, totp: string) => api<{ id: string; status: StrategyStatus }>('POST', `/v1/strategies/${id}/enable`, { body: {}, totp });
+export const disableStrategy = (id: string) => api<{ id: string; status: StrategyStatus }>('POST', `/v1/strategies/${id}/disable`, { body: {} });
+export const closeStrategy = (id: string) => api<{ id: string; status: StrategyStatus }>('POST', `/v1/strategies/${id}/close`, { body: {} });
+
+// --- Kill switch (S11 builds the endpoint; this is the contract S10b's screen is written against, recorded in plan.md) ---
+
+export interface KillResultRow {
+  pair: string;
+  market: Market;
+  /** What was done, e.g. "Long 0.050 · 2 orders". Plain text from the server. */
+  what: string;
+  status: 'closed' | 'cancelled' | 'failed';
+}
+
+export interface KillResult {
+  activatedAt: string;
+  results: KillResultRow[];
+  /** Positions the system did not open; reported, never touched (B11.3). */
+  untouched: { pair: string; market: Market }[];
+}
+
+export const activateKillSwitch = () => api<KillResult>('POST', '/v1/kill-switch', { body: {} });
