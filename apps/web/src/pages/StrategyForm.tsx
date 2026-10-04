@@ -10,7 +10,7 @@ import { useI18n } from '../i18n/index.js';
 import { fmtMoney } from '../lib/format.js';
 import './strategy-form.css';
 
-const PAIR_RE = /^[A-Z0-9]{2,}USDT$/;
+const PAIR_RE = /^[A-Z0-9]{1,20}USDT$/;
 const MODES: { id: SizingMode; label: string; desc: string }[] = [
   { id: 'A', label: 'modeA', desc: 'modeAD' },
   { id: 'B', label: 'modeB', desc: 'modeBD' },

@@ -15,10 +15,6 @@ const DIR_CLASS = { up: 'pnl-up', down: 'pnl-down', flat: 'pnl-flat' } as const;
 const LEVEL_EN = ['None', 'Low', 'Normal', 'High', 'Very high'];
 const LEVEL_TH = ['ไม่มี', 'น้อย', 'ปกติ', 'สูง', 'สูงมาก'];
 
-// No i18n keys exist for these two tooltip row labels yet.
-const LABEL_PNL = 'PnL';
-const LABEL_WL = 'Win / Loss';
-
 // Fixed reference year for month names; only the month part is rendered.
 const MONTH_REF_YEAR = 2026;
 
@@ -134,13 +130,13 @@ export function Heatmap({ items, today, weeks }: { items: HeatmapDay[]; today: s
                   <span className="mono">{hover.cell.trades}</span>
                 </div>
                 <div className="heatmap-tip-row">
-                  <span>{LABEL_PNL}</span>
+                  <span>{t('hmPnl')}</span>
                   <span className={`mono ${DIR_CLASS[pnlDir(hover.cell.pnl)]}`}>
                     <Icon name={DIR_ICON[pnlDir(hover.cell.pnl)]} /> {signed(hover.cell.pnl)} USDT
                   </span>
                 </div>
                 <div className="heatmap-tip-row">
-                  <span>{LABEL_WL}</span>
+                  <span>{t('hmWinLoss')}</span>
                   <span className="mono">{winLoss(hover.cell)}</span>
                 </div>
                 <div className="heatmap-tip-div" />

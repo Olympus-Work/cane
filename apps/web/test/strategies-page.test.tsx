@@ -263,6 +263,12 @@ describe('Strategies page', () => {
     expect(screen.getByText('Enter a USDT pair such as BTCUSDT.')).toBeTruthy();
     expect(saveButton().disabled).toBe(true);
 
+    // Same rule as the server: 1-20 characters before USDT.
+    fireEvent.change(pair, { target: { value: 'XUSDT' } });
+    expect(saveButton().disabled).toBe(false);
+    fireEvent.change(pair, { target: { value: `${'A'.repeat(21)}USDT` } });
+    expect(screen.getByText('Enter a USDT pair such as BTCUSDT.')).toBeTruthy();
+
     fireEvent.change(pair, { target: { value: 'BTCUSDT' } });
     expect(screen.getByText('BTCUSDT already has an enabled strategy: S-01 (Futures). Disable it first.')).toBeTruthy();
 
