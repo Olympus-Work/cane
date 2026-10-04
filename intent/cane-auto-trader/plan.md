@@ -584,7 +584,7 @@ Each step ends with its proof passing in CI before the next starts. Steps
   - **Close** is offered on every non-closed strategy. With an open position
     the server answers 409 `position_open` (S09.5) and the dialog says to use
     the kill switch until S11 adds the market close.
-  - **Pair input** is free text, upper-cased, checked against `^[A-Z0-9]+USDT$`
+  - **Pair input** is free text, upper-cased, checked against `^[A-Z0-9]{1,20}USDT$` (same as the server)
     in the browser and against Binance by the server (B10.6). There is no
     pair-list endpoint, so no search dropdown. A pair already used by an
     enabled / needs-attention strategy is flagged from the loaded list.

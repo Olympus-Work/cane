@@ -61,7 +61,7 @@ export function Dashboard({ poll, onNavigate }: { poll: Poll<DashboardData>; onN
 
       <div className={`stat-grid${stale ? ' stale' : ''}`}>{dash ? <StatCards data={dash} /> : <StatSkeletons />}</div>
 
-      {dash ? <Alerts alerts={dash.alerts} lastSyncAt={dash.lastSyncAt} onNavigate={onNavigate} onViewTrades={() => setTab('trades')} /> : null}
+      {dash ? <Alerts alerts={dash.alerts} lastSyncAt={dash.lastSyncAt} mobile={mobile} onNavigate={onNavigate} onViewTrades={() => setTab('trades')} /> : null}
 
       <section className="card card-flush">
         <div className="tabs" role="tablist">
@@ -188,7 +188,7 @@ function StatCards({ data }: { data: DashboardData }) {
   );
 }
 
-function Alerts({ alerts, lastSyncAt, onNavigate, onViewTrades }: { alerts: DashboardAlert[]; lastSyncAt: string | null; onNavigate(page: Page): void; onViewTrades(): void }) {
+function Alerts({ alerts, lastSyncAt, mobile, onNavigate, onViewTrades }: { alerts: DashboardAlert[]; lastSyncAt: string | null; mobile: boolean; onNavigate(page: Page): void; onViewTrades(): void }) {
   const { t } = useI18n();
   const attention = alerts.filter((a): a is Extract<DashboardAlert, { kind: 'needs_attention' }> => a.kind === 'needs_attention');
   const others = alerts.filter((a) => a.kind !== 'needs_attention');
@@ -210,9 +210,11 @@ function Alerts({ alerts, lastSyncAt, onNavigate, onViewTrades }: { alerts: Dash
               ))}
             </ul>
           </div>
-          <Button variant="secondary" size="sm" onClick={() => onNavigate('strategies')}>
-            {t('review')}
-          </Button>
+          {mobile ? null : (
+            <Button variant="secondary" size="sm" onClick={() => onNavigate('strategies')}>
+              {t('review')}
+            </Button>
+          )}
         </div>
       ) : null}
       {others.map((a) => {
@@ -248,9 +250,11 @@ function Alerts({ alerts, lastSyncAt, onNavigate, onViewTrades }: { alerts: Dash
                   <div className="dash-alert-title">{t('alKeyT')}</div>
                   <div className="dash-alert-text">{t('alKeyB')}</div>
                 </div>
-                <Button variant="secondary" size="sm" onClick={() => onNavigate('settings')}>
-                  {t('openSettings')}
-                </Button>
+                {mobile ? null : (
+                  <Button variant="secondary" size="sm" onClick={() => onNavigate('settings')}>
+                    {t('openSettings')}
+                  </Button>
+                )}
               </div>
             );
           default:

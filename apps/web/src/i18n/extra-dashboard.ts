@@ -40,6 +40,8 @@ export const en: Record<string, string> = {
   statusPillLabel: 'System status',
   mobileOnlyNote: 'Strategies and Settings are available on desktop.',
   mCloseNoPos: 'This marks the strategy as closed. Its trade history is kept.',
+  hmPnl: 'PnL',
+  hmWinLoss: 'Win / Loss',
 };
 
 export const th: Record<string, string> = {
@@ -83,4 +85,6 @@ export const th: Record<string, string> = {
   statusPillLabel: 'สถานะระบบ',
   mobileOnlyNote: 'กลยุทธ์และการตั้งค่าใช้ได้บนเดสก์ท็อป',
   mCloseNoPos: 'ปิดกลยุทธ์นี้ ประวัติการเทรดยังอยู่ครบ',
+  hmPnl: 'กำไรขาดทุน',
+  hmWinLoss: 'ชนะ / แพ้',
 };

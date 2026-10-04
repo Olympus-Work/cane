@@ -193,6 +193,21 @@ describe('Dashboard page', () => {
     expect(nav).toHaveBeenCalledWith('settings');
   });
 
+  it('hides the Open settings button on mobile, where Settings is not reachable', async () => {
+    const original = window.matchMedia;
+    window.matchMedia = (query: string) =>
+      ({ matches: query === '(max-width: 767px)', media: query, onchange: null, addEventListener: () => {}, removeEventListener: () => {}, addListener: () => {}, removeListener: () => {}, dispatchEvent: () => false }) as MediaQueryList;
+    try {
+      const dash = dashboard({ alerts: [{ kind: 'key_error', link: 'settings' }] });
+      setFetchForTests(mockFetch({}));
+      renderPage(pollOf(dash));
+      expect(await screen.findByText('Exchange key error')).toBeTruthy();
+      expect(screen.queryByRole('button', { name: 'Open settings' })).toBeNull();
+    } finally {
+      window.matchMedia = original;
+    }
+  });
+
   it('shows the Jev fallback count and its View button switches to the Trade history tab', async () => {
     const dash = dashboard({ alerts: [{ kind: 'jev_fallback', count: 2, link: 'trades' }] });
     setFetchForTests(mockFetch({ trades: () => ({ items: [], nextBefore: null }) }));
