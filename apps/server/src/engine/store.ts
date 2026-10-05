@@ -146,7 +146,37 @@ export class EngineStore {
     await this.db.insert(trades).values(row);
   }
 
-  async setStrategyStatus(id: string, status: 'enabled' | 'needs_attention', reason: string | null): Promise<void> {
+  /** B11: every strategy the kill switch must stop (all but the closed ones). */
+  async killableStrategies(): Promise<StrategyRow[]> {
+    return this.db.select().from(strategies).where(sql`${strategies.status} <> 'closed'`).orderBy(strategies.id);
+  }
+
+  /** Entry orders of a strategy that are still open or not yet answered (B11.2: "cancel all orders the system placed"). */
+  async openEntryOrders(strategyId: string): Promise<OrderRow[]> {
+    return this.db
+      .select()
+      .from(orders)
+      .where(and(eq(orders.strategyId, strategyId), eq(orders.purpose, 'entry'), inArray(orders.status, [...OPEN_STATUSES, PENDING])));
+  }
+
+  /** Open stop / take-profit orders of a strategy (all of them, with or without a position row). */
+  async openProtectiveOrders(strategyId: string): Promise<OrderRow[]> {
+    return this.db
+      .select()
+      .from(orders)
+      .where(and(eq(orders.strategyId, strategyId), inArray(orders.purpose, ['stop', 'take_profit']), inArray(orders.status, [...OPEN_STATUSES, PENDING])));
+  }
+
+  /** Key of an earlier kill close that was written but never answered, so a second press reuses its client order ID. */
+  async pendingKillKey(positionId: number): Promise<number | null> {
+    for (const o of await this.unbookedExits(positionId)) {
+      const m = /-(\d+)-kill$/.exec(o.clientOrderId);
+      if (m && o.status === PENDING) return Number(m[1]);
+    }
+    return null;
+  }
+
+  async setStrategyStatus(id: string, status: 'disabled' | 'enabled' | 'needs_attention', reason: string | null): Promise<void> {
     await this.db.update(strategies).set({ status, attentionReason: reason, updatedAt: sql`now()` }).where(eq(strategies.id, id));
   }
 

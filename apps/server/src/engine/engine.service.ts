@@ -9,6 +9,7 @@ import { KlineCache } from '../market-data/kline-cache.js';
 import { Engine, KeyedMutex } from './engine.js';
 import { Executor } from './executor.js';
 import type { JevClassifier, Notifier } from './ports.js';
+import { KillSwitch, type KillRow } from './kill-switch.js';
 import { Reconciler } from './reconciler.js';
 import { EngineStore } from './store.js';
 
@@ -35,6 +36,7 @@ export class EngineService implements OnModuleInit, OnModuleDestroy {
   private readonly log = new Logger('EngineService');
   private timers: ReturnType<typeof setInterval>[] = [];
   private streams: UserDataStream[] = [];
+  private killSwitch: KillSwitch | null = null;
 
   constructor(
     @Inject(DB) private readonly db: NodePgDatabase,
@@ -63,6 +65,7 @@ export class EngineService implements OnModuleInit, OnModuleDestroy {
     const now = Date.now;
     const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
     const executor = new Executor({ store, trading, notifier: this.notifier, now, sleep });
+    this.killSwitch = new KillSwitch({ store, executor, mutex, notifier: this.notifier, now });
     const engine = new Engine({ store, executor, candles: (m, p, tf, t) => this.klines.closedCandles(m, p, tf, t), jev: this.jev, mutex, now });
     const reconciler = new Reconciler({ store, executor, trading, notifier: this.notifier, mutex, now });
 
@@ -83,6 +86,18 @@ export class EngineService implements OnModuleInit, OnModuleDestroy {
     this.timers.push(setInterval(() => void engine.tick(), TICK_MS));
     this.timers.push(setInterval(() => void reconciler.reconcileAll(), RECONCILE_MS));
     this.log.log('engine started');
+  }
+
+  /**
+   * B11: stops every strategy. With the engine running it shares the engine's
+   * mutex and executor; with the engine off it still disables the strategies
+   * and reports any open position as failed (plan S11).
+   */
+  async killAll(): Promise<KillRow[]> {
+    const ks =
+      this.killSwitch ??
+      new KillSwitch({ store: new EngineStore(this.db), executor: null, mutex: new KeyedMutex(), notifier: this.notifier, now: Date.now });
+    return ks.run();
   }
 
   onModuleDestroy(): void {

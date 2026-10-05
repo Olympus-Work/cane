@@ -542,6 +542,27 @@ describe('BinanceTrading', () => {
     expect(post[0]!.params).toMatchObject({ side: 'BUY', quantity: '0.002', reduceOnly: 'true' });
   });
 
+  it('futures exit never closes more than the position the system holds (B11.3)', async () => {
+    const { rest, calls } = fakeRest((c) => {
+      switch (c.method + ' ' + c.path) {
+        case 'GET /fapi/v3/positionRisk':
+          return [{ symbol: 'BTCUSDT', positionAmt: '-0.005', entryPrice: '84000', liquidationPrice: '80000' }];
+        case 'GET /fapi/v1/order':
+          return notFound();
+        case 'POST /fapi/v1/order':
+          return { orderId: 32, status: 'FILLED', executedQty: '0.002', avgPrice: '84000' };
+      }
+    });
+    const trading = new BinanceTrading(rest, true, noSleep);
+
+    const result = await trading.closeFuturesPosition('BTCUSDT', 'S-01-2-kill', new Decimal('0.002'));
+
+    expect(result.kind).toBe('closed');
+    const post = posts(calls);
+    expect(post.length).toBe(1);
+    expect(post[0]!.params).toMatchObject({ side: 'BUY', quantity: '0.002', reduceOnly: 'true' });
+  });
+
   it('spot exit after the stop filled sells nothing, even with other BTC in the wallet (E7, B11.3)', async () => {
     const { rest, calls } = fakeRest((c) => {
       switch (c.method + ' ' + c.path) {

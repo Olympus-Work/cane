@@ -21,6 +21,7 @@ const envInt = (name: string): number => {
  */
 @Module({
   imports: [DbModule, MarketDataModule],
+  exports: [EngineService],
   providers: [
     EngineService,
     {

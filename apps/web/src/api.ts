@@ -280,7 +280,7 @@ export const enableStrategy = (id: string, totp: string) => api<{ id: string; st
 export const disableStrategy = (id: string) => api<{ id: string; status: StrategyStatus }>('POST', `/v1/strategies/${id}/disable`, { body: {} });
 export const closeStrategy = (id: string) => api<{ id: string; status: StrategyStatus }>('POST', `/v1/strategies/${id}/close`, { body: {} });
 
-// --- Kill switch (S11 builds the endpoint; this is the contract S10b's screen is written against, recorded in plan.md) ---
+// --- Kill switch (POST /v1/kill-switch, S11; contract recorded in plan.md) ---
 
 export interface KillResultRow {
   pair: string;

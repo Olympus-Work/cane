@@ -18,7 +18,8 @@ export type NotifyEvent =
   | 'system_started'
   | 'login_failed_lockout'
   | 'login_success'
-  | 'settings_changed';
+  | 'settings_changed'
+  | 'kill_switch';
 
 /**
  * Notification sink (B13). `details` holds only trade data (pair, side,

@@ -18,7 +18,7 @@ export function KillModal({ onClose, onDone }: { onClose(): void; onDone(result:
     try {
       onDone(await activateKillSwitch());
     } catch (err) {
-      // 404 = this server has no kill switch endpoint yet (S11).
+      // 404 = an older server without the kill switch endpoint (added in S11).
       setError(err instanceof ApiError && err.status === 404 ? t('killUnavailable') : errorText(err, t));
       setPending(false);
     }

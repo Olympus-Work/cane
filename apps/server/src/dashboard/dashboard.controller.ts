@@ -1,10 +1,10 @@
 import { BadRequestException, Controller, Get, Inject, Query, UseGuards } from '@nestjs/common';
-import { and, eq, gte, inArray } from 'drizzle-orm';
+import { and, eq, gte, inArray, max } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Decimal } from 'decimal.js';
 import { SessionGuard } from '../auth/guards.js';
 import { DB } from '../db/db.module.js';
-import { jevCalls, positions, strategies } from '../db/schema.js';
+import { auditLog, jevCalls, positions, strategies } from '../db/schema.js';
 import { ExchangeStateService } from '../exchange/exchange-state.service.js';
 import { tickerKey } from '../exchange/exchange-reader.js';
 import { StatsService } from '../stats/stats.service.js';
@@ -40,6 +40,7 @@ export class DashboardController {
       this.db.select({ id: jevCalls.id }).from(jevCalls).where(and(eq(jevCalls.fallback, true), gte(jevCalls.createdAt, new Date(now - JEV_FALLBACK_WINDOW_MS)))),
     ]);
     const snap = view.snapshot;
+    const killed = await this.killedSwitch();
 
     const alerts: DashboardAlert[] = attention.map((s) => ({ kind: 'needs_attention', strategyId: s.id, pair: s.pair, reason: s.reason, link: 'strategies' }));
     if (fallbacks.length > 0) alerts.push({ kind: 'jev_fallback', count: fallbacks.length, link: 'trades' });
@@ -78,8 +79,7 @@ export class DashboardController {
     });
 
     return {
-      // `stopped_by_kill_switch` arrives with S11.
-      status: view.error === 'unreachable' ? 'exchange_unreachable' : 'running',
+      status: killed ? 'stopped_by_kill_switch' : view.error === 'unreachable' ? 'exchange_unreachable' : 'running',
       lastSyncAt: view.lastSyncAt,
       stale: view.stale,
       cards: {
@@ -93,6 +93,21 @@ export class DashboardController {
       alerts,
       positions: positionRows,
     };
+  }
+
+  /**
+   * B11.5: trading is stopped from a kill switch until the first strategy is
+   * enabled again. Derived from the audit trail (newest kill row newer than the
+   * newest enable row), so it survives restarts without a new table.
+   */
+  private async killedSwitch(): Promise<boolean> {
+    const rows = await this.db
+      .select({ action: auditLog.action, last: max(auditLog.id) })
+      .from(auditLog)
+      .where(inArray(auditLog.action, ['kill_switch', 'strategy_enable']))
+      .groupBy(auditLog.action);
+    const last = (action: string) => rows.find((r) => r.action === action)?.last ?? 0;
+    return last('kill_switch') > last('strategy_enable');
   }
 
   /** B16.8: days with at least one trade; the web app fills the empty days. Day boundary 00:00 Asia/Bangkok. */
