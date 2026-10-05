@@ -22,7 +22,7 @@ Cane is under active development. See `intent/cane-auto-trader/plan.md` for the 
 
 ## Requirements
 
-- Node.js 22 LTS or newer.
+- Node.js 24 LTS or newer.
 - pnpm (via `corepack enable pnpm`; version pinned in package.json `packageManager`).
 - gitleaks 8.x on PATH (required by the pre-commit hook).
 - PostgreSQL (later steps).

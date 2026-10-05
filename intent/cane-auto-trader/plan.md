@@ -24,7 +24,7 @@ README commit; every path below is new.
 ## Tech stack (owner confirmed TypeScript + NestJS, 2026-09-28)
 | Layer | Choice | Why |
 |---|---|---|
-| Language | TypeScript end to end (Node 22 LTS) | One language for engine, API and UI; shared types between server and web; design suggests React + TS |
+| Language | TypeScript end to end (Node 24 LTS) | One language for engine, API and UI; shared types between server and web; design suggests React + TS |
 | Money math | `decimal.js` everywhere; DB `numeric` | Spec: no floats end to end. Lint rule bans `Number` arithmetic in `packages/core` money paths |
 | Backend | **NestJS** (Fastify adapter), `@nestjs/schedule` for candle-close jobs, modules per domain | Owner choice; DI and module boundaries fit engine / exchange / auth / notify split; single Railway service |
 | DB | PostgreSQL (Railway Hobby add-on), Drizzle ORM with SQL migration files | Durable state, restart-safe; migrations reviewable as plain SQL |
