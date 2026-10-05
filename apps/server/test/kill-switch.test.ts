@@ -99,7 +99,9 @@ describe('KillSwitch', () => {
     expect(rows[0]!.what).toContain('503');
     expect(fs.byId.get('S-01')!.status).toBe('needs_attention'); // still blocks entries (B12.2)
     expect(fs.byId.get('S-02')!.status).toBe('disabled');
-    expect(notify).toHaveBeenCalledWith('kill_switch', null, { what: 'BTCUSDT futures failed, ETHUSDT spot closed' });
+    expect(notify).toHaveBeenCalledTimes(2);
+    expect(notify).toHaveBeenNthCalledWith(1, 'kill_switch', null, { what: 'BTCUSDT futures failed' });
+    expect(notify).toHaveBeenNthCalledWith(2, 'kill_switch', null, { what: 'ETHUSDT spot closed' });
   });
 
   it('reuses the key of an earlier unanswered kill close so a second press sends no second order ID', async () => {

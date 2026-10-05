@@ -637,8 +637,8 @@ Each step ends with its proof passing in CI before the next starts. Steps
   - **Engine off** (`TRADING_ENABLED` not true or no key saved): strategies
     are still disabled and the audit row written; a strategy holding a
     position is reported `failed` with the reason, never a 500.
-  - New notification event `kill_switch` (one `what` line listing each
-    pair and its result). Audit row `kill_switch` with the results.
+  - New notification event `kill_switch` (one
+    notification per pair with its result, so `scrub()` never cuts a long list). Audit row `kill_switch` with the results.
   - Proof: tests with a faked exchange incl. a manual futures position on
     the same pair that must stay untouched, an entry order pending at kill,
     a failing close, engine off, and the status derivation. **AC10 on
