@@ -40,8 +40,9 @@ export class KillSwitch {
       const row = await this.d.mutex.run(s.id, () => this.stop(s.id));
       if (row) rows.push(row);
     }
-    if (rows.length > 0) {
-      await this.d.notifier.notify('kill_switch', null, { what: rows.map((r) => `${r.pair} ${r.market} ${r.status}`).join(', ') });
+    // One notification per pair: a single joined line would be cut by scrub() at 200 chars with many strategies.
+    for (const r of rows) {
+      await this.d.notifier.notify('kill_switch', null, { what: `${r.pair} ${r.market} ${r.status}` });
     }
     return rows;
   }
@@ -81,6 +82,8 @@ export class KillSwitch {
       return cancelled > 0 ? this.row(s, `${cancelled} order${cancelled === 1 ? '' : 's'} cancelled`, 'cancelled') : null;
     }
 
+    // Deliberate exception to the `<strategy_id>-<candle_open_time>-<action>` order ID rule: a kill has no
+    // candle, so the key is the press time, reused while a previous kill close is still pending.
     const key = (await this.d.store.pendingKillKey(p.id)) ?? this.d.now();
     const pnl = await ex.exit(s, p, 'kill_switch', key, 'kill', null, KILL_RETRY_MS);
     const after = await this.d.store.strategy(s.id);
