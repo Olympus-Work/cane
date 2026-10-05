@@ -241,15 +241,17 @@ export class BinanceTrading {
    * Closes the one-way USDⓈ-M position with a reduce-only market order. If
    * the position is already flat (stop or take-profit filled first, E7), no
    * order is sent. Remaining protective orders are the caller's to cancel (B7.3).
+   * `maxQuantity` (the system position's own size) caps the order so a larger
+   * position on the same symbol is never closed beyond what the system holds (B11.3).
    */
-  async closeFuturesPosition(symbol: string, clientId: string): Promise<ExitResult> {
+  async closeFuturesPosition(symbol: string, clientId: string, maxQuantity?: Decimal): Promise<ExitResult> {
     const { amount } = await this.futuresPosition(symbol);
     if (amount.isZero()) return { kind: 'already_closed' };
     const order = await this.placeMarket({
       market: 'futures',
       symbol,
       side: amount.gt(0) ? 'SELL' : 'BUY',
-      quantity: amount.abs(),
+      quantity: maxQuantity && maxQuantity.lt(amount.abs()) ? maxQuantity : amount.abs(),
       clientId,
       reduceOnly: true,
     });

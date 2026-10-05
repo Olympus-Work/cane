@@ -20,6 +20,7 @@ const TITLES: Record<NotifyEvent, string> = {
   login_failed_lockout: 'Login locked after failed attempts',
   login_success: 'Login',
   settings_changed: 'Settings changed',
+  kill_switch: 'Kill switch activated',
 };
 
 /** Fields allowed in a notification body, in render order. */

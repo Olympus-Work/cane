@@ -320,7 +320,7 @@ export class Executor {
    * shows it already closed (E7), nothing is sent and the reconciler books
    * how it closed. Returns the result when this call closed the position.
    */
-  async exit(s: StrategyRow, p: PositionRow, reason: ExitReason, key: number, action: 'exit' | 'bail' | 'kill' = 'exit', signalId: number | null = null): Promise<TradePnl | null> {
+  async exit(s: StrategyRow, p: PositionRow, reason: ExitReason, key: number, action: 'exit' | 'bail' | 'kill' = 'exit', signalId: number | null = null, retryMs: number = PROTECT_RETRY_MS): Promise<TradePnl | null> {
     const exitId = clientOrderId(s.id, key, action);
     const protective = await this.d.store.protectiveOrders(p.id);
     await this.orderRow(s, p, exitId, 'MARKET', 'exit', new Decimal(p.qty), null, signalId);
@@ -329,9 +329,9 @@ export class Executor {
     const ok = await this.retry(s, 'close the position', async () => {
       result =
         s.market === 'futures'
-          ? await this.d.trading.closeFuturesPosition(s.pair, exitId)
+          ? await this.d.trading.closeFuturesPosition(s.pair, exitId, new Decimal(p.qty))
           : await this.d.trading.closeSpotPosition({ symbol: s.pair, baseAsset: baseAsset(s.pair), quantity: new Decimal(p.qty), protective: protective.map(refOf), clientId: exitId });
-    });
+    }, retryMs);
     const done = result as ExitResult | null;
     if (!ok || !done) return null;
     if (done.kind === 'already_closed') {
@@ -458,8 +458,8 @@ export class Executor {
   }
 
   /** E3: retries `fn` with back-off for up to 10 minutes; then `order_rejected` + needs_attention. */
-  private async retry(s: StrategyRow, what: string, fn: () => Promise<void>): Promise<boolean> {
-    const deadline = this.d.now() + PROTECT_RETRY_MS;
+  private async retry(s: StrategyRow, what: string, fn: () => Promise<void>, retryMs: number = PROTECT_RETRY_MS): Promise<boolean> {
+    const deadline = this.d.now() + retryMs;
     for (let attempt = 1; ; attempt++) {
       try {
         await fn();

@@ -602,6 +602,47 @@ Each step ends with its proof passing in CI before the next starts. Steps
     page in TH and EN with the API mocked, a same-origin network assertion
     on every authenticated page, and screenshots for the owner to compare
     with the prototype.
+- **Kill switch choices in S11 (Claude Code, 2026-10-05; awaits owner
+  confirmation):**
+  - **Contract unchanged** from S10b: `POST /v1/kill-switch` (session only,
+    no TOTP) → `{activatedAt, results:[{pair, market, what, status:
+    closed|cancelled|failed}], untouched:[{pair, market}]}`. `untouched` is
+    the exchange snapshot's open futures positions that no system position
+    accounts for (B11.3); spot balances are not listed (a spot wallet always
+    holds assets the system did not buy).
+  - **Where it runs:** `EngineService` keeps the store, executor and mutex
+    and exposes `killAll()`; the controller sits in its own module
+    (`KillSwitchModule`) imported only by `AppModule`, so the replay
+    context never reaches it. Each strategy is handled under the same
+    `KeyedMutex` key as the engine tick, so a kill cannot race a half-done
+    entry.
+  - **Order per strategy:** set `disabled` first (no new entries), cancel
+    every open or pending order of the strategy (entries too, not only
+    stops), then market-close the position through
+    `Executor.exit(..., 'kill_switch', key, 'kill')`. A `closed` strategy is
+    skipped. The position's own quantity is the cap: futures close
+    `min(|positionAmt|, position.qty)` reduce-only, spot sells only the
+    strategy's quantity (already so).
+  - **Bounded request (E3):** the kill pass retries for 15 s, not the
+    10 minutes of normal exits. A pair that still fails is returned as
+    `failed`, the strategy becomes `needs_attention` (still blocks entries)
+    with `order_rejected` sent and listed on the Dashboard, and pressing
+    the kill switch again retries it. The retry reuses the pending `-kill`
+    order row (same client order ID, query before resend), so it never
+    sends a second close. The reconciler books a `-kill` order that filled
+    anyway.
+  - **Status survives restarts without a new table:** `stopped_by_kill_switch`
+    when the newest `kill_switch` audit row is newer than the newest
+    `strategy_enable` audit row; the first re-enable clears it (B11.5).
+  - **Engine off** (`TRADING_ENABLED` not true or no key saved): strategies
+    are still disabled and the audit row written; a strategy holding a
+    position is reported `failed` with the reason, never a 500.
+  - New notification event `kill_switch` (one `what` line listing each
+    pair and its result). Audit row `kill_switch` with the results.
+  - Proof: tests with a faked exchange incl. a manual futures position on
+    the same pair that must stay untouched, an entry order pending at kill,
+    a failing close, engine off, and the status derivation. **AC10 on
+    testnet still has to be run by the owner** (not run by this PR).
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.

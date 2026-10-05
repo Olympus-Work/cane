@@ -158,9 +158,10 @@ describe('notify templates', () => {
       login_failed_lockout: true,
       login_success: true,
       settings_changed: true,
+      kill_switch: true,
     } satisfies Record<NotifyEvent, true>;
     const events = Object.keys(all) as NotifyEvent[];
-    expect(events).toHaveLength(16);
+    expect(events).toHaveLength(17);
     for (const event of events) {
       const out = renderMessage(event, null, {});
       const first = out.split('\n')[0]!;
