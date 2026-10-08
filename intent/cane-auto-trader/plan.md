@@ -612,7 +612,10 @@ Each step ends with its proof passing in CI before the next starts. Steps
     holds assets the system did not buy). The snapshot for `untouched` is
     read fresh, past the reader's 15 s cache: the first AC10 run
     (2026-10-08) listed the just-closed BTCUSDT as untouched from a cached
-    pre-kill snapshot.
+    pre-kill snapshot. If that fresh read fails, `untouched` is `null` and
+    the page says Binance could not be read to list them. An older
+    snapshot is not used, and an empty list is not shown, because either
+    could misreport (PR #19 review).
   - **Where it runs:** `EngineService` keeps the store, executor and mutex
     and exposes `killAll()`; the controller sits in its own module
     (`KillSwitchModule`) imported only by `AppModule`, so the replay
