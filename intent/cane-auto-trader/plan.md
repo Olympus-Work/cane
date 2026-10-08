@@ -653,8 +653,22 @@ Each step ends with its proof passing in CI before the next starts. Steps
     notification per pair with its result, so `scrub()` never cuts a long list). Audit row `kill_switch` with the results.
   - Proof: tests with a faked exchange incl. a manual futures position on
     the same pair that must stay untouched, an entry order pending at kill,
-    a failing close, engine off, and the status derivation. **AC10 on
-    testnet still has to be run by the owner** (not run by this PR).
+    a failing close, engine off, and the status derivation.
+  - **AC10 passed on Binance Demo, 2026-10-08 (owner run 2, with the
+    fresh-snapshot fix).**
+    - Setup: the system held a BTCUSDT futures long (S-01) and its Algo
+      stop. The manual position was ETHUSDT futures, on a different pair
+      because one-way mode would merge same-pair positions.
+    - Result: the kill closed BTCUSDT, cancelled its stop and disabled
+      S-01, and wrote the `kill_switch` audit row. ETHUSDT was unchanged on
+      Binance and was the only `untouched` entry.
+    - Run 1 had listed the closed BTCUSDT in `untouched` too (cached
+      snapshot); it was fixed before run 2.
+    - Not checked live: the per-pair notification, because no LINE or
+      Telegram channel was configured locally. Unit tests cover it.
+    - The system position was opened with a local script (claimSignal +
+      `Executor.enter`, as in the Demo integration test) rather than a
+      market signal.
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.
