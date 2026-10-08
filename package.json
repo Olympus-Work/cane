@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
-    "build": "pnpm -r build"
+    "build": "pnpm -r build",
+    "dev": "pnpm --filter @cane/server build && pnpm --parallel --filter @cane/server --filter @cane/web run \"/^(start|dev)$/\""
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
