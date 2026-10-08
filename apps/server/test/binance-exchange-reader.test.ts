@@ -159,6 +159,19 @@ describe('BinanceExchangeReader', () => {
     expect(calls.length).toBeGreaterThan(countInside);
   });
 
+  it('fresh: true reads Binance inside the cache window and updates the cache', async () => {
+    let t = 1_000_000;
+    const { reader, calls } = makeReader(async () => creds, okHandler, () => t);
+
+    const first = await reader.snapshot();
+    const count = calls.length;
+    t += 1_000;
+    const fresh = await reader.snapshot({ fresh: true });
+    expect(fresh).not.toBe(first);
+    expect(calls.length - count).toBe(count);
+    expect(await reader.snapshot()).toBe(fresh);
+  });
+
   it('a failed refresh is not cached: the next call inside the window tries again', async () => {
     let t = 1_000_000;
     let fail = false;

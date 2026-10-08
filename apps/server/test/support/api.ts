@@ -19,8 +19,11 @@ const MASTER_KEY = Buffer.alloc(32, 7).toString('base64');
 export class FakeExchange implements ExchangeReader {
   snapshotValue: ExchangeSnapshot = { spotEquity: '1000', futuresEquity: '2000', tickers: {}, futuresPositions: [] };
   failWith: ExchangeReadError | null = null;
+  /** Whether the latest snapshot() asked for a fresh read. */
+  lastFresh = false;
   listed = new Set<string>(['futures:BTCUSDT', 'futures:ETHUSDT', 'spot:BTCUSDT', 'spot:ETHUSDT']);
-  async snapshot(): Promise<ExchangeSnapshot> {
+  async snapshot(opts?: { fresh?: boolean }): Promise<ExchangeSnapshot> {
+    this.lastFresh = opts?.fresh === true;
     if (this.failWith) throw this.failWith;
     return this.snapshotValue;
   }

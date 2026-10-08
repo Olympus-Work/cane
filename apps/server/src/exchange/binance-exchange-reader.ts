@@ -51,7 +51,9 @@ export class BinanceExchangeReader implements ExchangeReader {
     private readonly now: () => number = Date.now,
   ) {}
 
-  async snapshot(): Promise<ExchangeSnapshot> {
+  async snapshot(opts?: { fresh?: boolean }): Promise<ExchangeSnapshot> {
+    // Fresh skips the cache and any in-flight refresh: both may predate the caller's change.
+    if (opts?.fresh) return this.refresh();
     if (this.cached && this.now() - this.cached.at < SNAPSHOT_TTL_MS) return this.cached.value;
     if (!this.inflight) {
       this.inflight = this.refresh().finally(() => {

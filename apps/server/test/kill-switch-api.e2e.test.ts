@@ -48,6 +48,7 @@ describe.skipIf(!DATABASE_URL)('Kill switch API (S11, B11)', () => {
     const body = res.json();
     expect(body.results).toEqual([{ pair: 'BTCUSDT', market: 'futures', what: expect.stringContaining('engine is off'), status: 'failed' }]);
     expect(body.untouched).toEqual([{ pair: 'ETHUSDT', market: 'futures' }]);
+    expect(api.exchange.lastFresh).toBe(true); // a cached snapshot would still list what was just closed (AC10 run 1)
     expect(Number.isNaN(Date.parse(body.activatedAt))).toBe(false);
 
     const { rows } = await q('select id, status from strategies order by id');
