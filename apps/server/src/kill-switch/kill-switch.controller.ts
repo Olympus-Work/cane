@@ -25,10 +25,14 @@ export class KillSwitchController {
 
     // B11.3: report what is still open on the exchange and not ours to touch (failed rows are still ours).
     const failed = new Set(results.filter((r) => r.status === 'failed' && r.market === 'futures').map((r) => r.pair));
-    const { snapshot } = await this.exchange.view({ fresh: true }); // a cached one predates the closes
-    const untouched = (snapshot?.futuresPositions ?? [])
-      .filter((p) => !new Decimal(p.amount).isZero() && !failed.has(p.pair))
-      .map((p) => ({ pair: p.pair, market: 'futures' as const }));
+    // A cached or older snapshot predates the closes and would misreport them; null = could not read.
+    const { snapshot, stale } = await this.exchange.view({ fresh: true });
+    const untouched =
+      snapshot && !stale
+        ? snapshot.futuresPositions
+            .filter((p) => !new Decimal(p.amount).isZero() && !failed.has(p.pair))
+            .map((p) => ({ pair: p.pair, market: 'futures' as const }))
+        : null;
     return { activatedAt, results, untouched };
   }
 }

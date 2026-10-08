@@ -48,7 +48,11 @@ export function KillSwitch({ result, onRequestKill, onNavigate }: { result: Kill
 
       <p className="page-sub">
         <Icon name="shield-halved" />{' '}
-        {result.untouched.length > 0 ? t('killNotTouched', { n: result.untouched.map((u) => `${u.pair} ${u.market === 'spot' ? t('spot') : t('futures')}`).join(', ') }) : t('killNotTouchedNone')}
+        {result.untouched === null
+          ? t('killNotTouchedUnknown')
+          : result.untouched.length > 0
+            ? t('killNotTouched', { n: result.untouched.map((u) => `${u.pair} ${u.market === 'spot' ? t('spot') : t('futures')}`).join(', ') })
+            : t('killNotTouchedNone')}
       </p>
 
       <section className="card">

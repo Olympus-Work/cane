@@ -107,6 +107,11 @@ describe('KillSwitch page', () => {
     render(wrap(<KillSwitch result={{ ...killResult, untouched: [] }} onRequestKill={() => {}} onNavigate={() => {}} />));
     expect(screen.getByText('Positions not opened by Cane were not touched.')).toBeTruthy();
   });
+
+  it('says Binance could not be read when untouched is null', () => {
+    render(wrap(<KillSwitch result={{ ...killResult, untouched: null }} onRequestKill={() => {}} onNavigate={() => {}} />));
+    expect(screen.getByText('Positions not opened by Cane were not touched. Binance could not be read to list them.')).toBeTruthy();
+  });
 });
 
 describe('KillModal', () => {

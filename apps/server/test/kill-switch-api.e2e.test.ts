@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { ExchangeReadError } from '../src/exchange/exchange-reader.js';
 import { bootApi, type Api } from './support/api.js';
 import { DATABASE_URL } from './support/db.js';
 
@@ -72,5 +73,16 @@ describe.skipIf(!DATABASE_URL)('Kill switch API (S11, B11)', () => {
     expect((await api.call('POST', '/v1/kill-switch')).statusCode).toBe(200);
     expect(await status()).toBe('stopped_by_kill_switch');
     expect((await q("select status from strategies where id = 'S-02'")).rows[0].status).toBe('disabled');
+  });
+
+  it('untouched is null, not an older snapshot, when the fresh read fails', async () => {
+    api.exchange.failWith = new ExchangeReadError('unreachable', 'x'); // an older good snapshot is held from the kills above
+    try {
+      const res = await api.call('POST', '/v1/kill-switch');
+      expect(res.statusCode).toBe(200);
+      expect(res.json().untouched).toBeNull();
+    } finally {
+      api.exchange.failWith = null;
+    }
   });
 });

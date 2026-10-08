@@ -293,8 +293,8 @@ export interface KillResultRow {
 export interface KillResult {
   activatedAt: string;
   results: KillResultRow[];
-  /** Positions the system did not open; reported, never touched (B11.3). */
-  untouched: { pair: string; market: Market }[];
+  /** Positions the system did not open; reported, never touched (B11.3). Null when Binance could not be read. */
+  untouched: { pair: string; market: Market }[] | null;
 }
 
 export const activateKillSwitch = () => api<KillResult>('POST', '/v1/kill-switch', { body: {} });
