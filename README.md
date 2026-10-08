@@ -80,6 +80,7 @@ For local development copy `apps/server/.env.example` to `apps/server/.env` (git
 | JEV_MAX_RETRIES | 0 | Extra Jev attempts on network error, 429 or 5xx, inside the one 3 s budget. |
 | JEV_MAX_CONCURRENCY | 0 | Cap on in-flight Jev calls; 0 = no cap. |
 | PORT | 3000 | HTTP port. |
+| MIGRATION_DATABASE_URL | DATABASE_URL | Read only by `db-cli` (migrations). On Railway this is the superuser URL, while `DATABASE_URL` is the server's `cane_app` login user. |
 
 Binance API keys and LINE/Telegram tokens are entered in the web UI Settings and stored encrypted; they are never put in environment files or the repository.
 
@@ -93,6 +94,46 @@ CANE_OWNER_PASSWORD='<12+ characters>' pnpm --filter @cane/server owner seed-own
 ```
 
 `owner reset-password` (also uses `CANE_OWNER_PASSWORD`) and `owner reset-totp` are the only ways to reset a password or authenticator; both sign every session out. On Railway run them with the Railway CLI. Login needs email + password + a 6-digit code; a TOTP code can be used once, so two actions in the same 30 s window need two different codes.
+
+## Deploy (Railway)
+
+There is one Railway service plus the Postgres add-on. The server also serves the built web app (`apps/web/dist`) from its own origin, because the session cookie is `secure` and `sameSite=strict`. Railway settings are entered in the dashboard; the repository has no `railway.json`, since Railway deprecated it. Never put a real value in a file: keys, passwords and the master key go only into Railway variables.
+
+1. **Service settings** (dashboard → service → Settings). pnpm comes from `packageManager` in `package.json`; Node is pinned by the variable in step 2.
+   - Build command: `pnpm install --frozen-lockfile && pnpm build`
+   - Pre-deploy command: `node apps/server/dist/db-cli.js up`
+   - Start command: `node apps/server/dist/main.js`
+   - Healthcheck path: `/health`
+   - Networking: generate the `*.up.railway.app` HTTPS domain. Add **no TCP proxy**: the server trusts `X-Forwarded-For`, which is only safe behind Railway's HTTP proxy.
+2. **First deploy, without trading.** Set these variables:
+   - `MIGRATION_DATABASE_URL` and `DATABASE_URL`: both the Postgres `DATABASE_URL` reference for now.
+   - `CANE_MASTER_KEY`: a new one (`openssl rand -base64 32`), not the local one. Losing it makes every saved key unreadable.
+   - `BINANCE_ENV=live`
+   - `RAILPACK_NODE_VERSION=24`: `engines` says `>=24`, and this pins the LTS line the project uses.
+   - `TRADING_ENABLED`: leave it unset.
+
+   Deploy, and check that `https://<domain>/health` returns `{"status":"ok"}`.
+3. **Least-privilege login users**, once, in the Postgres service's Data / psql tab. Use generated passwords and keep them out of any file:
+   ```sql
+   CREATE ROLE cane_server LOGIN PASSWORD '<generated>' IN ROLE cane_app;
+   CREATE ROLE cane_replay LOGIN PASSWORD '<generated>' IN ROLE cane_readonly; -- used by step 13
+   ```
+   Then set the service's `DATABASE_URL` to the same URL with `cane_server:<password>` as the user, keep `MIGRATION_DATABASE_URL` as the superuser reference, and redeploy.
+4. **Owner account.** Open a shell in the service with `railway ssh` and run:
+   ```sh
+   CANE_OWNER_PASSWORD='<12+ characters>' node apps/server/dist/owner-cli.js seed-owner --email you@example.com
+   ```
+   This prints the authenticator secret and recovery codes once. If the shell does not have the service variables, run `env | grep -c CANE_MASTER_KEY` to check, and say so rather than copying the master key anywhere.
+5. **Settings.** Log in at `https://<domain>`.
+   - Set LINE and Telegram, and send a test message.
+   - Save the live Binance key: Reading, Spot & Margin Trading and Futures on; Withdrawals and Universal Transfer off.
+   - As the one live permission check (B15.2), first try a key with Withdrawals on: it must be rejected.
+6. **Go live.** Set `TRADING_ENABLED=true` and redeploy.
+   - `system_started` must arrive on LINE and Telegram and say `live`.
+   - The reconciler must start clean, with no needs-attention notification.
+7. **First strategy.** Create BTCUSDT, USDⓈ-M futures with the defaults (5x ceiling, isolated, mode B), then enable it with TOTP.
+
+Rollback: use the Kill switch in the UI, or unset `TRADING_ENABLED` and redeploy (stops stay on Binance), or use Railway's "rollback to previous deployment".
 
 ## Web app (development)
 

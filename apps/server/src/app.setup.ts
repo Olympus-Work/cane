@@ -1,4 +1,5 @@
 import fastifyCookie from '@fastify/cookie';
+import fastifyStatic from '@fastify/static';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { FastifyAdapter } from '@nestjs/platform-fastify';
 
@@ -9,7 +10,12 @@ import { FastifyAdapter } from '@nestjs/platform-fastify';
  */
 export const newAdapter = (): FastifyAdapter => new FastifyAdapter({ trustProxy: true });
 
-/** Shared by main.ts and the HTTP tests: the cookie plugin the session guard reads. */
-export async function configureApp(app: NestFastifyApplication): Promise<void> {
+/**
+ * Shared by main.ts and the HTTP tests: the cookie plugin the session guard reads,
+ * and (when `webDist` is given) the web build from the same origin as the API, as
+ * the `secure` + `sameSite=strict` session cookie needs (plan, S12).
+ */
+export async function configureApp(app: NestFastifyApplication, opts: { webDist?: string } = {}): Promise<void> {
   await app.register(fastifyCookie);
+  if (opts.webDist) await app.register(fastifyStatic, { root: opts.webDist });
 }
