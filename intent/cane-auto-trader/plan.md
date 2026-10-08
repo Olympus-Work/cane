@@ -672,6 +672,39 @@ Each step ends with its proof passing in CI before the next starts. Steps
     - The system position was opened with a local script (claimSignal +
       `Executor.enter`, as in the Demo integration test) rather than a
       market signal.
+- **Deploy choices in S12 (Claude Code, 2026-10-08; awaits owner
+  confirmation):**
+  - **The server serves the web build** (`apps/web/dist`, via
+    `@fastify/static`) from the same origin as the API. The session cookie
+    is `secure` and `sameSite=strict`, and the web calls relative `/v1`
+    paths, so a separate web service on another host would break login.
+    The server serves the build only when `apps/web/dist` exists, so dev
+    (Vite proxy) and the HTTP tests are unchanged. `/v1/*` and `/health`
+    still win, and an unknown `/v1` path is still a JSON 404. There is no
+    SPA fallback because the web has no URL routes.
+  - **Railway settings live in the dashboard, not in a file.** Railway
+    deprecated `railway.json`/`railway.toml` ("Config as Code", legacy
+    services until 2026-12-01). Its replacement (`.railway/railway.ts`)
+    needs another dependency for one service. The README lists the exact
+    values:
+    - build: `pnpm install --frozen-lockfile && pnpm build`
+    - pre-deploy: `node apps/server/dist/db-cli.js up`
+    - start: `node apps/server/dist/main.js`, plain node with no `.env`
+      line in the log (PR #16 review)
+    - healthcheck: `/health`
+  - **Migrations run as Railway's superuser; the server runs as a login
+    user in `cane_app`.** `db-cli` reads `MIGRATION_DATABASE_URL`, falling
+    back to `DATABASE_URL`, so the pre-deploy step can use the superuser
+    while `DATABASE_URL` names the app user. The owner creates the login
+    users (`cane_app`, and `cane_readonly` for S13) once in Railway's
+    psql. The README gives the SQL with placeholder passwords; real
+    passwords never go in a file.
+  - **First deploy without trading.** `TRADING_ENABLED` stays unset until
+    the owner has logged in, set LINE and Telegram, and saved the live
+    key. That save is the one manual live B15.2 check: a key with
+    Withdrawals on must be rejected. Then the owner sets
+    `TRADING_ENABLED=true` and redeploys. The service must have only its
+    Railway HTTPS domain and no TCP proxy (the `trustProxy` check).
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.
