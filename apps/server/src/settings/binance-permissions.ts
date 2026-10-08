@@ -59,6 +59,35 @@ export class BinanceApiPermissionChecker implements BinancePermissionChecker {
   }
 }
 
+/**
+ * Demo Trading checker: `apiRestrictions` 404s on Demo, so trade permission is
+ * read from the account endpoints instead (plan, S08 / AC10 prep). Demo has no
+ * withdrawals or universal transfer; that part of B15.2 is checked on live only.
+ */
+export class DemoPermissionChecker implements BinancePermissionChecker {
+  constructor(private readonly http: HttpFn) {}
+
+  async check(credentials: BinanceCredentials): Promise<KeyPermissions> {
+    const client = new BinanceRestClient(ENDPOINTS.testnet, () => credentials, this.http);
+    // A market whose call Binance rejects counts as "cannot trade" there.
+    const rejected = (e: unknown): null => {
+      if (e instanceof BinanceError) return null;
+      throw new KeyCheckError('Could not reach Binance to check this key. Nothing was saved.');
+    };
+    const [spot, futures] = await Promise.all([
+      client.request('spot', 'GET', '/api/v3/account', { omitZeroBalances: 'true' }, 'signed', 'safe').then((r) => r as Record<string, unknown>, rejected),
+      client.request('futures', 'GET', '/fapi/v3/account', {}, 'signed', 'safe').then(() => true, rejected),
+    ]);
+    if (spot === null && futures === null) throw new KeyCheckError('Binance did not accept this key (invalid key or secret, or the permission check is unavailable).');
+    return { withdrawals: false, universalTransfer: false, spotTrading: spot?.canTrade === true, futuresTrading: futures === true };
+  }
+}
+
+/** The checker for the configured environment: Demo has no `apiRestrictions`. */
+export function permissionCheckerFor(env: string | undefined, http: HttpFn): BinancePermissionChecker {
+  return binanceEnvFrom(env) === 'testnet' ? new DemoPermissionChecker(http) : new BinanceApiPermissionChecker(http);
+}
+
 /** A message that is safe to show the owner: it never contains the key or secret. */
 export class KeyCheckError extends Error {
   readonly code = 'unusable' as const;

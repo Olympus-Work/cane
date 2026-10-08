@@ -293,6 +293,15 @@ Each step ends with its proof passing in CI before the next starts. Steps
     on Demo, so AC12's "one testnet check" cannot run on Demo; S08 proves
     B15.2 with the mocked permission API only and one manual check with the
     live key at go-live (S12).
+  - **Settings save on Demo (fix found while preparing AC10, 2026-10-08;
+    needs owner OK):** with `BINANCE_ENV=testnet` the save used that 404
+    endpoint, so no Demo key could ever be saved. On testnet the checker
+    now reads trade permission from the account endpoints Demo serves:
+    spot `GET /api/v3/account` (`canTrade`), USDⓈ-M `GET /fapi/v3/account`
+    (a key without Futures is rejected by Binance). A market whose call is
+    rejected counts as "cannot trade" there; a key rejected by both is
+    refused. Withdrawals and universal transfer do not exist on Demo, so
+    that part of B15.2 is checked on live only. Live is unchanged.
 - **Binance adapter choices in S05 (Claude Code, 2026-09-29; confirmed by
   the owner 2026-09-29, incl. mark-price stops, the AC12 proof change and
   local-only integration tests):**

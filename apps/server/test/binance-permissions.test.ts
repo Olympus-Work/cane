@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Market } from '@cane/core';
 import type { HttpFn } from '../src/binance/rest.client.js';
-import { BinanceApiPermissionChecker, judgeKey, KeyCheckError, type KeyPermissions, type KeyVerdict } from '../src/settings/binance-permissions.js';
+import { BinanceApiPermissionChecker, DemoPermissionChecker, judgeKey, KeyCheckError, permissionCheckerFor, type KeyPermissions, type KeyVerdict } from '../src/settings/binance-permissions.js';
 
 const OK: KeyPermissions = { withdrawals: false, universalTransfer: false, spotTrading: true, futuresTrading: true };
 
@@ -129,5 +129,51 @@ describe('BinanceApiPermissionChecker (AC12)', () => {
     const assertion = expect(checker.check({ apiKey: 'fixture-key', apiSecret: 'fixture-secret' })).rejects.toBeInstanceOf(KeyCheckError);
     await vi.advanceTimersByTimeAsync(10_000);
     await assertion;
+  });
+});
+
+const SPOT_ACCOUNT = '/api/v3/account';
+const FUTURES_ACCOUNT = '/fapi/v3/account';
+const REJECTED = { status: 401, body: '{"code":-2015,"msg":"Invalid API-key, IP, or permissions for action."}' };
+
+describe('DemoPermissionChecker (apiRestrictions 404s on Demo)', () => {
+  const creds = { apiKey: 'fixture-key', apiSecret: 'fixture-secret' };
+  const time = { status: 200, body: '{"serverTime":1700000000000}' };
+
+  it('reads spot canTrade and futures access from the account endpoints', async () => {
+    const { fn, calls } = fakeHttp((url) =>
+      url.includes(SPOT_ACCOUNT) ? { status: 200, body: '{"canTrade":true,"balances":[]}' } : url.includes(FUTURES_ACCOUNT) ? { status: 200, body: '{"totalMarginBalance":"0"}' } : time,
+    );
+    const p = await new DemoPermissionChecker(fn).check(creds);
+    expect(p).toEqual({ withdrawals: false, universalTransfer: false, spotTrading: true, futuresTrading: true });
+    expect(calls.some((c) => c.url.includes(RESTRICTIONS))).toBe(false);
+    for (const c of calls.filter((c) => c.url.includes('account'))) {
+      expect(c.url).toContain('demo-');
+      expect(c.url).not.toContain('fixture-secret');
+    }
+  });
+
+  it('a market Binance rejects counts as not tradeable', async () => {
+    const { fn } = fakeHttp((url) =>
+      url.includes(SPOT_ACCOUNT) ? { status: 200, body: '{"canTrade":true,"balances":[]}' } : url.includes(FUTURES_ACCOUNT) ? REJECTED : time,
+    );
+    const p = await new DemoPermissionChecker(fn).check(creds);
+    expect(p.futuresTrading).toBe(false);
+    expect(judgeKey(p, ['futures'] as readonly Market[]).ok).toBe(false);
+  });
+
+  it('refuses a key rejected by both markets, without naming the credentials', async () => {
+    const { fn } = fakeHttp((url) => (url.includes('account') ? REJECTED : time));
+    const err = await new DemoPermissionChecker(fn).check(creds).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(KeyCheckError);
+    expect((err as Error).message).not.toContain('fixture-key');
+    expect((err as Error).message).not.toContain('fixture-secret');
+  });
+
+  it('is the checker for testnet; live keeps apiRestrictions', () => {
+    const fn: HttpFn = async () => ({ status: 200, headers: { get: () => null }, text: async () => '{}' });
+    expect(permissionCheckerFor('testnet', fn)).toBeInstanceOf(DemoPermissionChecker);
+    expect(permissionCheckerFor(undefined, fn)).toBeInstanceOf(DemoPermissionChecker);
+    expect(permissionCheckerFor('live', fn)).toBeInstanceOf(BinanceApiPermissionChecker);
   });
 });
