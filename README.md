@@ -68,7 +68,7 @@ Roles: `cane_app` (the server; audit_log is SELECT + INSERT only) and `cane_read
 
 ## Configuration (environment variables)
 
-For local development copy `apps/server/.env.example` to `apps/server/.env` (git-ignored). Its Binance Demo Trading keys are read by integration tests only.
+For local development copy `apps/server/.env.example` to `apps/server/.env` (git-ignored). The `start`, `owner` and `db:migrate` scripts of `@cane/server` load it (`node --env-file-if-exists=.env`; real environment variables win, and a missing file is fine in production). Run the server with `pnpm --filter @cane/server start`, and the owner CLI with `pnpm --filter @cane/server run owner ...` (`run` is needed because `pnpm owner` is a built-in pnpm command). Plain `node dist/main.js` does not read the file. The Binance Demo Trading keys in it are read by integration tests only. The replay script does not load it, by design.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
