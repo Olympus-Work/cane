@@ -44,8 +44,8 @@ export class ExchangeReadError extends Error {
  * anything. A port so API tests run on a fake (like `PERMISSION_CHECKER`).
  */
 export interface ExchangeReader {
-  /** Throws `ExchangeReadError`. */
-  snapshot(): Promise<ExchangeSnapshot>;
+  /** Throws `ExchangeReadError`. `fresh` reads Binance now instead of a cached snapshot. */
+  snapshot(opts?: { fresh?: boolean }): Promise<ExchangeSnapshot>;
   /** B10.6: a USDT pair listed and TRADING on the market. Throws `ExchangeReadError`. */
   isListed(market: Market, pair: string): Promise<boolean>;
 }
