@@ -96,7 +96,7 @@ CANE_OWNER_PASSWORD='<12+ characters>' pnpm --filter @cane/server owner seed-own
 
 ## Web app (development)
 
-One command for server + web: `pnpm dev` (builds the server, then runs `@cane/server start` and `@cane/web dev` in parallel). Stop any server already holding port 3000 first. Needs the Database and owner steps below done once.
+One command for server + web: `pnpm dev` (builds the server and its workspace packages, then runs `@cane/server start` and `@cane/web dev` in parallel). Stop any server already holding port 3000 first. Needs the Database and owner steps below done once.
 
 The web app is React + Vite in `apps/web` (fonts and icons are self-hosted; no third-party CDN). Login and Settings exist so far; Dashboard, Strategies and Kill switch follow.
 
