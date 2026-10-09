@@ -58,7 +58,11 @@ describe('App session gate', () => {
     setFetchForTests(
       vi.fn(async (input: RequestInfo | URL) => {
         if (!up) throw new TypeError('network down');
-        return String(input).endsWith('/v1/settings') ? json(200, settingsView) : json(200, { sessions: [] });
+        const url = String(input);
+        if (url.endsWith('/v1/auth/sessions')) return json(200, { sessions: [] });
+        if (url.endsWith('/v1/settings')) return json(200, settingsView);
+        // Anything else (the Dashboard poll) must not get a sessions body, or it renders a malformed dashboard.
+        return json(404, {});
       }),
     );
     renderApp();
