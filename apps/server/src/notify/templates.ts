@@ -21,6 +21,7 @@ const TITLES: Record<NotifyEvent, string> = {
   login_success: 'Login',
   settings_changed: 'Settings changed',
   kill_switch: 'Kill switch activated',
+  replay_diff: 'Live vs replay check',
 };
 
 /** Fields allowed in a notification body, in render order. */
@@ -45,6 +46,7 @@ const FIELDS = [
   'netPnl',
   'env',
   'minutes',
+  'day',
   'what',
 ] as const;
 
