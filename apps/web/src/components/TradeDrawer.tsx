@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Decimal } from 'decimal.js';
 import type { TradeDetail } from '../api.js';
@@ -57,7 +57,8 @@ export function TradeDrawer({
     };
   }, []);
 
-  useEffect(() => {
+  // Layout effect: the listener is attached in the same commit that shows the dialog, so an early Escape is never lost.
+  useLayoutEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
