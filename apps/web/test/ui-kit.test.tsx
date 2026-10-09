@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { act } from 'react';
+import { act, useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { ThemeProvider } from '../src/theme';
 import { I18nProvider } from '../src/i18n/index';
@@ -115,6 +115,31 @@ describe('UI kit', () => {
     );
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('Modal: an Escape pressed the moment it appears still calls onClose', async () => {
+    // Opened from a timer (outside act), so Escape fires inside the commit that adds the dialog, before passive effects run.
+    const onClose = vi.fn();
+    function Host() {
+      const [open, setOpen] = useState(false);
+      useEffect(() => {
+        const t = setTimeout(() => setOpen(true), 0);
+        return () => clearTimeout(t);
+      }, []);
+      return open ? <TotpModal title="Confirm" body="Enter a code." confirmLabel="Confirm" onConfirm={async () => undefined} onClose={onClose} /> : null;
+    }
+    const pressed = new Promise<void>((resolve) => {
+      const mo = new MutationObserver(() => {
+        if (!document.querySelector('[role="dialog"]')) return;
+        mo.disconnect();
+        fireEvent.keyDown(document, { key: 'Escape' });
+        resolve();
+      });
+      mo.observe(document.body, { childList: true, subtree: true });
+    });
+    render(wrap(<Host />));
+    await pressed;
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
   });
 
   it('Toast appears and disappears after 2600 ms', () => {

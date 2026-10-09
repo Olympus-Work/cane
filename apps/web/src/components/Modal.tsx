@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTheme } from '../theme.js';
 import { Icon } from './Icon.js';
@@ -28,7 +28,8 @@ export function Modal({ title, body, icon, tone = 'accent', onClose, children, f
     };
   }, []);
 
-  useEffect(() => {
+  // Layout effect: the listener is attached in the same commit that shows the dialog, so an early Escape is never lost.
+  useLayoutEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
