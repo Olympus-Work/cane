@@ -58,6 +58,23 @@ describe('Heatmap card', () => {
     expect(screen.queryByRole('tooltip')).toBeNull();
   });
 
+  it('closes the tooltip when the heatmap or the page scrolls, or the window resizes', () => {
+    const { container } = render(wrap(<Heatmap items={ITEMS} today="2026-09-27" weeks={53} />));
+    const cell = container.querySelector('.heatmap-cell[data-day="2026-09-20"]') as HTMLElement;
+
+    fireEvent.mouseEnter(cell);
+    fireEvent.scroll(container.querySelector('.heatmap-scroll')!); // its own horizontal scroll
+    expect(screen.queryByRole('tooltip')).toBeNull();
+
+    fireEvent.mouseEnter(cell);
+    fireEvent.scroll(window);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+
+    fireEvent.mouseEnter(cell);
+    fireEvent(window, new Event('resize'));
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
   it('formats the tooltip header in Thai with the Buddhist calendar', () => {
     const { container } = render(wrap(<Heatmap items={ITEMS} today="2026-09-27" weeks={53} />, 'th'));
     const cell = container.querySelector('.heatmap-cell[data-day="2026-09-20"]') as HTMLElement;
