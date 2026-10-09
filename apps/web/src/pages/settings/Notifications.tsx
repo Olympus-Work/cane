@@ -35,7 +35,9 @@ export function Notifications({ settings, reload }: { settings: SettingsView; re
   const tgConfigured = Boolean(secrets.telegram_bot_token && secrets.telegram_chat_id);
   const anyText = [lineToken, lineTarget, tgToken, tgChat].some((v) => v.trim().length > 0);
 
-  const hintFor = (key: SecretKey): string => (secrets[key] ? `•••• ${secrets[key]}` : t('fieldTargetHint'));
+  // A saved secret shows its last 4 inside the empty input, so the field itself reads as filled.
+  const masked = (key: SecretKey): string | undefined => (secrets[key] ? `•••• ${secrets[key]}` : undefined);
+  const hintFor = (key: SecretKey): string => (secrets[key] ? t('fieldSavedHint') : t('fieldTargetHint'));
 
   const runTest = async (channel: Channel) => {
     const set = channel === 'line' ? setTestLine : setTestTg;
@@ -117,8 +119,8 @@ export function Notifications({ settings, reload }: { settings: SettingsView; re
           )}
         </header>
         <div className="notif-fields">
-          <Field id="notif-line-token" label={t('token')} type="password" autoComplete="off" value={lineToken} onChange={setLineToken} hint={hintFor('line_channel_token')} />
-          <Field id="notif-line-target" label={t('target')} type="password" autoComplete="off" value={lineTarget} onChange={setLineTarget} hint={hintFor('line_user_id')} />
+          <Field id="notif-line-token" label={t('token')} type="password" autoComplete="off" value={lineToken} onChange={setLineToken} placeholder={masked('line_channel_token')} hint={hintFor('line_channel_token')} />
+          <Field id="notif-line-target" label={t('target')} type="password" autoComplete="off" value={lineTarget} onChange={setLineTarget} placeholder={masked('line_user_id')} hint={hintFor('line_user_id')} />
         </div>
         <footer className="notif-card-footer">
           <Button variant="secondary" size="sm" icon="paper-plane" loading={testing === 'line'} onClick={() => void runTest('line')}>
@@ -144,8 +146,8 @@ export function Notifications({ settings, reload }: { settings: SettingsView; re
           )}
         </header>
         <div className="notif-fields">
-          <Field id="notif-tg-token" label={t('botToken')} type="password" autoComplete="off" value={tgToken} onChange={setTgToken} hint={hintFor('telegram_bot_token')} />
-          <Field id="notif-tg-chat" label={t('chatId')} type="password" autoComplete="off" value={tgChat} onChange={setTgChat} hint={hintFor('telegram_chat_id')} />
+          <Field id="notif-tg-token" label={t('botToken')} type="password" autoComplete="off" value={tgToken} onChange={setTgToken} placeholder={masked('telegram_bot_token')} hint={hintFor('telegram_bot_token')} />
+          <Field id="notif-tg-chat" label={t('chatId')} type="password" autoComplete="off" value={tgChat} onChange={setTgChat} placeholder={masked('telegram_chat_id')} hint={hintFor('telegram_chat_id')} />
         </div>
         <footer className="notif-card-footer">
           <Button variant="secondary" size="sm" icon="paper-plane" loading={testing === 'telegram'} onClick={() => void runTest('telegram')}>

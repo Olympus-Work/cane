@@ -56,11 +56,12 @@ describe('Settings > Notifications', () => {
     expect(screen.getByText('Not set up')).toBeTruthy();
   });
 
-  it('shows the saved hint masked under each input', () => {
+  it('shows a saved secret masked inside its empty input', () => {
     renderNotif(view({ line_channel_token: 'AB12', telegram_chat_id: '9012' }));
-    expect(screen.getByText('•••• AB12')).toBeTruthy();
-    expect(screen.getByText('•••• 9012')).toBeTruthy();
-    // Unsaved fields keep the write-only hint.
+    expect(screen.getByPlaceholderText('•••• AB12')).toBeTruthy();
+    expect(screen.getByPlaceholderText('•••• 9012')).toBeTruthy();
+    expect(screen.getAllByText('Saved. Type a new value to replace it.').length).toBe(2);
+    // Unsaved fields have no placeholder and keep the write-only hint.
     expect(screen.getAllByText('Write-only. Stored encrypted.').length).toBe(2);
   });
 
