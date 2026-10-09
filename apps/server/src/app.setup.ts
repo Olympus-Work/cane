@@ -1,5 +1,6 @@
 import fastifyCookie from '@fastify/cookie';
 import fastifyStatic from '@fastify/static';
+import { relative, sep } from 'node:path';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { FastifyAdapter } from '@nestjs/platform-fastify';
 
@@ -17,5 +18,16 @@ export const newAdapter = (): FastifyAdapter => new FastifyAdapter({ trustProxy:
  */
 export async function configureApp(app: NestFastifyApplication, opts: { webDist?: string } = {}): Promise<void> {
   await app.register(fastifyCookie);
-  if (opts.webDist) await app.register(fastifyStatic, { root: opts.webDist });
+  const root = opts.webDist;
+  if (!root) return;
+  await app.register(fastifyStatic, {
+    root,
+    // Vite content-hashes everything under assets/, so it can be cached forever;
+    // the rest (index.html first) is revalidated, or a redeploy would leave a
+    // cached page pointing at assets that no longer exist.
+    setHeaders: (reply, path) => {
+      const hashed = relative(root, path).startsWith(`assets${sep}`);
+      reply.header('cache-control', hashed ? 'public, max-age=31536000, immutable' : 'no-cache');
+    },
+  });
 }

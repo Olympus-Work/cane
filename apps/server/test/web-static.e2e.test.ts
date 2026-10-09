@@ -35,12 +35,14 @@ describe('web build served by the server (S12)', () => {
     expect(res.statusCode).toBe(200);
     expect(res.headers['content-type']).toContain('text/html');
     expect(res.payload).toContain('<title>Cane</title>');
+    expect(res.headers['cache-control']).toBe('no-cache');
   });
 
   it('serves built assets', async () => {
     const res = await app.inject({ method: 'GET', url: '/assets/app.js' });
     expect(res.statusCode).toBe(200);
     expect(res.headers['content-type']).toContain('javascript');
+    expect(res.headers['cache-control']).toBe('public, max-age=31536000, immutable');
   });
 
   it('API routes still win: /health is JSON', async () => {
