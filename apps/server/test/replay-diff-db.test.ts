@@ -55,6 +55,7 @@ describe.skipIf(!DATABASE_URL)('replay-diff live records through the read-only u
     await stop('S-01-a-stop', '80000', 'CANCELED', K + H4 + 32_000);
     await stop('S-01-b-trail', '81000', 'NEW', K + 3 * H4 + 31_000);
     await stop('S-01-c-trail', '81500', 'REJECTED', K + 4 * H4 + 31_000);
+    await stop('S-01-d-trail', '81700', 'PENDING', K + 4 * H4 + 32_000); // retries gave up before Binance had it
   });
 
   afterAll(async () => {
@@ -99,7 +100,7 @@ describe.skipIf(!DATABASE_URL)('replay-diff live records through the read-only u
     expect(afterEntry!.stop.toFixed()).toBe('80000');
     const afterMove = await live.positionAt('S-01', new Date(K + 4 * H4 + 30_000));
     expect(afterMove!.stop.toFixed()).toBe('81000');
-    // A rejected stop never protected the position.
+    // A rejected or never-sent stop never protected the position.
     const afterRejected = await live.positionAt('S-01', new Date(K + 5 * H4 + 30_000));
     expect(afterRejected!.stop.toFixed()).toBe('81000');
   });

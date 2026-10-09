@@ -102,7 +102,8 @@ export class Engine {
 
     // E4: a missing candle is retried on the next tick instead of being recorded.
     if (dec.type === 'none' && dec.reason === 'data_gap') return;
-    const signalId = await this.d.store.claimSignal(s.id, '4h', key, dec);
+    // `input` keeps the position `decide` saw, so the daily replay-diff (S13) re-decides on the same state.
+    const signalId = await this.d.store.claimSignal(s.id, '4h', key, { ...dec, input: { position } });
     if (signalId === null) return;
 
     if (dec.type === 'enter') {

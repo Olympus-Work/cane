@@ -18,8 +18,8 @@ export interface DiffStrategy {
   market: Market;
 }
 
-/** Stop orders that never protected the position. */
-const DEAD_STOP = ['NOT_SENT', 'REJECTED'];
+/** Stop orders that never protected the position (PENDING: the send failed or never finished). */
+const DEAD_STOP = ['PENDING', 'NOT_SENT', 'REJECTED'];
 
 /**
  * Reads what live recorded, through the read-only `cane_replay` user (plan S13).

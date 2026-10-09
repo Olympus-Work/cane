@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { TIMEFRAME_MS, analyzeTimeframe, decide, type Analyses, type Candle, type Timeframe } from '@cane/core';
 import { KlineCache } from '../market-data/kline-cache.js';
-import { classifyKey, type KeyDiff } from '../replay/diff.js';
+import { classifyKey, recordedPosition, type KeyDiff } from '../replay/diff.js';
 import { LiveRecords, type DiffStrategy } from './live-records.js';
 
 export const LIVE_RECORDS = Symbol('LIVE_RECORDS');
@@ -64,7 +64,9 @@ export class ReplayDiffService {
       const load = (tf: Timeframe): Promise<Candle[]> => this.klines.closedCandles(s.market, s.pair, tf, nowMs);
       const [h4, d1, w1] = await Promise.all([load('4h'), load('1d'), load('1w')]);
       const analyses: Analyses = { '4h': analyzeTimeframe('4h', h4), '1d': analyzeTimeframe('1d', d1), '1w': analyzeTimeframe('1w', w1) };
-      const position = await this.live.positionAt(s.id, at);
+      // The position live recorded with its decision; rebuilt from positions/orders for older rows and missing keys.
+      const recorded = recordedPosition(row?.decision);
+      const position = recorded !== undefined ? recorded : await this.live.positionAt(s.id, at);
       const replay = decideFn({ strategy: { id: s.id, market: s.market }, analyses, position, nowMs });
       const around = row ? true : await this.live.hasRowsAround(s.id, key);
       const diff = classifyKey(key, row?.decision, replay, around);
