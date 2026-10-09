@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import type { HeatmapDay } from '../api.js';
 import { pnlDir, signed } from '../lib/format.js';
@@ -66,6 +66,20 @@ export function Heatmap({ items, today, weeks }: { items: HeatmapDay[]; today: s
   const cols: CSSProperties = { gridTemplateColumns: `repeat(${weeks}, minmax(0, 1fr))` };
   const show = (cell: HeatmapCell, el: HTMLElement) => setHover({ cell, rect: el.getBoundingClientRect() });
   const hide = () => setHover(null);
+
+  // The tip is placed from the cell's rect at hover time: any scroll (the page or the
+  // heatmap's own horizontal scroll) or resize would leave it in the wrong place, so close it.
+  const open = hover !== null;
+  useEffect(() => {
+    if (!open) return;
+    const close = () => setHover(null);
+    window.addEventListener('scroll', close, { capture: true, passive: true });
+    window.addEventListener('resize', close);
+    return () => {
+      window.removeEventListener('scroll', close, { capture: true });
+      window.removeEventListener('resize', close);
+    };
+  }, [open]);
 
   return (
     <section className="card heatmap">
