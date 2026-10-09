@@ -54,6 +54,25 @@ describe('ReplayDiffService (plan S13)', () => {
     ]);
   });
 
+  it('uses the position the engine recorded (incl. none) before rebuilding it', async () => {
+    const recorded = { side: 'short', kind: 'primary', stop: '90000', openedAt: 7 };
+    const rows: LiveRow[] = [
+      { key: FIRST, decision: { ...none, input: { position: recorded } }, at: new Date(FIRST + H4 + 30_000) },
+      // Recorded "no position" wins even though the rebuild would find one.
+      { key: FIRST + 3 * H4, decision: { ...none, input: { position: null } }, at: new Date(FIRST + 4 * H4 + 30_000) },
+    ];
+    const live = fakeLive(rows);
+    const calls: DecideInput[] = [];
+    await new ReplayDiffService(klines, live).run('2026-10-09', (input) => {
+      calls.push(input);
+      return none;
+    });
+    expect(calls[0]!.position).toMatchObject({ side: 'short', openedAt: 7 });
+    expect(calls[0]!.position!.stop.toFixed()).toBe('90000');
+    expect(calls[3]!.position).toBeNull();
+    expect(live.positionAt).not.toHaveBeenCalledWith('S-01', rows[0]!.at);
+  });
+
   it('does not count keys outside the managed period', async () => {
     const out = await new ReplayDiffService(klines, fakeLive([], false)).run('2026-10-09', () => none);
     expect(out.strategies[0]).toMatchObject({ compared: 0, matched: 0, mismatches: [] });

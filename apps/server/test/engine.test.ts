@@ -372,6 +372,20 @@ describe.skipIf(!DATABASE_URL)('Engine.evaluate', () => {
     expect(enter).not.toHaveBeenCalled();
   });
 
+  it('records the position decide saw in the 4H row, for the replay-diff (S13)', async () => {
+    await strategy('S-01', 'BTCUSDT');
+    await engine.evaluate('S-01', KEY);
+    await openPosition('S-01', 'BTCUSDT');
+    await engine.evaluate('S-01', KEY + H4);
+    const { rows: r } = await pool.query<{ decision: { type: string; input: { position: Record<string, unknown> | null } } }>(
+      "select decision from signals where timeframe = '4h' order by candle_open_time",
+    );
+    expect(r[0]!.decision).toMatchObject({ type: 'none', input: { position: null } });
+    const pos = r[1]!.decision.input.position!;
+    expect(pos).toMatchObject({ side: 'long', kind: expect.any(String), stop: expect.any(String), openedAt: expect.any(Number) });
+    expect(decideFn.mock.calls[1]![0].position.stop.toFixed()).toBe(pos.stop);
+  });
+
   it('move_stop goes to the executor', async () => {
     await strategy('S-01', 'BTCUSDT');
     const posId = await openPosition('S-01', 'BTCUSDT');

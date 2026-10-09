@@ -1,5 +1,5 @@
 import { Decimal } from 'decimal.js';
-import type { Decision } from '@cane/core';
+import type { Decision, OpenPosition } from '@cane/core';
 
 /** Outcome of one 4H evaluation key (plan S13). */
 export type DiffOutcome = 'match' | 'differ' | 'missing_live' | 'missing_replay';
@@ -54,6 +54,7 @@ export function sameDecision(live: unknown, replay: Decision): boolean {
       return (
         live.side === replay.side &&
         live.kind === replay.kind &&
+        sameDecimal(live.refPrice, replay.refPrice) &&
         sameSignal(live.signal, replay.signal) &&
         sameDecimal(live.stop, replay.stop) &&
         live.stopSource === replay.stopSource &&
@@ -61,7 +62,7 @@ export function sameDecision(live: unknown, replay: Decision): boolean {
         live.trend1w === replay.trend1w
       );
     case 'exit':
-      return live.side === replay.side && live.reason === replay.reason && sameSignal(live.signal, replay.signal);
+      return live.side === replay.side && live.reason === replay.reason && sameSignal(live.signal, replay.signal) && sameDecimal(live.refPrice, replay.refPrice);
     case 'move_stop':
       return live.side === replay.side && sameDecimal(live.stop, replay.stop) && sameSignal(live.signal, replay.signal);
   }
@@ -102,4 +103,16 @@ export function classifyKey(key: number, live: unknown, replay: Decision, liveAr
   if (replayGap) return { key, outcome: 'missing_replay', live: describeDecision(live), replay: describeDecision(replay) };
   if (sameDecision(live, replay)) return { key, outcome: 'match' };
   return { key, outcome: 'differ', live: describeDecision(live), replay: describeDecision(replay) };
+}
+
+/**
+ * The position live passed to `decide`, as the engine records it in the 4H
+ * row (`input.position`, S13). `undefined` when the row predates that field.
+ */
+export function recordedPosition(live: unknown): OpenPosition | null | undefined {
+  if (!isObj(live) || !isObj(live.input) || !('position' in live.input)) return undefined;
+  const p = live.input.position;
+  if (p === null) return null;
+  if (!isObj(p) || (p.side !== 'long' && p.side !== 'short') || typeof p.stop !== 'string') return undefined;
+  return { side: p.side, kind: p.kind === 'late' ? 'late' : 'primary', stop: new Decimal(p.stop), openedAt: Number(p.openedAt) };
 }

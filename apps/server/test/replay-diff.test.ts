@@ -1,7 +1,7 @@
 import { Decimal } from 'decimal.js';
 import { describe, expect, it } from 'vitest';
 import type { Decision } from '@cane/core';
-import { classifyKey, describeDecision, sameDecision } from '../src/replay/diff.js';
+import { classifyKey, describeDecision, recordedPosition, sameDecision } from '../src/replay/diff.js';
 
 const D1 = 1_727_740_800_000; // a 1D open time
 const enter: Decision = {
@@ -40,8 +40,8 @@ describe('replay-diff comparison (plan S13)', () => {
     expect(sameDecision({ ...(stored(enter) as object), plan: { qty: '0.01' }, jevCallId: 3 }, enter)).toBe(true);
   });
 
-  it('ignores refPrice (the market fills near it) but not stop source, take-profit or 1W trend', () => {
-    expect(sameDecision({ ...(stored(enter) as object), refPrice: '1' }, enter)).toBe(true);
+  it('compares refPrice (the signal candle close), stop source, take-profit and 1W trend', () => {
+    expect(sameDecision({ ...(stored(enter) as object), refPrice: '1' }, enter)).toBe(false);
     expect(sameDecision({ ...(stored(enter) as object), stopSource: 'atr_fallback' }, enter)).toBe(false);
     expect(sameDecision({ ...(stored(enter) as object), takeProfit: '90000' }, enter)).toBe(false);
     expect(sameDecision({ ...(stored(enter) as object), trend1w: 'bearish' }, enter)).toBe(false);
@@ -70,6 +70,16 @@ describe('replay-diff comparison (plan S13)', () => {
     expect(classifyKey(1, undefined, enter, false)).toBeNull();
     // A data gap on both sides: live does not record one either (E4).
     expect(classifyKey(1, undefined, gap, true)).toBeNull();
+  });
+
+  it('reads the position the engine recorded with its decision', () => {
+    expect(recordedPosition({ type: 'none', input: { position: null } })).toBeNull();
+    const p = recordedPosition({ type: 'none', input: { position: { side: 'short', kind: 'flip', stop: '90000.1', openedAt: 5 } } })!;
+    expect(p).toMatchObject({ side: 'short', kind: 'primary', openedAt: 5 });
+    expect(p.stop.toFixed()).toBe('90000.1');
+    // Rows written before the field existed: the diff rebuilds the position instead.
+    expect(recordedPosition({ type: 'none' })).toBeUndefined();
+    expect(recordedPosition(undefined)).toBeUndefined();
   });
 
   it('describes both sides of a mismatch in one line', () => {

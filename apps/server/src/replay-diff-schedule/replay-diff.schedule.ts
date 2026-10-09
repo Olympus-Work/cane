@@ -6,7 +6,7 @@ import type { DayDiff, StrategyDiff } from '../replay-diff/replay-diff.service.j
 export type RunDiff = (day: string) => Promise<DayDiff>;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-/** Run from 00:15 UTC: the last 4H evaluation of the day before lands at about 00:00:30. */
+/** Run from 00:15 UTC: a missing 16:00 row only counts once the next day's 00:00:30 row exists (plan S13). */
 export const RUN_AFTER_MS = 15 * 60 * 1000;
 
 /** The previous UTC day once it may be checked (from 00:15 UTC), else null. */
