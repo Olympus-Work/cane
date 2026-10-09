@@ -19,7 +19,8 @@ export type NotifyEvent =
   | 'login_failed_lockout'
   | 'login_success'
   | 'settings_changed'
-  | 'kill_switch';
+  | 'kill_switch'
+  | 'replay_diff';
 
 /**
  * Notification sink (B13). `details` holds only trade data (pair, side,

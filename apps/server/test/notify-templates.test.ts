@@ -159,15 +159,21 @@ describe('notify templates', () => {
       login_success: true,
       settings_changed: true,
       kill_switch: true,
+      replay_diff: true,
     } satisfies Record<NotifyEvent, true>;
     const events = Object.keys(all) as NotifyEvent[];
-    expect(events).toHaveLength(17);
+    expect(events).toHaveLength(18);
     for (const event of events) {
       const out = renderMessage(event, null, {});
       const first = out.split('\n')[0]!;
       expect(first.startsWith('[')).toBe(true);
       expect(first.length).toBeGreaterThan(1);
     }
+  });
+
+  it('renders the daily replay-diff summary (plan S13)', () => {
+    const out = renderMessage('replay_diff', 'S-01', { day: '2026-10-09', what: 'BTCUSDT futures: 6/6 match' });
+    expect(out).toBe('[Live vs replay check] S-01\nday: 2026-10-09\nwhat: BTCUSDT futures: 6/6 match');
   });
 
   it('renders booleans and numbers in whitelist order', () => {

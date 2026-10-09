@@ -133,6 +133,12 @@ There is one Railway service plus the Postgres add-on. The server also serves th
    - The reconciler must start clean, with no needs-attention notification.
 7. **First strategy.** Create BTCUSDT, USDⓈ-M futures with the defaults (5x ceiling, isolated, mode B), then enable it with TOTP.
 
+8. **Daily replay-diff (S13).** Add the variable below to the service and redeploy. The `cane_replay` user is the one created in step 3, and its password is that user's generated password:
+   ```
+   REPLAY_DATABASE_URL=postgresql://cane_replay:<password>@${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.PGDATABASE}}
+   ```
+   The log then says `daily replay-diff scheduled (00:15 UTC)`. Every day at 00:15 UTC (07:15 Bangkok) a `Live vs replay check` message arrives per strategy. To run it by hand in the service Console: `node apps/server/dist/replay-diff-cli.js --day YYYY-MM-DD`. Record the results in `intent/cane-auto-trader/live-log.md`.
+
 Rollback: use the Kill switch in the UI, or unset `TRADING_ENABLED` and redeploy (stops stay on Binance), or use Railway's "rollback to previous deployment".
 
 ## Web app (development)
