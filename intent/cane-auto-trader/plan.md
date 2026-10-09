@@ -743,6 +743,59 @@ Each step ends with its proof passing in CI before the next starts. Steps
       - Error text not recorded: the B15.2 rejection text was not checked
         live against design.md item 19. Paste it here if a key is ever
         rejected again.
+- **Replay-diff in S13 (Claude Code, 2026-10-09; awaits owner OK in the
+  PR):**
+  - **Unit of comparison: one 4H evaluation.** For each managed strategy
+    and each 4H candle that closed in the UTC day, the diff runs core
+    `decide` at the same evaluation time as live (the 4H close). It uses
+    public closed candles from the replay's `KlineCache`, and the
+    position that live actually held at that moment. Then it compares the
+    result with the live `signals` row of that 4H key. Only 4H rows are
+    compared: 1D rows are idempotency claims of the same decisions.
+  - **Why the live position, not a simulated one.** Starting the replay
+    flat would let one expected divergence poison every later day. Such
+    divergences include an entry skipped by B9.2 or min notional, a
+    Binance rejection, a flip (B7.5 needs Jev, which the replay does not
+    call) and a stop filled on the exchange. So AC3 checks "same candles
+    + same position → same decision". Position handling is covered by the
+    exchange tests (S05/S06) and the reconciler. The position at time T is
+    the `positions` row with `opened_at < T`, and `closed_at` unset or
+    after T. Its stop is the newest stop order created before T, or the
+    position's initial stop if there is none. `openedAt` only feeds
+    "1D candle closed after the entry", so the live fill time (seconds
+    after the close) and the replay's close + 1 ms give the same answer.
+  - **Fields compared:** decision `type`; for `none`, `reason`; for
+    `enter`, side, kind, signal timeframe + open time, stop, stop source,
+    take-profit and 1W trend; for `exit`, side, reason and signal; for
+    `move_stop`, side, stop and signal. Decimals are compared with
+    `Decimal.eq`. Keys added later by `annotateSignal` (the entry plan)
+    are ignored.
+  - **Outcome per key:** `match`, `differ`, `missing_live` or
+    `missing_replay`. `missing_live` is expected in two cases. One is an
+    E4 data gap, which live does not record. The other is the server
+    being down across a 4H close, because the engine evaluates only the
+    newest key. Every non-match is written to `live-log.md` with its
+    explanation; that file is the AC3 proof.
+  - **Isolation: a separate process.** The diff is a CLI
+    (`node apps/server/dist/replay-diff-cli.js --day YYYY-MM-DD`), like
+    the replay CLI. Its Nest context loads only replay, market data and a
+    read-only DB pool. The server's scheduler starts it once a day as a
+    child process. The child gets a minimal env (`PATH` and
+    `REPLAY_DATABASE_URL`): no master key, no `DATABASE_URL`, no
+    `TRADING_ENABLED`. So the diff never runs in a process that holds the
+    executor, Binance trading code or keys. Its DB user is `cane_replay`
+    (in `cane_readonly`) through `REPLAY_DATABASE_URL`, with no fallback
+    to `DATABASE_URL`. The child prints a JSON result; the parent logs
+    it and notifies. The owner can run the same CLI by hand in the
+    Railway Console.
+  - **Schedule:** once a day for the previous UTC day, from 00:15 UTC
+    (07:15 Bangkok). The last 4H evaluation of the day is at about
+    00:00:30 UTC. If `REPLAY_DATABASE_URL` is unset, the scheduler logs a
+    warning and never runs. A diff failure only notifies (`replay_diff`
+    event) and never touches trading.
+  - **A daily summary on every run, even when all keys match** (e.g.
+    "S-01 6/6 match"). A silent success could not be told apart from a
+    job that is dead, and AC3 needs 30 days of evidence.
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.
