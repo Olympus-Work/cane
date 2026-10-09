@@ -1,5 +1,6 @@
 import { Logger } from '@nestjs/common';
 import type { Notifier } from '../engine/ports.js';
+import { previousUtcDay } from '../replay/diff.js';
 import type { DayDiff, StrategyDiff } from '../replay-diff/replay-diff.service.js';
 
 /** Runs the diff for one UTC day in its own process (plan S13) and returns its JSON result. */
@@ -13,7 +14,7 @@ export const RUN_AFTER_MS = 15 * 60 * 1000;
 export function dueDay(nowMs: number): string | null {
   const intoDay = nowMs % DAY_MS;
   if (intoDay < RUN_AFTER_MS) return null;
-  return new Date(nowMs - intoDay - DAY_MS).toISOString().slice(0, 10);
+  return previousUtcDay(nowMs);
 }
 
 /** One line per strategy, e.g. `BTCUSDT futures: 6/6 match` or `… 4/6 match; differ 4h@…`. */

@@ -16,6 +16,12 @@ Outcomes:
   after downtime across a 4H close, or after an E4 data gap.
 - `missing_replay`: the replay hit a data gap where live decided.
 
+`Position` says where the position given to the replay came from:
+`recorded` (the engine wrote it with its decision), `rebuilt` (rows from
+before S13, or a missing key; the stop is tick-rounded) or `unreadable`
+(the recorded `input` did not parse, so it was rebuilt; check the recorded
+shape first).
+
 Window: 30 days from the first live evaluation of S-01 (2026-10-09).
 
 ## Daily results
@@ -25,5 +31,5 @@ Window: 30 days from the first live evaluation of S-01 (2026-10-09).
 
 ## Mismatches and explanations
 
-| UTC day | Strategy | 4H key (UTC) | Outcome | Live | Replay | Explanation |
-|---|---|---|---|---|---|---|
+| UTC day | Strategy | 4H key (UTC) | Outcome | Position | Live | Replay | Explanation |
+|---|---|---|---|---|---|---|---|
