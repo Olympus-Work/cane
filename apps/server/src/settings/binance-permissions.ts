@@ -53,8 +53,8 @@ export class BinanceApiPermissionChecker implements BinancePermissionChecker {
         futuresTrading: r.enableFutures === true,
       };
     } catch (e) {
-      if (e instanceof BinanceError) throw new KeyCheckError('Binance did not accept this key (invalid key or secret, or the permission check is unavailable).');
-      throw new KeyCheckError('Could not reach Binance to check this key. Nothing was saved.');
+      if (e instanceof BinanceError) throw KeyCheckError.rejected();
+      throw KeyCheckError.unreachable();
     }
   }
 }
@@ -72,13 +72,13 @@ export class DemoPermissionChecker implements BinancePermissionChecker {
     // A market whose call Binance rejects counts as "cannot trade" there.
     const rejected = (e: unknown): null => {
       if (e instanceof BinanceError) return null;
-      throw new KeyCheckError('Could not reach Binance to check this key. Nothing was saved.');
+      throw KeyCheckError.unreachable();
     };
     const [spot, futures] = await Promise.all([
       client.request('spot', 'GET', '/api/v3/account', { omitZeroBalances: 'true' }, 'signed', 'safe').then((r) => r as Record<string, unknown>, rejected),
       client.request('futures', 'GET', '/fapi/v3/account', {}, 'signed', 'safe').then(() => true, rejected),
     ]);
-    if (spot === null && futures === null) throw new KeyCheckError('Binance did not accept this key (invalid key or secret, or the permission check is unavailable).');
+    if (spot === null && futures === null) throw KeyCheckError.rejected();
     return { withdrawals: false, universalTransfer: false, spotTrading: spot?.canTrade === true, futuresTrading: futures === true };
   }
 }
@@ -91,4 +91,14 @@ export function permissionCheckerFor(env: string | undefined, http: HttpFn): Bin
 /** A message that is safe to show the owner: it never contains the key or secret. */
 export class KeyCheckError extends Error {
   readonly code = 'unusable' as const;
+
+  /** Binance answered and refused the key (both checkers use the same words). */
+  static rejected(): KeyCheckError {
+    return new KeyCheckError('Binance did not accept this key (invalid key or secret, or the permission check is unavailable).');
+  }
+
+  /** Binance could not be reached; nothing was saved. */
+  static unreachable(): KeyCheckError {
+    return new KeyCheckError('Could not reach Binance to check this key. Nothing was saved.');
+  }
 }
