@@ -672,8 +672,8 @@ Each step ends with its proof passing in CI before the next starts. Steps
     - The system position was opened with a local script (claimSignal +
       `Executor.enter`, as in the Demo integration test) rather than a
       market signal.
-- **Deploy choices in S12 (Claude Code, 2026-10-08; awaits owner
-  confirmation):**
+- **Deploy choices in S12 (Claude Code, 2026-10-08; the owner deployed
+  with them on 2026-10-09):**
   - **The server serves the web build** (`apps/web/dist`, via
     `@fastify/static`) from the same origin as the API. The session cookie
     is `secure` and `sameSite=strict`, and the web calls relative `/v1`
@@ -705,6 +705,35 @@ Each step ends with its proof passing in CI before the next starts. Steps
     Withdrawals on must be rejected. Then the owner sets
     `TRADING_ENABLED=true` and redeploys. The service must have only its
     Railway HTTPS domain and no TCP proxy (the `trustProxy` check).
+  - **S12 live on Railway, 2026-10-09 (owner run). Proof passed except
+    Telegram, which the owner sets up later.**
+    - Railway's monorepo detection created two services (`@cane/web`,
+      `@cane/server`). The owner deleted `@cane/web` and set the README
+      values on `@cane/server`: start `node apps/server/dist/main.js`
+      instead of the detected `pnpm --filter @cane/server start`, and the
+      detected watch path `/apps/server/**` was cleared. One replica,
+      serverless off, only the generated `*.up.railway.app` domain, no TCP
+      proxy.
+    - The first deploy failed in pre-deploy because no variables were set.
+      After setting them, `migrate up: done` ran and the server started.
+    - `/health` returned `{"status":"ok"}` and `/` showed Login (the web
+      build is served).
+    - The owner created `cane_server` (in `cane_app`) and `cane_replay` (in
+      `cane_readonly`, for S13) and pointed `DATABASE_URL` at
+      `cane_server`. `seed-owner` from the Railway dashboard Console and
+      the first login both worked through that user.
+    - LINE: the test message was delivered. Telegram is not set up yet, so
+      `system_started` on Telegram is still open.
+    - B15.2 (AC12) live check: the owner reports that a key with
+      Withdrawals on was rejected. The error text was not recorded. The
+      live key was then saved; only one `Settings changed: Binance key`
+      notification was sent.
+    - With `TRADING_ENABLED=true`: LINE got `[System started] env: live`,
+      the log shows `engine started` with no ERROR or WARN, and the
+      reconciler sent no notification. No strategy existed at that point,
+      so the first reconcile had nothing to compare.
+    - First strategy S-01: BTCUSDT USDⓈ-M futures, 5x, isolated, mode B,
+      enabled with TOTP; status "waiting for signal", no notification.
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.
