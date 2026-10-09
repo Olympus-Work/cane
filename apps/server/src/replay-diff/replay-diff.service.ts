@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { TIMEFRAME_MS, analyzeTimeframe, decide, type Analyses, type Candle, type Timeframe } from '@cane/core';
+import { TIMEFRAME_MS, analyzeTimeframe, decide, type Analyses, type Candle, type OpenPosition, type Timeframe } from '@cane/core';
 import { KlineCache } from '../market-data/kline-cache.js';
-import { classifyKey, recordedPosition, type KeyDiff } from '../replay/diff.js';
+import { classifyKey, recordedPosition, type KeyDiff, type PositionSource } from '../replay/diff.js';
 import { LiveRecords, type DiffStrategy } from './live-records.js';
 
 export const LIVE_RECORDS = Symbol('LIVE_RECORDS');
@@ -73,8 +73,14 @@ export class ReplayDiffService {
       if (diff === null) continue;
       result.compared++;
       if (diff.outcome === 'match') result.matched++;
-      else result.mismatches.push(diff);
+      else result.mismatches.push({ ...diff, position: positionSource(row?.decision, recorded) });
     }
     return result;
   }
+}
+
+function positionSource(live: unknown, recorded: OpenPosition | null | undefined): PositionSource {
+  if (recorded !== undefined) return 'recorded';
+  const hasInput = typeof live === 'object' && live !== null && 'input' in live;
+  return hasInput ? 'unreadable' : 'rebuilt';
 }

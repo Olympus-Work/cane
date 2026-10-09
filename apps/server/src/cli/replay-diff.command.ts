@@ -1,13 +1,9 @@
 import { Command, CommandRunner, Option } from 'nest-commander';
+import { previousUtcDay } from '../replay/diff.js';
 import { ReplayDiffService } from '../replay-diff/replay-diff.service.js';
 
 interface ReplayDiffOptions {
   day?: string;
-}
-
-/** The previous UTC day, YYYY-MM-DD. */
-export function previousUtcDay(nowMs: number): string {
-  return new Date(nowMs - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
 @Command({

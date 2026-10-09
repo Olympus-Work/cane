@@ -52,6 +52,14 @@ describe('ReplayDiffService (plan S13)', () => {
       [FIRST, 'differ'],
       [FIRST + 2 * H4, 'missing_live'],
     ]);
+    // Rows without `input` (written before S13) and missing keys use the rebuilt position.
+    expect(s.mismatches.map((m) => m.position)).toEqual(['rebuilt', 'rebuilt']);
+  });
+
+  it('marks a mismatch whose recorded input could not be read', async () => {
+    const rows: LiveRow[] = [{ key: FIRST, decision: { type: 'none', reason: 'trend_filter', input: { position: { side: 'long', stop: 1 } } }, at: new Date(FIRST + H4 + 30_000) }];
+    const out = await new ReplayDiffService(klines, fakeLive(rows)).run('2026-10-09', () => none);
+    expect(out.strategies[0]!.mismatches[0]).toMatchObject({ outcome: 'differ', position: 'unreadable' });
   });
 
   it('uses the position the engine recorded (incl. none) before rebuilding it', async () => {

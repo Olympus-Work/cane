@@ -11,7 +11,12 @@ export interface KeyDiff {
   /** Compact text of each side, set when the outcome is not `match`. */
   live?: string;
   replay?: string;
+  /** Where the position given to the replay came from (set on non-matches by the diff service). */
+  position?: PositionSource;
 }
+
+/** `recorded`: the engine's `input.position`; `rebuilt`: from positions/orders; `unreadable`: an `input` the diff could not parse, so rebuilt. */
+export type PositionSource = 'recorded' | 'rebuilt' | 'unreadable';
 
 type Json = Record<string, unknown>;
 
@@ -115,4 +120,9 @@ export function recordedPosition(live: unknown): OpenPosition | null | undefined
   if (p === null) return null;
   if (!isObj(p) || (p.side !== 'long' && p.side !== 'short') || typeof p.stop !== 'string') return undefined;
   return { side: p.side, kind: p.kind === 'late' ? 'late' : 'primary', stop: new Decimal(p.stop), openedAt: Number(p.openedAt) };
+}
+
+/** The UTC day before `nowMs`, YYYY-MM-DD: the day the daily replay-diff checks. */
+export function previousUtcDay(nowMs: number): string {
+  return new Date(nowMs - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
