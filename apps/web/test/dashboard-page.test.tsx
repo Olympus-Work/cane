@@ -236,6 +236,26 @@ describe('Dashboard page', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 
+  it('closes the drawer on an Escape pressed the moment it appears', async () => {
+    // Fires inside the commit that adds the dialog, before passive effects run (the CI flake on the test above).
+    setFetchForTests(mockFetch({ trades: () => ({ items: [trade(1)], nextBefore: null }), tradeDetail }));
+    const { container } = renderPage(pollOf(dashboard()));
+    fireEvent.click(getTab(container, 'Trade history'));
+    const row = await screen.findByRole('button', { name: /BTCUSDT/ });
+    const pressed = new Promise<void>((resolve) => {
+      const mo = new MutationObserver(() => {
+        if (!document.querySelector('[role="dialog"]')) return;
+        mo.disconnect();
+        fireEvent.keyDown(document, { key: 'Escape' });
+        resolve();
+      });
+      mo.observe(document.body, { childList: true, subtree: true });
+    });
+    fireEvent.click(row);
+    await pressed;
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
   it('appends older trades via Load more and hides the button when the cursor is exhausted', async () => {
     const fetchMock = mockFetch({
       trades: (url) =>
