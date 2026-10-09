@@ -758,18 +758,28 @@ Each step ends with its proof passing in CI before the next starts. Steps
     Binance rejection, a flip (B7.5 needs Jev, which the replay does not
     call) and a stop filled on the exchange. So AC3 checks "same candles
     + same position → same decision". Position handling is covered by the
-    exchange tests (S05/S06) and the reconciler. The position at time T is
-    the `positions` row with `opened_at < T`, and `closed_at` unset or
-    after T. Its stop is the newest stop order created before T, or the
-    position's initial stop if there is none. `openedAt` only feeds
-    "1D candle closed after the entry", so the live fill time (seconds
-    after the close) and the replay's close + 1 ms give the same answer.
+    exchange tests (S05/S06) and the reconciler.
+  - **Where the position comes from.** The engine now writes the position
+    it passed to `decide` into the 4H row (`decision.input.position`:
+    side, kind, unrounded stop, openedAt; `null` when flat). The diff
+    uses exactly that. This field cannot be rebuilt exactly: stop orders
+    carry the stop rounded to the tick, and `positions.stop_price` keeps
+    only the latest value. Rows written before S13 (the first days of
+    S-01) and keys with no live row fall back to a rebuild. The rebuild
+    takes the `positions` row open at T, and as its stop the newest stop
+    order created before T that Binance accepted (not PENDING, NOT_SENT
+    or REJECTED). It is tick-rounded, so a `move_stop` near the old stop
+    can differ there; explain such cases in `live-log.md`. `openedAt`
+    only feeds "1D candle closed after the entry", so the live fill time
+    (seconds after the close) and the replay's close + 1 ms give the same
+    answer.
   - **Fields compared:** decision `type`; for `none`, `reason`; for
-    `enter`, side, kind, signal timeframe + open time, stop, stop source,
-    take-profit and 1W trend; for `exit`, side, reason and signal; for
-    `move_stop`, side, stop and signal. Decimals are compared with
-    `Decimal.eq`. Keys added later by `annotateSignal` (the entry plan)
-    are ignored.
+    `enter`, side, kind, signal timeframe + open time, refPrice (the
+    signal candle's close, so it shows kline data differences), stop,
+    stop source, take-profit and 1W trend; for `exit`, side, reason,
+    signal and refPrice; for `move_stop`, side, stop and signal. Decimals
+    are compared with `Decimal.eq`. `input` and keys added later by
+    `annotateSignal` (the entry plan) are ignored.
   - **Outcome per key:** `match`, `differ`, `missing_live` or
     `missing_replay`. `missing_live` is expected in two cases. One is an
     E4 data gap, which live does not record. The other is the server
@@ -789,8 +799,14 @@ Each step ends with its proof passing in CI before the next starts. Steps
     it and notifies. The owner can run the same CLI by hand in the
     Railway Console.
   - **Schedule:** once a day for the previous UTC day, from 00:15 UTC
-    (07:15 Bangkok). The last 4H evaluation of the day is at about
-    00:00:30 UTC. If `REPLAY_DATABASE_URL` is unset, the scheduler logs a
+    (07:15 Bangkok). A day holds the six evaluations at 00:00:30 …
+    20:00:30 UTC. A missing row for the 16:00 key is only reported when
+    live has a row after it, and that row is the next day's 00:00:30
+    evaluation, so the run waits until 00:15. The scheduler checks only
+    yesterday. Earlier days (before `REPLAY_DATABASE_URL` was set, or a
+    day the server was down at 00:15) are run by hand with `--day`. The
+    last run day is kept in memory, so a restart after 00:15 sends the
+    same day's summary again. If `REPLAY_DATABASE_URL` is unset, the scheduler logs a
     warning and never runs. A diff failure only notifies (`replay_diff`
     event) and never touches trading.
   - **A daily summary on every run, even when all keys match** (e.g.
