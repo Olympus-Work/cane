@@ -43,6 +43,7 @@ export function KillSwitch({ result, onRequestKill, onNavigate }: { result: Kill
           <h2 className="kill-card-title">{t('perPair')}</h2>
           <span className="mono">{t('killResultCount', { ok, n: result.results.length })}</span>
         </div>
+        {/* One row per strategy, so market-pair can repeat; the index keeps keys unique. Safe only while ResultRow is stateless and results never reorder. */}
         {result.results.length === 0 ? <p className="kill-empty">{t('killNothing')}</p> : <ul className="kill-rows">{result.results.map((r, i) => <ResultRow key={`${i}-${r.market}-${r.pair}`} row={r} />)}</ul>}
       </section>
 
