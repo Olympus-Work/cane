@@ -734,6 +734,15 @@ Each step ends with its proof passing in CI before the next starts. Steps
       so the first reconcile had nothing to compare.
     - First strategy S-01: BTCUSDT USDⓈ-M futures, 5x, isolated, mode B,
       enabled with TOTP; status "waiting for signal", no notification.
+    - Open follow-ups (PR #22 review):
+      - Telegram: set it up and confirm a test message or
+        `system_started` on Telegram.
+      - Reconcile with a real position: after S-01 holds a position, note
+        one restart (any redeploy) with the reconciler quiet and the stop
+        still on Binance.
+      - Error text not recorded: the B15.2 rejection text was not checked
+        live against design.md item 19. Paste it here if a key is ever
+        rejected again.
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.
