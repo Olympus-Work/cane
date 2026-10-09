@@ -15,7 +15,7 @@ describe('fmtMoney', () => {
   it('formats with grouping and fixed decimals', () => {
     expect(fmtMoney('10000')).toBe('10,000.00');
     expect(fmtMoney('4120.555')).toBe('4,120.56');
-    expect(fmtMoney('-5.5')).toBe('-5.50');
+    expect(fmtMoney('-5.5')).toBe('−5.50');
   });
 
   it('returns an em dash for null', () => {
@@ -46,8 +46,8 @@ describe('fmtPrice', () => {
   });
 
   it('uses the absolute value for the magnitude', () => {
-    expect(fmtPrice('-0.5')).toBe('-0.5000');
-    expect(fmtPrice('-100')).toBe('-100.00');
+    expect(fmtPrice('-0.5')).toBe('−0.5000');
+    expect(fmtPrice('-100')).toBe('−100.00');
   });
 });
 
@@ -60,6 +60,13 @@ describe('fmtQty', () => {
 
   it('returns an em dash for null', () => {
     expect(fmtQty(null)).toBe('—');
+  });
+
+  it('writes negatives with U+2212, grouped, and never as −0', () => {
+    expect(fmtQty('-1234.5')).toBe('−1,234.500');
+    expect(fmtQty('-1234.5').charCodeAt(0)).toBe(0x2212);
+    expect(fmtQty('-0.000000001')).toBe('0');
+    expect(fmtMoney('-1234567.891')).toBe('−1,234,567.89');
   });
 
   it('drops trailing zeros but keeps up to 8 decimals, rounding half-up', () => {

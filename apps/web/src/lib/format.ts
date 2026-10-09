@@ -2,10 +2,12 @@ import { Decimal } from 'decimal.js';
 
 const MINUS = '−'; // U+2212, not a hyphen
 
+/** Groups the integer part with commas; a leading minus becomes U+2212. */
 function groupIntPart(s: string): string {
-  const [int = '', frac] = s.split('.');
+  const negative = s.startsWith('-');
+  const [int = '', frac] = (negative ? s.slice(1) : s).split('.');
   const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  return frac !== undefined ? `${grouped}.${frac}` : grouped;
+  return (negative ? MINUS : '') + (frac !== undefined ? `${grouped}.${frac}` : grouped);
 }
 
 export function fmtMoney(v: string | null, dp = 2): string {
@@ -29,7 +31,7 @@ export function fmtQty(v: string | null): string {
     const [int = '', frac = ''] = s.split('.');
     s = `${int}.${frac.padEnd(3, '0')}`;
   }
-  const sign = new Decimal(v).isNegative() ? '-' : '';
+  const sign = new Decimal(v).isNegative() && !d.isZero() ? MINUS : '';
   return sign + groupIntPart(s);
 }
 
