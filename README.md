@@ -109,10 +109,10 @@ There is one Railway service plus the Postgres add-on. The server also serves th
    - `MIGRATION_DATABASE_URL` and `DATABASE_URL`: both the Postgres `DATABASE_URL` reference for now.
    - `CANE_MASTER_KEY`: a new one (`openssl rand -base64 32`), not the local one. Losing it makes every saved key unreadable.
    - `BINANCE_ENV=live`
-   - `RAILPACK_NODE_VERSION=24`: `engines` says `>=24`, and this pins the LTS line the project uses.
+   - `RAILPACK_NODE_VERSION=24`: `engines` says `>=24`; this pins the LTS line that `.nvmrc` and CI use.
    - `TRADING_ENABLED`: leave it unset.
 
-   Deploy, and check that `https://<domain>/health` returns `{"status":"ok"}`.
+   Deploy, and check that `https://<domain>/health` returns `{"status":"ok"}`. Always use the `https://` domain: the session cookie is `Secure`, so login fails over plain `http://` (only `localhost` is exempt).
 3. **Least-privilege login users**, once, in the Postgres service's Data / psql tab. Use generated passwords and keep them out of any file:
    ```sql
    CREATE ROLE cane_server LOGIN PASSWORD '<generated>' IN ROLE cane_app;
