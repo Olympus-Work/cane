@@ -36,7 +36,12 @@ export function Notifications({ settings, reload }: { settings: SettingsView; re
   const anyText = [lineToken, lineTarget, tgToken, tgChat].some((v) => v.trim().length > 0);
 
   // A saved secret shows its last 4 inside the empty input, so the field itself reads as filled.
-  const masked = (key: SecretKey): string | undefined => (secrets[key] ? `•••• ${secrets[key]}` : undefined);
+  // The server sends `****` instead of a last 4 for a secret of 4 characters or fewer.
+  const masked = (key: SecretKey): string | undefined => {
+    const hint = secrets[key];
+    if (!hint) return undefined;
+    return hint === '****' ? '••••' : `•••• ${hint}`;
+  };
   const hintFor = (key: SecretKey): string => (secrets[key] ? t('fieldSavedHint') : t('fieldTargetHint'));
 
   const runTest = async (channel: Channel) => {

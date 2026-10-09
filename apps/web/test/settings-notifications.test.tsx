@@ -65,6 +65,12 @@ describe('Settings > Notifications', () => {
     expect(screen.getAllByText('Write-only. Stored encrypted.').length).toBe(2);
   });
 
+  it('shows a short saved secret (server hint ****) as the mask alone', () => {
+    renderNotif(view({ telegram_chat_id: '****' }));
+    expect(screen.getByPlaceholderText('••••')).toBeTruthy();
+    expect(screen.queryByPlaceholderText('•••• ****')).toBeNull();
+  });
+
   it('keeps Save disabled until at least one field has text', () => {
     renderNotif(view());
     const save = screen.getByRole('button', { name: 'Save with TOTP' });
