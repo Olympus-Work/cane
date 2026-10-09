@@ -114,6 +114,7 @@ describe('BinanceApiPermissionChecker (AC12)', () => {
 
     const err = await checker.check({ apiKey: 'fixture-key', apiSecret: 'fixture-secret' }).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(KeyCheckError);
+    expect((err as Error).message).toBe(KeyCheckError.rejected().message);
     expect((err as Error).message).not.toContain('fixture-key');
     expect((err as Error).message).not.toContain('fixture-secret');
   });
@@ -126,7 +127,7 @@ describe('BinanceApiPermissionChecker (AC12)', () => {
       throw new TypeError('network down');
     };
     const checker = new BinanceApiPermissionChecker(http);
-    const assertion = expect(checker.check({ apiKey: 'fixture-key', apiSecret: 'fixture-secret' })).rejects.toBeInstanceOf(KeyCheckError);
+    const assertion = expect(checker.check({ apiKey: 'fixture-key', apiSecret: 'fixture-secret' })).rejects.toThrow(KeyCheckError.unreachable().message);
     await vi.advanceTimersByTimeAsync(10_000);
     await assertion;
   });
@@ -139,6 +140,7 @@ const REJECTED = { status: 401, body: '{"code":-2015,"msg":"Invalid API-key, IP,
 describe('DemoPermissionChecker (apiRestrictions 404s on Demo)', () => {
   const creds = { apiKey: 'fixture-key', apiSecret: 'fixture-secret' };
   const time = { status: 200, body: '{"serverTime":1700000000000}' };
+  afterEach(() => vi.useRealTimers());
 
   it('reads spot canTrade and futures access from the account endpoints', async () => {
     const { fn, calls } = fakeHttp((url) =>
@@ -166,8 +168,20 @@ describe('DemoPermissionChecker (apiRestrictions 404s on Demo)', () => {
     const { fn } = fakeHttp((url) => (url.includes('account') ? REJECTED : time));
     const err = await new DemoPermissionChecker(fn).check(creds).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(KeyCheckError);
+    // Same words as the live checker (PR #18 review: keep the two from drifting).
+    expect((err as Error).message).toBe(KeyCheckError.rejected().message);
     expect((err as Error).message).not.toContain('fixture-key');
     expect((err as Error).message).not.toContain('fixture-secret');
+  });
+
+  it('says Binance could not be reached, in the live checker\'s words, on a network failure', async () => {
+    vi.useFakeTimers();
+    const http: HttpFn = async () => {
+      throw new TypeError('network down');
+    };
+    const assertion = expect(new DemoPermissionChecker(http).check(creds)).rejects.toThrow(KeyCheckError.unreachable().message);
+    await vi.advanceTimersByTimeAsync(10_000);
+    await assertion;
   });
 
   it('is the checker for testnet; live keeps apiRestrictions', () => {
