@@ -98,6 +98,15 @@ describe('KillSwitch page', () => {
     expect(rows[2]!.textContent).toContain('ETHUSDT · Futures');
   });
 
+  it('renders two rows for the same pair and market without a duplicate-key warning', () => {
+    // e.g. a disabled strategy still holding a position and a new strategy on the same pair
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const twin = { pair: 'BTCUSDT', market: 'futures' as const, what: 'Orders cancelled', status: 'cancelled' as const };
+    render(wrap(<KillSwitch result={{ ...killResult, results: [killResult.results[0]!, twin] }} onRequestKill={() => {}} onNavigate={() => {}} />));
+    expect(document.querySelectorAll('.kill-row')).toHaveLength(2);
+    expect(error.mock.calls.flat().join(' ')).not.toMatch(/same key/);
+  });
+
   it('shows the empty note when nothing was open', () => {
     render(wrap(<KillSwitch result={{ ...killResult, results: [] }} onRequestKill={() => {}} onNavigate={() => {}} />));
     expect(screen.getByText('No Cane positions or orders were open.')).toBeTruthy();
