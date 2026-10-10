@@ -7,6 +7,7 @@ import {
   fmtPct,
   fmtPrice,
   fmtQty,
+  fmtSecretHint,
   pnlDir,
   signed,
 } from '../src/lib/format.js';
@@ -128,6 +129,14 @@ describe('fmtPct', () => {
 
   it('returns an em dash for null', () => {
     expect(fmtPct(null)).toBe('—');
+  });
+});
+
+describe('fmtSecretHint', () => {
+  it('shows a saved last 4 after the dots, a short secret as dots only, and nothing when unsaved', () => {
+    expect(fmtSecretHint('77AA')).toBe('•••• 77AA');
+    expect(fmtSecretHint('****')).toBe('••••');
+    expect(fmtSecretHint(null)).toBeUndefined();
   });
 });
 
