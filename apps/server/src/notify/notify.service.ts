@@ -82,6 +82,8 @@ export class NotifyService implements Notifier, OnModuleInit, OnModuleDestroy {
     if (claimed.length === 0) return;
 
     const channel = await this.channel(row.channel);
+    // `event` is a text column written only by `notify` above. The cast is safe because the event only picks a colour,
+    // and an unknown value gets the default colour (rich.ts `toneOf`).
     const result: SendResult = channel ? await channel.send(row.message, row.event as NotifyEvent) : { ok: false, error: 'channel is no longer configured' };
     if (result.ok) {
       await this.db.update(notifications).set({ status: 'sent', sentAt: now, lastError: null }).where(eq(notifications.id, row.id));
