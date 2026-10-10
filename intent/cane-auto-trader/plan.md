@@ -832,6 +832,34 @@ Each step ends with its proof passing in CI before the next starts. Steps
   - Proof: component tests, plus Playwright checks that the heatmap and the
     Strategies list have no horizontal overflow at 1280 px, and screenshots
     for the owner.
+- **Rich notification messages, ClickUp `z8p29877e5` (owner, 2026-10-10).**
+  This changes "English plain text" in the S09 notification choices.
+  - The outbox still stores the plain text from the whitelist template. That
+    template is unchanged, as are its redaction and its 200-character cut.
+    The channel formats the text when it sends. It reads the title and
+    strategy ID from line 1 and the `field: value` rows from the rest, and
+    uses the row's event for the colour. No DB change; retries resend the
+    same stored text.
+  - **LINE:** a Flex Message bubble. A coloured header holds the title and
+    the strategy ID, and the body is a label / value table. `altText` is the
+    plain text cut to 400 characters (LINE's limit), so the chat list and
+    push preview stay readable.
+  - **Telegram:** HTML parse mode with a coloured dot, a bold title and bold
+    labels. Values are HTML-escaped. If the HTML would pass Telegram's
+    4096-character limit, the plain text is sent instead.
+  - **Colour by event:**
+    - Green: `entry_filled`, `tp_triggered`.
+    - Red: `stop_triggered`, `order_rejected`, `kill_switch`,
+      `login_failed_lockout`.
+    - Amber: `jev_fallback`, `order_skipped_min_notional`, `sizing_reduced`,
+      `leverage_lowered`, `reconcile_mismatch`.
+    - Cane indigo: everything else (exit, flips, system, login, settings,
+      replay check, test message).
+  - Labels are readable names for the whitelist fields, e.g. `netPnl` →
+    "Net PnL", `what` → "Detail".
+  - Proof: unit tests on the LINE and Telegram bodies (header colour,
+    rows, altText, escaping, fallback), plus one owner check on real LINE
+    and Telegram with the Settings test message or the next real event.
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.
