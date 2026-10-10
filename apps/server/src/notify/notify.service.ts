@@ -82,7 +82,7 @@ export class NotifyService implements Notifier, OnModuleInit, OnModuleDestroy {
     if (claimed.length === 0) return;
 
     const channel = await this.channel(row.channel);
-    const result: SendResult = channel ? await channel.send(row.message) : { ok: false, error: 'channel is no longer configured' };
+    const result: SendResult = channel ? await channel.send(row.message, row.event as NotifyEvent) : { ok: false, error: 'channel is no longer configured' };
     if (result.ok) {
       await this.db.update(notifications).set({ status: 'sent', sentAt: now, lastError: null }).where(eq(notifications.id, row.id));
     } else {
@@ -95,7 +95,8 @@ export class NotifyService implements Notifier, OnModuleInit, OnModuleDestroy {
   async sendTest(name: ChannelName): Promise<SendResult> {
     const channel = await this.channel(name);
     if (!channel) return { ok: false, error: 'This channel is not set up in Settings.' };
-    return channel.send('Cane test message: this channel is working.');
+    // Same `[Title]` + `field: value` shape as renderMessage, so the rich layouts apply to the test too.
+    return channel.send('[Test message]\nwhat: Cane can reach this channel.');
   }
 
   private async configuredChannels(): Promise<ChannelName[]> {
