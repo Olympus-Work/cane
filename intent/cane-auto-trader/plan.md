@@ -864,8 +864,15 @@ Each step ends with its proof passing in CI before the next starts. Steps
   - The Settings test message uses the same shape (`[Test message]` plus a
     Detail row), so the owner can check the layout from Settings.
   - Proof: unit tests on the LINE and Telegram bodies (header colour,
-    rows, altText, escaping, fallback), plus one owner check on real LINE
-    and Telegram with the Settings test message or the next real event.
+    rows, altText, escaping, fallback). After the deploy, the owner checks
+    real LINE twice:
+    1. The Settings test message arrives as a card.
+    2. The next daily `[Live vs replay check] S-01` arrives as a card with
+       the strategy ID in its header.
+    If either one arrives as plain text, LINE rejected the Flex layout and
+    the fallback sent plain text. Report it. Telegram is not set up yet, so
+    its HTML is covered by unit tests only, and its live check moves to the
+    S12 Telegram follow-up.
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.
