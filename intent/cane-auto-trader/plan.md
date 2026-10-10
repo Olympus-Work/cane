@@ -869,7 +869,9 @@ Each step ends with its proof passing in CI before the next starts. Steps
     1. The Settings test message arrives as a card.
     2. The next daily `[Live vs replay check] S-01` arrives as a card with
        the strategy ID in its header.
-    If either one arrives as plain text, LINE rejected the Flex layout and
+    3. The next `[Login]` arrives as a card. It has no rows, so the bubble
+       is header only (PR #34 review).
+    If any of them arrives as plain text, LINE rejected the Flex layout and
     the fallback sent plain text. Report it. Telegram is not set up yet, so
     its HTML is covered by unit tests only, and its live check moves to the
     S12 Telegram follow-up.
