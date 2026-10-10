@@ -857,6 +857,12 @@ Each step ends with its proof passing in CI before the next starts. Steps
       replay check, test message).
   - Labels are readable names for the whitelist fields, e.g. `netPnl` →
     "Net PnL", `what` → "Detail".
+  - **Plain-text fallback:** if LINE or Telegram answers HTTP 400 to the
+    rich layout, the same text is sent once more as plain text in the same
+    attempt. A layout the provider rejects can never lose an alert such as
+    `stop_triggered`.
+  - The Settings test message uses the same shape (`[Test message]` plus a
+    Detail row), so the owner can check the layout from Settings.
   - Proof: unit tests on the LINE and Telegram bodies (header colour,
     rows, altText, escaping, fallback), plus one owner check on real LINE
     and Telegram with the Settings test message or the next real event.
