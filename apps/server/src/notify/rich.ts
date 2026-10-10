@@ -88,7 +88,7 @@ const toneOf = (event: NotifyEvent | null): Tone => (event ? (TONE[event] ?? 'in
 export function lineFlexMessage(text: string, event: NotifyEvent | null): Record<string, unknown> {
   const { title, strategyId, rows } = parseMessage(text);
   const header: Record<string, unknown>[] = [{ type: 'text', text: title, color: '#FFFFFF', weight: 'bold', size: 'md', wrap: true }];
-  if (strategyId !== null) header.push({ type: 'text', text: strategyId, color: '#FFFFFFCC', size: 'sm' });
+  if (strategyId !== null) header.push({ type: 'text', text: strategyId, color: '#E0E7FF', size: 'sm' });
   const bubble: Record<string, unknown> = {
     type: 'bubble',
     size: 'kilo',
