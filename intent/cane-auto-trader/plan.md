@@ -877,6 +877,9 @@ Each step ends with its proof passing in CI before the next starts. Steps
        the strategy ID in its header.
     3. The next `[Login]` arrives as a card. It has no rows, so the bubble
        is header only (PR #34 review).
+    Result: PR #34 merged 2026-10-10 (84181da). The owner reported that
+    LINE cards work. Check 2 is confirmed with the next replay-check
+    message.
     If any of them arrives as plain text, LINE rejected the Flex layout and
     the fallback sent plain text. Report it. Telegram is not set up yet, so
     its HTML is covered by unit tests only, and its live check moves to the
