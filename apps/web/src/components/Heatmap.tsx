@@ -94,8 +94,13 @@ export function Heatmap({ items, today, weeks }: { items: HeatmapDay[]; today: s
           <div className="heatmap-months" style={cols}>
             {labels.map(({ col, month }) => {
               const name = monthFmt.format(new Date(Date.UTC(MONTH_REF_YEAR, month, 1)));
+              // A label in the last column would run past the grid edge and make the card scroll, so it ends at that edge.
               return (
-                <span key={col} className="heatmap-month" style={{ gridColumn: col + 1 }}>
+                <span
+                  key={col}
+                  className={col === grid.length - 1 ? 'heatmap-month heatmap-month-end' : 'heatmap-month'}
+                  style={{ gridColumn: col + 1 }}
+                >
                   {lang === 'th' ? name : name.toUpperCase()}
                 </span>
               );
