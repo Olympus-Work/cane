@@ -28,6 +28,7 @@ Window: 30 days from the first live evaluation of S-01 (2026-10-09).
 
 | UTC day | Strategy | Result | Mismatches |
 |---|---|---|---|
+| 2026-10-09 | S-01 BTCUSDT futures | 5/5 match | 0 |
 
 ## Mismatches and explanations
 
