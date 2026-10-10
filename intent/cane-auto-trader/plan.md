@@ -812,6 +812,26 @@ Each step ends with its proof passing in CI before the next starts. Steps
   - **A daily summary on every run, even when all keys match** (e.g.
     "S-01 6/6 match"). A silent success could not be told apart from a
     job that is dead, and AC3 needs 30 days of evidence.
+- **UI fixes from ClickUp `z8p29877dh` (owner, 2026-10-10).** These
+  override the design handoff where the two differ.
+  - **Heatmap:** no scroll bar at desktop widths. The handoff's 720 px
+    minimum and its scroll stay for narrow windows. The bar showed on every
+    width because the label of a month that starts in the last week column
+    (`white-space: nowrap`) ran past the grid's right edge (by 1 px at
+    1920 px, by 7 px at 1000 px). That label now ends at the grid edge.
+  - **Strategies:** each strategy is a 2-line card instead of the 10-column
+    grid. The grid's 1380 px minimum is wider than the 1230 px content
+    width, so it scrolled at every window size. Line 1 holds pair + ID,
+    price + 24h, state (+ reason), position and 30-day PnL. Line 2 holds
+    market · sizing · leverage · margin mode on the left and the actions on
+    the right. There is no header row; position and PnL carry small labels.
+    The fields and the buttons per state are unchanged (spec B10.8).
+  - **Jev API key:** a saved key shows `•••• <last 4>` inside the empty
+    input, like the LINE and Telegram fields. It is no longer a separate
+    line under the input.
+  - Proof: component tests, plus Playwright checks that the heatmap and the
+    Strategies list have no horizontal overflow at 1280 px, and screenshots
+    for the owner.
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.
