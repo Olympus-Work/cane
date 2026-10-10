@@ -118,7 +118,13 @@ describe('StrategyTable', () => {
     expect(screen.getByText('Closed')).toBeTruthy();
     expect(screen.getByText('Needs attention')).toBeTruthy();
     expect(screen.getByText('Long 0.050 @ 61,240.00')).toBeTruthy();
-    expect(screen.getByText('5x (3x)')).toBeTruthy();
+    expect(screen.getByText('Futures · A · margin · 5x (3x) · Isolated')).toBeTruthy();
+  });
+
+  it('puts the settings on the second line; spot shows the market only', () => {
+    render(wrap(<StrategyTable items={items} actions={actions} />));
+    expect(within(rowOf('ETHUSDT')).getByText('Futures · B · notional · 10x · Cross').className).toContain('strat-meta');
+    expect(within(rowOf('SOLUSDT')).getByText('Spot').className).toContain('strat-meta');
   });
 
   it('colours the 24h change with the pnl class and sign, never colour alone', () => {

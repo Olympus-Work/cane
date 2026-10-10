@@ -25,11 +25,19 @@ async function openDashboard(page: Page, dict: Record<string, string>) {
   await expect(page.getByRole('heading', { name: s(dict, 'dashboard') })).toBeVisible();
 }
 
-// A horizontal scroll bar shows when the content is wider than the box, even by 1 px (ClickUp z8p29877dh).
+// A horizontal scroll bar shows when the content is wider than its box, even by 1 px (ClickUp z8p29877dh).
+// The box and every scroll container inside it are checked, so a nested scroll bar counts too.
 async function expectNoHorizontalOverflow(page: Page, selector: string) {
-  const el = page.locator(selector).first();
-  const { scroll, client } = await el.evaluate((e) => ({ scroll: e.scrollWidth, client: e.clientWidth }));
-  expect(scroll, `${selector} overflows horizontally`).toBeLessThanOrEqual(client);
+  const wide = await page
+    .locator(selector)
+    .first()
+    .evaluate((root) =>
+      [root, ...root.querySelectorAll('*')]
+        .filter((e) => e === root || ['auto', 'scroll'].includes(getComputedStyle(e).overflowX))
+        .filter((e) => e.scrollWidth > e.clientWidth)
+        .map((e) => `${e.className} ${e.scrollWidth}>${e.clientWidth}`),
+    );
+  expect(wide, `${selector} overflows horizontally`).toEqual([]);
 }
 
 function assertSameOriginOnly(origins: string[]) {
@@ -82,6 +90,7 @@ for (const lang of LANGS) {
     for (const id of ['S-01', 'S-02', 'S-03', 'S-04']) {
       await expect(page.getByText(id, { exact: true })).toBeVisible();
     }
+    await expectNoHorizontalOverflow(page, 'section:has(.strat-row)');
     await shot(page, `strategies-${lang}`);
 
     // The create form, with its live sizing preview.
