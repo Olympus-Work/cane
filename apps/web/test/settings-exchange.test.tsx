@@ -195,6 +195,21 @@ describe('TradingSettings', () => {
     expect(f).not.toHaveBeenCalled();
   });
 
+  it('shows a saved Jev key masked inside its empty input, like the LINE fields', () => {
+    render(wrap(<TradingSettings settings={savedSettings()} reload={vi.fn()} />));
+    const input = screen.getByLabelText('Jev API key') as HTMLInputElement;
+    expect(input.value).toBe('');
+    expect(input.placeholder).toBe('•••• 77AA');
+    expect(screen.getByText('Saved. Type a new value to replace it.')).toBeTruthy();
+  });
+
+  it('shows no mask and the write-only hint when no Jev key is saved', () => {
+    const settings = savedSettings();
+    render(wrap(<TradingSettings settings={{ ...settings, secrets: { ...settings.secrets, jev_api_key: null } }} reload={vi.fn()} />));
+    expect((screen.getByLabelText('Jev API key') as HTMLInputElement).placeholder).toBe('');
+    expect(screen.getByText('Write-only. Stored encrypted.')).toBeTruthy();
+  });
+
   it('sends timeoutMs in milliseconds for a changed timeout', async () => {
     const f = mockFetch({ apiKey: '77AA', timeoutMs: 2500 }, 200);
     render(wrap(<TradingSettings settings={savedSettings()} reload={vi.fn()} />));
@@ -230,10 +245,9 @@ describe('TradingSettings', () => {
     expect(JSON.parse(String((f2.mock.calls[0] as unknown as [string, RequestInit])[1].body))).toEqual({ timeoutMs: 5000 });
   });
 
-  it('shows the masked Jev key hint and disables Save when nothing changed', () => {
+  it('disables Save when nothing changed', () => {
     mockFetch({}, 200);
     render(wrap(<TradingSettings settings={savedSettings()} reload={vi.fn()} />));
-    expect(screen.getByText('•••• 77AA')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Save with TOTP' }).hasAttribute('disabled')).toBe(true);
   });
 });

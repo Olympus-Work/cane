@@ -66,8 +66,17 @@ export function TradingSettings({ settings, reload }: { settings: SettingsView; 
           <span className="exchange-unit">{t('seconds')}</span>
         </div>
         <div className="exchange-field-saved">
-          <Field id="jev-key" label={t('jevKey')} type="password" value={jevKey} onChange={setJevKey} hint={t('jevKeyHint')} autoComplete="off" />
-          {jevHint ? <span className="exchange-saved mono">•••• {jevHint}</span> : null}
+          {/* A saved key shows its last 4 inside the empty input, like the LINE and Telegram fields (Notifications.tsx). */}
+          <Field
+            id="jev-key"
+            label={t('jevKey')}
+            type="password"
+            value={jevKey}
+            onChange={setJevKey}
+            placeholder={jevHint ? (jevHint === '****' ? '••••' : `•••• ${jevHint}`) : undefined}
+            hint={jevHint ? t('fieldSavedHint') : t('jevKeyHint')}
+            autoComplete="off"
+          />
         </div>
         <div className="exchange-actions">
           <Button variant="primary" disabled={!dirty} onClick={openModal}>
