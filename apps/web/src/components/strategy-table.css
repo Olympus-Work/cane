@@ -1,19 +1,26 @@
 /* Strategies list: one 2-line card per strategy, no header and no horizontal scroll (ClickUp z8p29877dh; see grid-table.css for the shared row classes). */
+/* The list owns the line-1 columns and every card uses them through a subgrid, so the columns line up across cards
+   and a column is as wide as its widest content in any card (PR #33 review). */
+.strat-list {
+  display: grid;
+  grid-template-columns: 1.1fr 130px 1.3fr 1.4fr 1.2fr;
+  column-gap: 8px;
+}
+
 .strat-row {
-  grid-template-columns: minmax(0, 1fr);
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
   row-gap: 10px;
 }
 
-/* Line 1: pair, price · 24h, state, position, 30-day PnL. */
+/* Line 1: pair, price · 24h, state, position, 30-day PnL, placed straight on the card's subgrid. */
 .strat-line {
-  display: grid;
-  grid-template-columns: 1.1fr 130px 1.3fr 1.4fr 1.2fr;
-  align-items: center;
-  column-gap: 8px;
+  display: contents;
 }
 
 /* Line 2: the settings on the left, the actions on the right. */
 .strat-line-2 {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   justify-content: space-between;
