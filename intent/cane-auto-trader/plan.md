@@ -743,11 +743,12 @@ Each step ends with its proof passing in CI before the next starts. Steps
       - Error text not recorded: the B15.2 rejection text was not checked
         live against design.md item 19. Paste it here if a key is ever
         rejected again.
-      - Jev live call: the owner saved the Jev key in Settings on
-        2026-10-10. No live Jev call has been checked yet (S-01 has not
-        entered). Close this with a passing `jev-live.test.ts` run
-        (model `jev-1.13.0`), or with the first entry's `jev_calls` row
-        showing no error and no `jev_fallback`.
+      - ~~Jev live call~~ — closed 2026-10-10. The owner saved the Jev key
+        in Settings, then ran `jev-live.test.ts` locally: 2 passed (long +
+        short), model `jev-1.13.0`, latency about 300 ms, no error. This
+        checks the API, the pinned model and the response shape. The
+        server's own call is first seen on S-01's first entry (a
+        `jev_calls` row with no error and no `jev_fallback`).
 - **Replay-diff in S13 (Claude Code, 2026-10-09; awaits owner OK in the
   PR):**
   - **Unit of comparison: one 4H evaluation.** For each managed strategy
