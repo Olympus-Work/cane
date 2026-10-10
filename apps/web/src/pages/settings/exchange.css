@@ -81,8 +81,3 @@
   font-size: 12px;
   color: var(--text-muted);
 }
-
-.exchange-saved {
-  font-weight: 600;
-  color: var(--text-primary);
-}
