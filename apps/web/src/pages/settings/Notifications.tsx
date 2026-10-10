@@ -8,6 +8,7 @@ import { TotpModal } from '../../components/TotpModal.js';
 import { useToast } from '../../components/Toast.js';
 import { errorText } from '../../components/errors.js';
 import { useI18n } from '../../i18n/index.js';
+import { fmtSecretHint } from '../../lib/format.js';
 import './notifications.css';
 
 type Channel = 'line' | 'telegram';
@@ -35,13 +36,7 @@ export function Notifications({ settings, reload }: { settings: SettingsView; re
   const tgConfigured = Boolean(secrets.telegram_bot_token && secrets.telegram_chat_id);
   const anyText = [lineToken, lineTarget, tgToken, tgChat].some((v) => v.trim().length > 0);
 
-  // A saved secret shows its last 4 inside the empty input, so the field itself reads as filled.
-  // The server sends `****` instead of a last 4 for a secret of 4 characters or fewer.
-  const masked = (key: SecretKey): string | undefined => {
-    const hint = secrets[key];
-    if (!hint) return undefined;
-    return hint === '****' ? '••••' : `•••• ${hint}`;
-  };
+  const masked = (key: SecretKey): string | undefined => fmtSecretHint(secrets[key]);
   const hintFor = (key: SecretKey): string => (secrets[key] ? t('fieldSavedHint') : t('fieldTargetHint'));
 
   const runTest = async (channel: Channel) => {

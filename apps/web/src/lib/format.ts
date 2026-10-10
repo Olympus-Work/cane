@@ -52,6 +52,13 @@ export function fmtPct(v: string | null, dp = 2): string {
   return signed(v, dp) + '%';
 }
 
+// A saved secret shows its last 4 inside the empty input, so the field itself reads as filled.
+// The server sends `****` instead of a last 4 for a secret of 4 characters or fewer.
+export function fmtSecretHint(hint: string | null): string | undefined {
+  if (!hint) return undefined;
+  return hint === '****' ? '••••' : `•••• ${hint}`;
+}
+
 const BKK = 'Asia/Bangkok';
 
 export function bangkokDay(iso: string): string {

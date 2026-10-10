@@ -5,6 +5,7 @@ import { Field } from '../../components/Field.js';
 import { TotpModal } from '../../components/TotpModal.js';
 import { useToast } from '../../components/Toast.js';
 import { useI18n } from '../../i18n/index.js';
+import { fmtSecretHint } from '../../lib/format.js';
 import '../settings.css';
 import './exchange.css';
 
@@ -66,14 +67,13 @@ export function TradingSettings({ settings, reload }: { settings: SettingsView; 
           <span className="exchange-unit">{t('seconds')}</span>
         </div>
         <div className="exchange-field-saved">
-          {/* A saved key shows its last 4 inside the empty input, like the LINE and Telegram fields (Notifications.tsx). */}
           <Field
             id="jev-key"
             label={t('jevKey')}
             type="password"
             value={jevKey}
             onChange={setJevKey}
-            placeholder={jevHint ? (jevHint === '****' ? '••••' : `•••• ${jevHint}`) : undefined}
+            placeholder={fmtSecretHint(jevHint)}
             hint={jevHint ? t('fieldSavedHint') : t('jevKeyHint')}
             autoComplete="off"
           />
