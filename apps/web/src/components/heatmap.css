@@ -42,6 +42,11 @@
   white-space: nowrap;
 }
 
+/* The last column's label ends at the grid edge instead of overflowing it (overflow made the card scroll). */
+.heatmap-month-end {
+  justify-self: end;
+}
+
 .heatmap-grid {
   display: grid;
   grid-auto-flow: column;

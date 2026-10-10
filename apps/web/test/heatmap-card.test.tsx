@@ -37,6 +37,14 @@ describe('Heatmap card', () => {
     expect(screen.getByText('last 12 months')).toBeTruthy();
   });
 
+  it('ends a month label in the last column at the grid edge, so it does not overflow', () => {
+    // 2026-10-04 is a Sunday, so the last column starts October.
+    render(wrap(<Heatmap items={ITEMS} today="2026-10-04" weeks={53} />));
+    const octs = screen.getAllByText('OCT');
+    expect(octs.at(-1)?.className).toContain('heatmap-month-end');
+    expect(screen.getByText('SEP').className).not.toContain('heatmap-month-end');
+  });
+
   it('summarises 2 non-adjacent active days in the footer', () => {
     render(wrap(<Heatmap items={ITEMS} today="2026-09-27" weeks={53} />));
     expect(screen.getByText('2 trading days out of 365 · longest streak 1 days')).toBeTruthy();

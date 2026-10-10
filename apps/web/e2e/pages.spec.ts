@@ -25,6 +25,13 @@ async function openDashboard(page: Page, dict: Record<string, string>) {
   await expect(page.getByRole('heading', { name: s(dict, 'dashboard') })).toBeVisible();
 }
 
+// A horizontal scroll bar shows when the content is wider than the box, even by 1 px (ClickUp z8p29877dh).
+async function expectNoHorizontalOverflow(page: Page, selector: string) {
+  const el = page.locator(selector).first();
+  const { scroll, client } = await el.evaluate((e) => ({ scroll: e.scrollWidth, client: e.clientWidth }));
+  expect(scroll, `${selector} overflows horizontally`).toBeLessThanOrEqual(client);
+}
+
 function assertSameOriginOnly(origins: string[]) {
   for (const origin of origins) {
     expect(origin, `request to non-localhost origin: ${origin}`).toBe(BASE);
@@ -61,6 +68,7 @@ for (const lang of LANGS) {
 
     // Heatmap.
     await expect(page.locator('.heatmap').getByText(s(dict, 'hmTitle'))).toBeVisible();
+    await expectNoHorizontalOverflow(page, '.heatmap-scroll');
   });
 
   test(`strategies (${lang})`, async ({ page }) => {
