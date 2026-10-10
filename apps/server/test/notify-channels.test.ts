@@ -27,7 +27,10 @@ describe('lineChannel', () => {
     expect(url).toBe('https://api.line.me/v2/bot/message/push');
     expect(init.method).toBe('POST');
     expect(init.headers.authorization).toBe(`Bearer ${LINE_TOKEN}`);
-    expect(JSON.parse(init.body)).toEqual({ to: LINE_USER, messages: [{ type: 'text', text: 'hello' }] });
+    const body = JSON.parse(init.body);
+    expect(body.to).toBe(LINE_USER);
+    expect(body.messages).toHaveLength(1);
+    expect(body.messages[0]).toMatchObject({ type: 'flex', altText: 'hello' });
   });
 
   it('reports a provider error and redacts the token', async () => {
@@ -55,6 +58,24 @@ describe('lineChannel', () => {
     }
   });
 
+  it('resends as plain text when LINE rejects the Flex layout with HTTP 400', async () => {
+    const fetch = fakeFetch(() => Promise.resolve(reply(200, '{}')));
+    fetch.mockImplementationOnce(() => Promise.resolve(reply(400, '{"message":"A message (messages[0]) in the request body is invalid"}')));
+
+    const result = await lineChannel({ channelToken: LINE_TOKEN, userId: LINE_USER }, fetch).send('[Login]', 'login_success');
+
+    expect(result).toEqual({ ok: true });
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(fetch.mock.calls[0]![1].body).messages[0].type).toBe('flex');
+    expect(JSON.parse(fetch.mock.calls[1]![1].body).messages).toEqual([{ type: 'text', text: '[Login]' }]);
+  });
+
+  it('does not resend on errors other than HTTP 400', async () => {
+    const fetch = fakeFetch(() => Promise.resolve(reply(500, 'oops')));
+    await lineChannel({ channelToken: LINE_TOKEN, userId: LINE_USER }, fetch).send('[Login]');
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
   it('reports a non-JSON error body as a bare status', async () => {
     const fetch = fakeFetch(() => Promise.resolve(reply(500, 'boom')));
     const result = await lineChannel({ channelToken: LINE_TOKEN, userId: LINE_USER }, fetch).send('hello');
@@ -62,12 +83,15 @@ describe('lineChannel', () => {
     expect(result).toEqual({ ok: false, error: 'HTTP 500' });
   });
 
-  it('cuts long text to 4000 characters', async () => {
+  it('cuts long text to 4000 characters, and altText to the LINE limit of 400', async () => {
     const fetch = fakeFetch(() => Promise.resolve(reply(200, '{}')));
     await lineChannel({ channelToken: LINE_TOKEN, userId: LINE_USER }, fetch).send('x'.repeat(6000));
 
-    const sent = JSON.parse(fetch.mock.calls[0]![1].body) as { messages: Array<{ text: string }> };
-    expect(sent.messages[0]?.text).toHaveLength(4000);
+    const sent = JSON.parse(fetch.mock.calls[0]![1].body) as {
+      messages: Array<{ altText: string; contents: { header: { contents: Array<{ text: string }> } } }>;
+    };
+    expect(sent.messages[0]?.altText).toHaveLength(400);
+    expect(sent.messages[0]?.contents.header.contents[0]?.text).toHaveLength(4000);
   });
 
   it('cuts a long provider message to at most 200 characters', async () => {
@@ -128,7 +152,7 @@ describe('telegramChannel', () => {
     const [url, init] = fetch.mock.calls[0]!;
     expect(url).toBe(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`);
     expect(init.method).toBe('POST');
-    expect(JSON.parse(init.body)).toEqual({ chat_id: TG_CHAT, text: 'hello' });
+    expect(JSON.parse(init.body)).toEqual({ chat_id: TG_CHAT, text: '🟣 <b>hello</b>', parse_mode: 'HTML' });
   });
 
   it('reports a provider error with the description', async () => {
@@ -136,6 +160,17 @@ describe('telegramChannel', () => {
     const result = await telegramChannel({ botToken: TG_TOKEN, chatId: TG_CHAT }, fetch).send('hello');
 
     expect(result).toEqual({ ok: false, error: 'HTTP 400: Bad Request: chat not found' });
+  });
+
+  it('resends as plain text without parse_mode when Telegram rejects the HTML with HTTP 400', async () => {
+    const fetch = fakeFetch(() => Promise.resolve(reply(200, '{"ok":true}')));
+    fetch.mockImplementationOnce(() => Promise.resolve(reply(400, '{"ok":false,"description":"Bad Request: can\'t parse entities"}')));
+
+    const result = await telegramChannel({ botToken: TG_TOKEN, chatId: TG_CHAT }, fetch).send('[Login]', 'login_success');
+
+    expect(result).toEqual({ ok: true });
+    expect(JSON.parse(fetch.mock.calls[0]![1].body).parse_mode).toBe('HTML');
+    expect(JSON.parse(fetch.mock.calls[1]![1].body)).toEqual({ chat_id: TG_CHAT, text: '[Login]' });
   });
 
   it('treats an HTTP 200 with ok !== true as a failure', async () => {
@@ -171,7 +206,7 @@ describe('telegramChannel', () => {
     await telegramChannel({ botToken: TG_TOKEN, chatId: TG_CHAT }, fetch).send('x'.repeat(6000));
 
     const sent = JSON.parse(fetch.mock.calls[0]![1].body) as { text: string };
-    expect(sent.text).toHaveLength(4000);
+    expect(sent.text).toBe(`🟣 <b>${'x'.repeat(4000)}</b>`);
   });
 
   it('never throws when fetch rejects with a network error', async () => {

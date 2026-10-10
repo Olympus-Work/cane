@@ -69,6 +69,10 @@ describe.skipIf(!DATABASE_URL)('notification outbox (B13.2, E12)', () => {
     expect(r.map((x) => x.channel).sort()).toEqual(['line', 'telegram']);
     expect(r[0]!.message).toContain('[Entry filled] S-01');
     expect(fetchFn).toHaveBeenCalledTimes(2);
+    // The stored event reaches the channel: entry_filled colours both rich layouts green.
+    const bodies = fetchFn.mock.calls.map(([, init]) => init.body).join('\n');
+    expect(bodies).toContain('#16A34A');
+    expect(bodies).toContain('🟢');
   });
 
   it('notify returns without waiting for the network', async () => {

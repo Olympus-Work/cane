@@ -3,11 +3,15 @@
  * the fetch function and the timeout budget are injected so tests can fake both.
  */
 
+import type { NotifyEvent } from '../engine/ports.js';
+import { lineFlexMessage, telegramHtmlFields } from './rich.js';
+
 export type SendResult = { ok: true } | { ok: false; error: string };
 
 export interface Channel {
   readonly name: 'line' | 'telegram';
-  send(text: string): Promise<SendResult>;
+  /** `event` only picks the colour of the rich layout; null (the Settings test message) uses the default. */
+  send(text: string, event?: NotifyEvent | null): Promise<SendResult>;
 }
 
 export type NotifyFetch = (
@@ -97,21 +101,35 @@ function lineFailure(status: number, body: string): string | undefined {
   return httpError(status, providerMessage(body, (p) => (typeof p.message === 'string' ? p.message : undefined)));
 }
 
+/**
+ * A provider that rejects the rich layout (HTTP 400) gets the same text once more as plain text,
+ * so a layout the provider does not accept never loses an alert.
+ */
+async function richThenPlain(rich: () => Promise<SendResult>, plain: () => Promise<SendResult>): Promise<SendResult> {
+  const result = await rich();
+  return !result.ok && result.error.startsWith('HTTP 400') ? plain() : result;
+}
+
 export function lineChannel(cfg: { channelToken: string; userId: string }, fetchFn: NotifyFetch, timeoutMs?: number): Channel {
+  const push = (text: string, message: (t: string) => Record<string, unknown>) =>
+    post(
+      {
+        url: LINE_PUSH_URL,
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${cfg.channelToken}` },
+        body: (t) => JSON.stringify({ to: cfg.userId, messages: [message(t)] }),
+        secrets: [cfg.channelToken, cfg.userId],
+        failure: lineFailure,
+      },
+      fetchFn,
+      timeoutMs ?? CHANNEL_TIMEOUT_MS,
+      text,
+    );
   return {
     name: 'line',
-    send: (text) =>
-      post(
-        {
-          url: LINE_PUSH_URL,
-          headers: { 'content-type': 'application/json', authorization: `Bearer ${cfg.channelToken}` },
-          body: (t) => JSON.stringify({ to: cfg.userId, messages: [{ type: 'text', text: t }] }),
-          secrets: [cfg.channelToken, cfg.userId],
-          failure: lineFailure,
-        },
-        fetchFn,
-        timeoutMs ?? CHANNEL_TIMEOUT_MS,
-        text,
+    send: (text, event = null) =>
+      richThenPlain(
+        () => push(text, (t) => lineFlexMessage(t, event)),
+        () => push(text, (t) => ({ type: 'text', text: t })),
       ),
   };
 }
@@ -131,20 +149,25 @@ function telegramFailure(status: number, body: string): string | undefined {
 }
 
 export function telegramChannel(cfg: { botToken: string; chatId: string }, fetchFn: NotifyFetch, timeoutMs?: number): Channel {
+  const sendMessage = (text: string, fields: (t: string) => { text: string; parse_mode?: 'HTML' }) =>
+    post(
+      {
+        url: `https://api.telegram.org/bot${cfg.botToken}/sendMessage`,
+        headers: { 'content-type': 'application/json' },
+        body: (t) => JSON.stringify({ chat_id: cfg.chatId, ...fields(t) }),
+        secrets: [cfg.botToken, cfg.chatId],
+        failure: telegramFailure,
+      },
+      fetchFn,
+      timeoutMs ?? CHANNEL_TIMEOUT_MS,
+      text,
+    );
   return {
     name: 'telegram',
-    send: (text) =>
-      post(
-        {
-          url: `https://api.telegram.org/bot${cfg.botToken}/sendMessage`,
-          headers: { 'content-type': 'application/json' },
-          body: (t) => JSON.stringify({ chat_id: cfg.chatId, text: t }),
-          secrets: [cfg.botToken, cfg.chatId],
-          failure: telegramFailure,
-        },
-        fetchFn,
-        timeoutMs ?? CHANNEL_TIMEOUT_MS,
-        text,
+    send: (text, event = null) =>
+      richThenPlain(
+        () => sendMessage(text, (t) => telegramHtmlFields(t, event)),
+        () => sendMessage(text, (t) => ({ text: t })),
       ),
   };
 }
