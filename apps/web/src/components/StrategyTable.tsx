@@ -56,7 +56,7 @@ export function StrategyTable({ items, actions }: { items: StrategyItem[]; actio
   if (items.length === 0) return null;
 
   return (
-    <div>
+    <div className="strat-list">
       {items.map((s) => {
         const chgDir = pnlDir(s.change24hPct);
         const chgIcon = chgDir === 'up' ? 'caret-up' : chgDir === 'down' ? 'caret-down' : 'minus';
