@@ -1,6 +1,6 @@
 import type { NotifyEvent } from '../engine/ports.js';
 
-/** Detail values a notification may carry (B13.3: trade data only). */
+/** Detail values a notification may carry (B13.3: never secrets; B13.5: login session metadata). */
 export type NotifyDetails = Record<string, string | number | boolean | null>;
 
 const TITLES: Record<NotifyEvent, string> = {
