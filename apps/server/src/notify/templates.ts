@@ -48,6 +48,10 @@ const FIELDS = [
   'minutes',
   'day',
   'what',
+  'method',
+  'device',
+  'ip',
+  'expires',
 ] as const;
 
 /**

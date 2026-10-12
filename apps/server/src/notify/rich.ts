@@ -50,6 +50,10 @@ const LABELS: Record<string, string> = {
   minutes: 'Minutes',
   day: 'Day',
   what: 'Detail',
+  method: 'Method',
+  device: 'Device',
+  ip: 'IP',
+  expires: 'Expires',
 };
 
 /** LINE caps `altText` at 400 characters. */

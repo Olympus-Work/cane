@@ -875,6 +875,18 @@ Each step ends with its proof passing in CI before the next starts. Steps
     the fallback sent plain text. Report it. Telegram is not set up yet, so
     its HTML is covered by unit tests only, and its live check moves to the
     S12 Telegram follow-up.
+- **Login card details, spec B13.5 (owner, 2026-10-12).** The `[Login]`
+  card had no rows. `login_success` now sends four new whitelist fields:
+  - `method`: `authenticator` or `recovery code`.
+  - `device`: browser and OS from the user agent, e.g. `Chrome on Windows`,
+    or `unknown`.
+  - `ip`: the request IP.
+  - `expires`: the session's absolute expiry in ICT, `YYYY-MM-DD HH:mm ICT`.
+  - The values still go through `scrub`, so a full-length IPv6 address
+    (32+ characters) shows as `[redacted]`. This is accepted: the full IP
+    stays in the audit log and on Settings → Security.
+  - Proof: unit tests on the rendered text and the card labels. After the
+    deploy, the owner's next `[Login]` card shows the four rows.
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.

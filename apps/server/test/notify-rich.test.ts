@@ -65,6 +65,17 @@ describe('lineFlexMessage', () => {
     expect(bubble(lineFlexMessage('[Title]', event)).header.backgroundColor).toBe(color);
   });
 
+  it('shows login method, device, IP and expiry rows', () => {
+    const text = renderMessage('login_success', null, {
+      method: 'authenticator',
+      device: 'Chrome on Windows',
+      ip: '203.0.113.7',
+      expires: '2026-10-13 08:07 ICT',
+    });
+    const b = bubble(lineFlexMessage(text, 'login_success'));
+    expect(rowsOf(b).map(([label]) => label)).toEqual(['Method', 'Device', 'IP', 'Expires']);
+  });
+
   it('has no body and only the title when there are no rows or strategy ID', () => {
     const b = bubble(lineFlexMessage(renderMessage('login_success', null, {}), 'login_success'));
     expect(b.header.contents.map((c) => c.text)).toEqual(['Login']);

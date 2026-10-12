@@ -7,6 +7,7 @@ import { DB } from '../db/db.module.js';
 import { owner, recoveryCodes, sessions, settings } from '../db/schema.js';
 import { NOTIFIER } from '../engine/engine.service.js';
 import type { Notifier } from '../engine/ports.js';
+import { shortDevice } from './device.js';
 import { hashPassword, verifyPassword } from './password.js';
 import { SecretBox } from './secret-box.js';
 import { newRecoveryCodes, newSessionToken, normaliseRecoveryCode, sha256Hex } from './tokens.js';
@@ -22,6 +23,9 @@ export const SESSION_ABSOLUTE_MS = 12 * 3_600_000;
 export const MIN_PASSWORD_LENGTH = 12;
 
 const PENDING_TOTP_KEY = 'totp_pending';
+
+/** `YYYY-MM-DD HH:mm ICT`; Asia/Bangkok has no daylight saving. */
+const ictMinute = (d: Date): string => `${new Date(d.getTime() + 7 * 3_600_000).toISOString().slice(0, 16).replace('T', ' ')} ICT`;
 
 export interface RequestCtx {
   ip: string | null;
@@ -95,7 +99,12 @@ export class AuthService {
     await this.db.update(owner).set({ failedLogins: 0, lockedUntil: null }).where(eq(owner.id, 1));
     const session = await this.createSession(ctx, now);
     await this.audit.record({ actor: 'owner', action: 'login_success', target: session.id, ip: ctx.ip });
-    await this.notifier.notify('login_success', null, {});
+    await this.notifier.notify('login_success', null, {
+      method: totpStep !== null ? 'authenticator' : 'recovery code',
+      device: shortDevice(ctx.device),
+      ip: ctx.ip,
+      expires: ictMinute(session.expiresAt),
+    });
     return { ok: true, token: session.token, expiresAt: session.expiresAt };
   }
 

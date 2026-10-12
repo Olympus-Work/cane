@@ -140,6 +140,16 @@ describe('notify templates', () => {
     expect(out).not.toMatch(/C{32,}/);
   });
 
+  it('renders login_success with method, device, ip and expires', () => {
+    const out = renderMessage('login_success', null, {
+      method: 'authenticator',
+      device: 'Chrome on Windows',
+      ip: '203.0.113.7',
+      expires: '2026-10-13 08:07 ICT',
+    });
+    expect(out).toBe('[Login]\nmethod: authenticator\ndevice: Chrome on Windows\nip: 203.0.113.7\nexpires: 2026-10-13 08:07 ICT');
+  });
+
   it('renders a non-empty [TITLE] first line for every NotifyEvent', () => {
     const all = {
       entry_filled: true,
