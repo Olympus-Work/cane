@@ -208,6 +208,21 @@ describe('Dashboard page', () => {
     }
   });
 
+  it('replaces New strategy with a desktop-only note on mobile when there are no open positions', async () => {
+    const original = window.matchMedia;
+    window.matchMedia = (query: string) =>
+      ({ matches: query === '(max-width: 767px)', media: query, onchange: null, addEventListener: () => {}, removeEventListener: () => {}, addListener: () => {}, removeListener: () => {}, dispatchEvent: () => false }) as MediaQueryList;
+    try {
+      setFetchForTests(mockFetch({}));
+      renderPage(pollOf(dashboard()));
+      expect(await screen.findByText('No open positions')).toBeTruthy();
+      expect(screen.queryByRole('button', { name: 'New strategy' })).toBeNull();
+      expect(screen.getByText('Strategies and Settings are available on desktop.')).toBeTruthy();
+    } finally {
+      window.matchMedia = original;
+    }
+  });
+
   it('shows the Jev fallback count and its View button switches to the Trade history tab', async () => {
     const dash = dashboard({ alerts: [{ kind: 'jev_fallback', count: 2, link: 'trades' }] });
     setFetchForTests(mockFetch({ trades: () => ({ items: [], nextBefore: null }) }));
