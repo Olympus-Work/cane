@@ -14,6 +14,9 @@ longer use a TradingView export (owner: skip, trade live directly).
 Revision 5.2 (2026-09-29, owner decision in the S03 PR review): B8.1
 feature details completed (the "lookbacks and thresholds" sentence was cut
 off); B7.5 "with realised profit" means net PnL > 0. No other change.
+Revision 5.3 (2026-10-12, owner decision): B13.5 added; the `login_success`
+notification carries method, device, IP and session expiry. The Data row
+for session metadata now names that notification.
 Author: Claude (drafted for owner review). Approver: Zong (owner).
 
 Defaults below were confirmed by the owner on 2026-09-25. Numeric defaults are configurable unless stated otherwise.
@@ -268,6 +271,9 @@ Given an enabled strategy with no open position on its pair:
    Telegram bot). A failed channel is retried; it never blocks trading.
 3. Messages never contain keys, tokens, TOTP data or full account IDs.
 4. Settings has a "send test message" per channel.
+5. `login_success` carries the sign-in method (authenticator or recovery
+   code), the device (browser and OS), the IP and the session expiry
+   (ICT), so the owner can spot a sign-in that was not theirs.
 
 ### B14 Auth and session
 1. Single owner account created by a CLI / env seed; no sign-up route.
@@ -335,7 +341,7 @@ Given an enabled strategy with no open position on its pair:
 | TOTP secret, recovery code hashes | restricted | DB, encrypted | account life | — |
 | Owner email | pii | DB | account life | not in logs or notifications |
 | Session tokens | restricted | DB/cookie | expiry | not logged |
-| Session metadata (device, IP) | pii | DB | session life + audit | shown only to the owner |
+| Session metadata (device, IP) | pii | DB | session life + audit | shown only to the owner (Settings → Security and the `login_success` notification, B13.5) |
 | Strategies, orders, positions, trades, PnL | internal | DB | indefinite | not in repo |
 | Jev requests/responses | internal (market data only) | DB | indefinite | contain no account data |
 | Candles / market data | public | DB cache | rolling | — |

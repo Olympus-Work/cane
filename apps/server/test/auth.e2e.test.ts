@@ -40,6 +40,7 @@ const sink: LoggerService = {
 };
 
 const notifications: string[] = [];
+const notifyDetails: Record<string, unknown>[] = [];
 
 describe.skipIf(!DATABASE_URL)('Auth + Settings API (AC11, AC12)', () => {
   let app: NestFastifyApplication;
@@ -99,7 +100,12 @@ describe.skipIf(!DATABASE_URL)('Auth + Settings API (AC11, AC12)', () => {
       .overrideProvider(PERMISSION_CHECKER)
       .useValue({ check: async () => keyPermissions })
       .overrideProvider(NOTIFIER)
-      .useValue({ notify: async (event: string) => void notifications.push(event) })
+      .useValue({
+        notify: async (event: string, _strategyId: unknown, details: Record<string, unknown>) => {
+          notifications.push(event);
+          notifyDetails.push(details);
+        },
+      })
       .setLogger(sink)
       .compile();
     app = moduleRef.createNestApplication<NestFastifyApplication>(newAdapter());
@@ -135,6 +141,7 @@ describe.skipIf(!DATABASE_URL)('Auth + Settings API (AC11, AC12)', () => {
     });
 
     it('succeeds with email + password + code and sets an HttpOnly, Secure, SameSite=Strict cookie whose token is stored only as a hash', async () => {
+      notifyDetails.length = 0;
       const res = await login();
       expect(res.statusCode).toBe(200);
       const setCookie = String(res.headers['set-cookie']);
@@ -145,6 +152,12 @@ describe.skipIf(!DATABASE_URL)('Auth + Settings API (AC11, AC12)', () => {
       const { rows } = await pool.query('select token_hash from sessions');
       expect(rows.map((r) => r.token_hash)).toContain(sha256Hex(token));
       expect(JSON.stringify(rows)).not.toContain(token);
+      // The login_success notification (pushed in lockstep with `notifications`) carries the details.
+      expect(notifications.at(-1)).toBe('login_success');
+      const details = notifyDetails.at(-1)!;
+      expect(details.method).toBe('authenticator');
+      expect(typeof details.device).toBe('string');
+      expect(details.expires).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2} ICT$/);
     });
 
     it('rejects a TOTP code that was already used (replay)', async () => {
