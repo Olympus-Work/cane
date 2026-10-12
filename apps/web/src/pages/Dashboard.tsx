@@ -289,9 +289,13 @@ function PositionsPanel({ data, stale, mobile, onNavigate }: { data: DashboardDa
         <Icon name="layer-group" />
         <div className="gt-empty-title">{t('noPositions')}</div>
         <div>{t('emptyPosRun')}</div>
-        <Button variant="secondary" icon="plus" onClick={() => onNavigate('strategies')}>
-          {t('newStrategy')}
-        </Button>
+        {mobile ? (
+          <div>{t('mobileOnlyNote')}</div>
+        ) : (
+          <Button variant="secondary" icon="plus" onClick={() => onNavigate('strategies')}>
+            {t('newStrategy')}
+          </Button>
+        )}
       </div>
     );
   }
