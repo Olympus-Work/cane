@@ -1,5 +1,5 @@
 # Spec: funding-rate arbitrage strategy (v1)
-From: intent/funding-arb/intent.md (draft 2026-10-14; must be approved first). Status: draft.
+From: intent/funding-arb/intent.md (approved 2026-10-14). Status: draft.
 Author: Zong (owner). Approver: TBD (owner sign-off required; money-affecting).
 Ticket: [F00] z8p2987e22. Build tickets: F01–F17.
 Design: `intent/funding-arb/design_handoff_funding_arb/README.md` (high-fidelity,
@@ -96,9 +96,12 @@ Out (v1):
   sub-account; if not, it enables them and logs an audit event.
 
 ### BNB fee buffer
-- B23. SPOT and UMFUTURE wallets each keep a BNB buffer of at least `bnb_buffer_days`
-  of estimated fees (7 **(proposed)**) and at most `bnb_buffer_max_usdt` (TBD).
-- B24. Below the minimum, the system redeems from Simple Earn Flexible, else buys BNB on
+- B23. SPOT and UMFUTURE wallets each keep a BNB buffer of at least the fees of
+  `bnb_buffer_trades` round trips (10, owner 2026-10-14). One round trip is the open + close
+  of one pair: 2 fills per wallet at the largest enabled whitelist cap, priced with the
+  account's taker fee rate for that wallet (B6). There is no maximum; extra BNB the owner
+  adds is kept.
+- B24. Below the minimum, the system tops up to the minimum: it redeems from Simple Earn Flexible, else buys BNB on
   spot, then transfers to the short wallet.
 - B25. If a fill reports `commissionAsset != BNB`, the system notifies.
 
@@ -107,6 +110,9 @@ Out (v1):
   (spot PnL + perp PnL excluding funding), net PnL, net APR on total capital used
   (spot notional + perp margin + BNB buffer).
 - B27. Metric definitions are identical in backtest (F02) and live so they are comparable.
+- B27.5. Hurdle: net APR (B26) target is **6% / yr** (owner 2026-10-14, fixed number).
+  F02 chooses `entry_apr_min` / `exit_apr_min` so the backtest net APR meets it, and the
+  F12 report compares live net APR with it.
 
 ### Coin scanner and recommendations (F14)
 - B28. Once per funding interval the scanner ranks every USDⓈ-M perpetual that also has a
@@ -166,7 +172,7 @@ Out (v1):
   strategy log (all), and returns a confirmation toast.
 - B48. Editable parameters: capital_per_symbol, entry_apr_min, exit_apr_min, N, K,
   max_breakeven_days, max_leverage, margin L1/L2/L3 (40/60/80% **(proposed)**), drift_tol,
-  maker_timeout_s, bnb_buffer_days, max_whitelisted_coins, max_total_exposure,
+  maker_timeout_s, bnb_buffer_trades, max_whitelisted_coins, max_total_exposure,
   recommendation_digest (on/off, default off). Values still TBD carry a
   "Set after backtest F02" tag in the UI.
 
@@ -180,7 +186,7 @@ Out (v1):
   Stale values keep the last known state and are marked stale (dimmed + amber note).
 - B53. Overview (Dashboard card and Funding arb › Overview) shows: Net PnL today, Net PnL
   to date, Net APR; per coin: size per leg, funding APR (current, avg N, entry threshold),
-  margin level + ratio, delta drift vs tolerance; BNB buffer days per wallet, last
+  margin level + ratio, delta drift vs tolerance; BNB buffer per wallet (round trips covered), last
   reconcile time, Binance connection; next funding countdown when enabled.
 - B54. Pair detail shows both legs, delta drift, funding history (7D default, 30D) with
   avg-N and entry/exit thresholds and the open/close marker, PnL breakdown (funding, fees,
@@ -269,14 +275,16 @@ All fields are `internal` (owner's own trading data, no customer data). No `pii`
 
 ## Acceptance criteria
 - AC1. Backfill has no missing funding intervals for both symbols over ≥ 2 years (B1–B3).
-- AC2. F02 report produced for ≥ 3 parameter sets; chosen thresholds recorded in this spec.
+- AC2. F02 report produced for ≥ 3 parameter sets; chosen thresholds recorded in this spec,
+  and their backtest net APR is ≥ the hurdle (B27.5).
 - AC3. Testnet: full cycle open → funding recorded → close, with both legs matched (B4–B15).
 - AC4. Testnet: leg-2 rejection, partial fill, and crash-between-legs each end hedged or
   fully flat, never with an unalerted orphan leg (B10–B12, B21).
 - AC5. Testnet: simulated margin drop triggers L1/L2/L3 behavior correctly (B17).
 - AC6. Kill switch flattens all pairs, both legs (B20).
 - AC7. Live PnL snapshot matches Binance income history for the same period (B26).
-- AC8. 30-day live run report with go/no-go decision recorded (F12).
+- AC8. 30-day live run report with go/no-go decision recorded (F12); go/no-go criteria are
+  written in F12 before go-live and include live net APR vs the hurdle (B27.5).
 - AC9. Scanner snapshot stored every funding interval with all B29 fields; a liquidity
   fail shows its reason; dropped coins show reason and time (B28–B31).
 - AC10. Whitelist API rejects each B35 case with its reason; every change has an audit
@@ -290,13 +298,15 @@ All fields are `internal` (owner's own trading data, no customer data). No `pii`
   correct prefix and deep link; muted Info sends no Info messages (B59–B60).
 
 ## Open questions
-1. Capital per symbol and max total exposure — owner.
+1. ~~Capital per symbol and max total exposure~~ — resolved: owner settings (B48), 2026-10-14.
 2. `entry_apr_min`, `exit_apr_min`, N, K — from F02 backtest.
 3. Margin L1/L2/L3 thresholds — from F02 worst-case basis/price moves.
-4. Hurdle rate vs holding USDT in Simple Earn — owner.
-5. Max BNB buffer size (unhedged exposure) — owner.
+4. ~~Hurdle rate vs holding USDT in Simple Earn~~ — resolved: 6% / yr net (B27.5), 2026-10-14.
+5. ~~Max BNB buffer size (unhedged exposure)~~ — resolved: min 10 round trips, no max (B23),
+   2026-10-14.
 6. Isolated vs cross margin on the sub-account — confirm after F05 testnet.
 7. API outage alert threshold — owner.
 8. Scanner score weights, liquidity thresholds, `min_consistency` — from F02.
 9. Jev top N (10 proposed) — owner, based on token cost.
-10. `max_whitelisted_coins`, `max_total_exposure` — owner.
+10. ~~`max_whitelisted_coins`, `max_total_exposure`~~ — resolved: owner settings (B48);
+    defaults 5 coins / 25,000 USDT **(proposed)**, 2026-10-14.
