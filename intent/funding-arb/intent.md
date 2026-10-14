@@ -1,5 +1,6 @@
 # Intent: funding-rate arbitrage strategy
-Author: Zong (owner, cane-auto-trader). Status: draft. Date: 2026-10-14.
+Author: Zong (owner, cane-auto-trader). Status: approved. Date: 2026-10-14.
+Approved: Zong (owner), 2026-10-14.
 Ticket: [F00] z8p2987e22
 
 ## Problem
@@ -31,8 +32,14 @@ live results can be compared to a backtest and a go/no-go decision made after 30
 - Existing kill switch must flatten this strategy fully (both legs).
 - No live orders before the backtest (F02) result is reviewed.
 
+## Decisions (owner, 2026-10-14)
+1. Capital per symbol and max total exposure are owner settings (`capital_per_symbol`,
+   per-coin cap, `max_total_exposure`), editable in Settings, not fixed in this intent.
+2. Hurdle: net APR on total capital used (spot notional + perp margin + BNB buffer)
+   must be at least **6% / yr**, a fixed number. Below that, the strategy is not worth
+   running compared with holding USDT in Simple Earn.
+3. An unhedged BNB buffer is accepted. Each wallet keeps at least enough BNB for the fees
+   of **10 round trips** (open + close of one pair) at the largest coin cap. No maximum.
+
 ## Open questions
-1. How much capital per symbol, and max total exposure?
-2. What net APR makes this worth running at all (hurdle vs just holding USDT in Earn)?
-3. Is it acceptable to hold an unhedged BNB buffer for fee discounts, and how large?
-4. Go/no-go criteria after the 30-day live run (F12).
+1. Go/no-go criteria after the 30-day live run: deferred to F12, decided before go-live.

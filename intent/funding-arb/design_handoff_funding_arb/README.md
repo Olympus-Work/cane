@@ -50,7 +50,7 @@ One combined card for the whole strategy, one row per whitelisted coin (scales t
    - Margin: 4-step badge (below) + ratio %, or "—" when no pair
    - Delta drift: "0.00%" (red if above tolerance) / "tol 0.50%"
 6. **Quiet-market note** (enabled, no open pairs): `fa-eye` + "Watching. Funding is below the entry threshold on both symbols, so the bot stays out. A pair opens when the 9-interval average reaches 10.00%."
-7. **Plumbing strip** (`--surface` background, 12px, flex-wrap gap 8×20): BNB spot "9.4 d", BNB futures "7.8 d" (amber if below `bnb_buffer_target`), "Reconciled 2 min ago" (amber if > 10 min), "Binance connected" (green plug) / "Binance unreachable" (red).
+7. **Plumbing strip** (`--surface` background, 12px, flex-wrap gap 8×20): BNB spot "14 trades", BNB futures "12 trades" (amber if below `bnb_buffer_trades`), "Reconciled 2 min ago" (amber if > 10 min), "Binance connected" (green plug) / "Binance unreachable" (red).
 8. **Disabled state** replaces 2–7: centred power icon, "Strategy is off", "No new pairs open while funding-arb is disabled. Turn it on in strategy settings.", secondary button "Strategy settings".
 
 **Seven symbol states** (pill colors; Open is calm, Needs attention is the only red):
@@ -108,7 +108,7 @@ A coin disabled on the whitelist with no open pair shows a neutral "Coin disable
    | Margin L1 / L2 / L3 | % | 40 / 60 / 80 | yes |
    | Delta drift tolerance | % | 0.50 | |
    | Maker timeout | s | 30 | |
-   | BNB buffer target | days | 7 | |
+   | BNB buffer minimum | round trips | 10 | |
    | Max whitelisted coins | coins | 5 | yes |
    | Max total exposure | USDT | 25000 | yes |
    | Recommendation digest | on/off | off | |
