@@ -63,6 +63,10 @@ describe('withIntervals (B2)', () => {
     expect(withIntervals(events).map((e) => e.intervalHours)).toEqual([8, 8, 8]);
   });
 
+  it('starts a batch that begins across a hole from the first regular gap ahead (PR #39 review)', () => {
+    expect(withIntervals(settled([0, 16, 24, 32])).map((e) => e.intervalHours)).toEqual([8, 8, 8, 8]);
+  });
+
   it('uses the fallback only for a lone first event', () => {
     expect(withIntervals(settled([0]), { fallbackIntervalHours: 4 })[0]!.intervalHours).toBe(4);
     expect(() => withIntervals(settled([0]))).toThrow(/no funding interval/);

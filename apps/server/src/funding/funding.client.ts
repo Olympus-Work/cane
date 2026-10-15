@@ -8,7 +8,8 @@ import { publicGetJson } from '../market-data/public-get.js';
 export const FAPI_BASE = 'https://fapi.binance.com';
 export const FUNDING_PAGE_LIMIT = 1000;
 const PAGE_DELAY_MS = 200;
-const SYMBOL_RE = /^[A-Z0-9]{2,20}$/;
+/** Binance symbol format; checked before a symbol goes into a URL or the DB. */
+export const SYMBOL_RE = /^[A-Z0-9]{2,20}$/;
 
 /** `/fapi/v1/premiumIndex` for one symbol: the next funding and its predicted rate. */
 export interface PremiumIndex {
@@ -40,8 +41,8 @@ function epochMs(value: unknown, what: string): number {
   return value;
 }
 
-function assertSymbol(symbol: string): void {
-  if (!SYMBOL_RE.test(symbol)) throw new Error(`Invalid symbol: ${symbol}`);
+export function assertSymbol(symbol: string, context = 'Invalid symbol'): void {
+  if (!SYMBOL_RE.test(symbol)) throw new Error(`${context}: ${symbol}`);
 }
 
 /** Parse one `/fapi/v1/fundingRate` row. Old rows carry `markPrice: ""`. */

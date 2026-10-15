@@ -88,6 +88,17 @@ describe.skipIf(!DATABASE_URL)('FundingSync on Postgres (plan F01)', () => {
     expect(rows.map((r) => [r.fundingTime, r.intervalHours])).toEqual([0, 8, 16, 24, 32].map((h) => [T0 + h * H, 8]));
   });
 
+  it('re-reads the oldest stored interval once older history is filled in (PR #39 review)', async () => {
+    const fake = new FakeFundingClient([0, 8, 16, 20, 24].map((h) => ev(h)));
+    const sync = syncWith(fake);
+    await sync.sync('BTCUSDT', T0 + 16 * H, T0 + 25 * H);
+    expect((await store.oldest('BTCUSDT'))!.intervalHours).toBe(4); // read forward: 16h -> 20h
+
+    expect((await sync.sync('BTCUSDT', T0, T0 + 25 * H)).added).toBe(2);
+    const rows = await store.range('BTCUSDT', 0, T0 + 30 * H);
+    expect(rows.map((r) => r.intervalHours)).toEqual([8, 8, 8, 4, 4]);
+  });
+
   it('takes a lone first event interval from the next funding time', async () => {
     const fake = new FakeFundingClient([ev(0)], T0 + 4 * H);
     await syncWith(fake).sync('NEWUSDT', T0, T0 + H);

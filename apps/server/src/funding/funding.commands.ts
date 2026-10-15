@@ -1,5 +1,6 @@
 import { Command, CommandRunner, Option } from 'nest-commander';
 import { fundingGaps } from '@cane/core';
+import { assertSymbol } from './funding.client.js';
 import { FundingStore } from './funding.store.js';
 import { FundingSync } from './funding.sync.js';
 
@@ -14,9 +15,7 @@ interface FundingOptions {
 
 function parseSymbols(value: string): string[] {
   const symbols = value.split(',').map((s) => s.trim()).filter(Boolean);
-  for (const s of symbols) {
-    if (!/^[A-Z0-9]{2,20}$/.test(s)) throw new Error(`Invalid symbol "${s}"`);
-  }
+  for (const s of symbols) assertSymbol(s);
   if (symbols.length === 0) throw new Error('No symbol given');
   return symbols;
 }
