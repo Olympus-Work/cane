@@ -61,6 +61,7 @@ describe.skipIf(!url)('db migrations (fresh database)', () => {
     expect(await tables()).toEqual([
       'audit_log',
       'candles',
+      'funding_rate',
       'jev_calls',
       'notifications',
       'orders',
@@ -73,12 +74,12 @@ describe.skipIf(!url)('db migrations (fresh database)', () => {
       'strategies',
       'trades',
     ]);
-    expect(await count('select count(*)::int as n from drizzle.__drizzle_migrations')).toBe(4);
+    expect(await count('select count(*)::int as n from drizzle.__drizzle_migrations')).toBe(5);
   });
 
   it('up again is a no-op', async () => {
     await migrateUp(pool);
-    expect(await count('select count(*)::int as n from drizzle.__drizzle_migrations')).toBe(4);
+    expect(await count('select count(*)::int as n from drizzle.__drizzle_migrations')).toBe(5);
   });
 
   it('signals are idempotent per strategy, timeframe and candle', async () => {
@@ -142,6 +143,21 @@ describe.skipIf(!url)('db migrations (fresh database)', () => {
     );
   });
 
+  it('funding_rate is keyed by symbol and time and only takes Binance intervals', async () => {
+    const insert = (time: number, interval: number) =>
+      pool.query(
+        'insert into funding_rate(symbol, funding_time, rate, mark_price, interval_hours) values ($1, $2, $3, $4, $5)',
+        ['BTCUSDT', time, '0.0001', null, interval],
+      );
+    await insert(1704067200000, 8);
+    await expectPgError(insert(1704067200000, 8), '23505');
+    await expectPgError(insert(1704096000000, 3), '23514');
+    await expectPgError(
+      pool.query("insert into funding_rate(symbol, funding_time, rate, interval_hours) values ('btc', 1, '0', 8)"),
+      '23514',
+    );
+  });
+
   it('audit_log is append-only', async () => {
     await pool.query("insert into audit_log(actor, action) values ('owner','login_success')");
     await expect(pool.query('update audit_log set actor = \'x\'')).rejects.toThrow(/append-only/);
@@ -154,10 +170,16 @@ describe.skipIf(!url)('db migrations (fresh database)', () => {
     await expectPgError(asRole('cane_app', "update audit_log set actor = 'y'"), '42501');
     await expectPgError(asRole('cane_app', 'delete from audit_log'), '42501');
     await asRole('cane_app', 'select * from settings');
+    await asRole('cane_app', "insert into funding_rate(symbol, funding_time, rate, interval_hours) values ('ETHUSDT', 1, '0', 8)");
   });
 
   it('cane_readonly can only read trading records', async () => {
     await asRole('cane_readonly', 'select * from strategies');
+    await asRole('cane_readonly', 'select * from funding_rate');
+    await expectPgError(
+      asRole('cane_readonly', "insert into funding_rate(symbol, funding_time, rate, interval_hours) values ('BTCUSDT', 1, '0', 8)"),
+      '42501',
+    );
     await expectPgError(
       asRole(
         'cane_readonly',
@@ -179,6 +201,6 @@ describe.skipIf(!url)('db migrations (fresh database)', () => {
 
   it('up works again after down', async () => {
     await migrateUp(pool);
-    expect((await tables()).length).toBe(13);
+    expect((await tables()).length).toBe(14);
   });
 });

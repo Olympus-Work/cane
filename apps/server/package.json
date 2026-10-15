@@ -12,6 +12,7 @@
     "replay": "node dist/replay-cli.js replay",
     "replay-diff": "node dist/replay-diff-cli.js",
     "owner": "node --env-file-if-exists=.env dist/owner-cli.js",
+    "funding": "node --env-file-if-exists=.env dist/funding-cli.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --env-file-if-exists=.env dist/db-cli.js",
     "test:integration": "vitest run -c vitest.integration.config.ts"

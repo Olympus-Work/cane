@@ -393,3 +393,25 @@ export const candles = pgTable(
     check('candles_times', sql`${t.closeTime} > ${t.openTime}`),
   ],
 );
+
+/**
+ * Settled USDⓈ-M funding events (funding-arb spec B1–B3, plan F01). Public market data.
+ * `interval_hours` is read from the exchange's own timestamps, never assumed 8h (B2).
+ */
+export const FUNDING_INTERVALS = [1, 2, 4, 8] as const;
+
+export const fundingRate = pgTable(
+  'funding_rate',
+  {
+    symbol: text('symbol').notNull(),
+    fundingTime: candleTime('funding_time').notNull(),
+    rate: numeric('rate').notNull(),
+    markPrice: numeric('mark_price'),
+    intervalHours: integer('interval_hours').notNull(),
+  },
+  (t) => [
+    primaryKey({ name: 'funding_rate_pk', columns: [t.symbol, t.fundingTime] }),
+    check('funding_rate_symbol', sql`${t.symbol} ~ '^[A-Z0-9]{2,20}$'`),
+    check('funding_rate_interval', sql`${t.intervalHours} in (${sql.raw(FUNDING_INTERVALS.join(', '))})`),
+  ],
+);
