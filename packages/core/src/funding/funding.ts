@@ -55,7 +55,7 @@ export interface IntervalContext {
  * timestamps (spec B2): the gap to the previous event. When that gap is not a
  * funding interval (events missing), the previous event's interval is carried
  * forward; the gap itself is reported by `fundingGaps`. The very first event,
- * with nothing before it, takes the gap to the next event.
+ * with nothing before it, takes the first regular gap ahead of it.
  * `events` must be sorted by `fundingTime`, ascending, without duplicates.
  */
 export function withIntervals(events: readonly SettledFunding[], ctx: IntervalContext = {}): FundingEvent[] {
@@ -78,10 +78,7 @@ export function withIntervals(events: readonly SettledFunding[], ctx: IntervalCo
     } else if (prevInterval !== undefined) {
       interval = prevInterval;
     } else {
-      const next = events[i + 1];
-      const forward = next === undefined ? undefined : hoursBetween(e.fundingTime, next.fundingTime);
-      if (forward !== undefined && isFundingInterval(forward)) interval = forward;
-      else interval = ctx.fallbackIntervalHours;
+      interval = firstRegularGap(events, i) ?? ctx.fallbackIntervalHours;
     }
     if (interval === undefined || !isFundingInterval(interval)) {
       throw new Error(`withIntervals: no funding interval for event at ${new Date(e.fundingTime).toISOString()}`);
@@ -91,6 +88,15 @@ export function withIntervals(events: readonly SettledFunding[], ctx: IntervalCo
     prevInterval = interval;
   }
   return out;
+}
+
+/** The first gap after `events[from]` that is a funding interval (a batch may start across a hole). */
+function firstRegularGap(events: readonly SettledFunding[], from: number): number | undefined {
+  for (let j = from + 1; j < events.length; j++) {
+    const gap = hoursBetween(events[j - 1]!.fundingTime, events[j]!.fundingTime);
+    if (isFundingInterval(gap)) return gap;
+  }
+  return undefined;
 }
 
 export type FundingGapReason = 'irregular_interval' | 'missing_in_steady_interval' | 'missing_start' | 'missing_end';

@@ -1,4 +1,5 @@
 import { Logger } from '@nestjs/common';
+import { assertSymbol } from '../funding/funding.client.js';
 import type { FundingSync } from '../funding/funding.sync.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -16,9 +17,7 @@ export const ERROR_RETRY_MS = 5 * 60_000;
 /** `FUNDING_SYNC_SYMBOLS` → symbols; empty or unset = off. */
 export function parseSyncSymbols(value: string | undefined): string[] {
   const symbols = (value ?? '').split(',').map((s) => s.trim()).filter(Boolean);
-  for (const s of symbols) {
-    if (!/^[A-Z0-9]{2,20}$/.test(s)) throw new Error(`FUNDING_SYNC_SYMBOLS: invalid symbol "${s}"`);
-  }
+  for (const s of symbols) assertSymbol(s, 'FUNDING_SYNC_SYMBOLS: invalid symbol');
   return symbols;
 }
 
