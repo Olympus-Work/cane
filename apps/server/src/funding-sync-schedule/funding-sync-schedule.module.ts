@@ -3,9 +3,9 @@ import { FundingModule } from '../funding/funding.module.js';
 import { FundingSync } from '../funding/funding.sync.js';
 import { FundingSyncSchedule, parseSyncSymbols } from './funding-sync.schedule.js';
 
-const TICK_MS = 15 * 60_000;
+const TICK_MS = 60_000;
 
-/** Live funding data (plan F01). Off while `FUNDING_SYNC_SYMBOLS` is unset. */
+/** Live funding data, synced right after each settlement (plan F01). Off while `FUNDING_SYNC_SYMBOLS` is unset. */
 @Module({ imports: [FundingModule] })
 export class FundingSyncScheduleModule implements OnApplicationBootstrap, OnModuleDestroy {
   private readonly log = new Logger('FundingSync');
@@ -22,7 +22,7 @@ export class FundingSyncScheduleModule implements OnApplicationBootstrap, OnModu
     const schedule = new FundingSyncSchedule(this.sync, symbols, Date.now);
     void schedule.tick();
     this.timer = setInterval(() => void schedule.tick(), TICK_MS);
-    this.log.log(`live funding sync every 15 min: ${symbols.join(', ')}`);
+    this.log.log(`live funding sync after each settlement: ${symbols.join(', ')}`);
   }
 
   onModuleDestroy(): void {

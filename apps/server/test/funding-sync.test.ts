@@ -94,6 +94,10 @@ describe.skipIf(!DATABASE_URL)('FundingSync on Postgres (plan F01)', () => {
     expect((await store.newest('NEWUSDT'))!.intervalHours).toBe(4);
   });
 
+  it('reads the next settlement time from premiumIndex', async () => {
+    expect(await syncWith(new FakeFundingClient([], T0 + 8 * H)).nextFundingTime('BTCUSDT')).toBe(T0 + 8 * H);
+  });
+
   it('keeps symbols apart', async () => {
     const fake = new FakeFundingClient([0, 8].map((h) => ev(h)));
     const sync = syncWith(fake);
