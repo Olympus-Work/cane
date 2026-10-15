@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { Decimal } from 'decimal.js';
@@ -56,5 +56,50 @@ describe('KlineCache.closedCandles', () => {
     expect(second.map((c) => c.openTime)).toEqual([0, 1000, 2000]);
     expect(fetchRange).toHaveBeenCalledTimes(2);
     expect(fetchRange.mock.calls[1]![3]).toBe(1001);
+  });
+});
+
+describe('KlineCache concurrent access', () => {
+  it('a reader never sees a half-written cache file while other instances rewrite it', async () => {
+    const shared = await mkdtemp(path.join(tmpdir(), 'kline-cache-race-'));
+    try {
+      const H = 1000;
+      const candles = Array.from({ length: 5000 }, (_, i) => makeCandle(i * H, i * H + H - 1));
+      const fetchRange = vi.fn((_m: string, _s: string, _i: string, start: number, end: number) =>
+        Promise.resolve(candles.filter((c) => c.openTime >= start && c.openTime <= end)),
+      );
+      const client = { fetchRange } as unknown as KlinesClient;
+      // Separate instances stand in for the live engine and the replay-diff child.
+      const writers = Array.from({ length: 4 }, () => new KlineCache(client, shared));
+      await writers[0]!.closedCandles('futures', 'BTCUSDT', '4h', 4000 * H);
+
+      const file = path.join(shared, 'futures-BTCUSDT-4h.json');
+      const errors: unknown[] = [];
+      let writing = true;
+      const reader = (async () => {
+        while (writing) {
+          try {
+            const rows = JSON.parse(await readFile(file, 'utf8')) as unknown[];
+            if (rows.length < 4000) errors.push(new Error(`partial file: ${rows.length} rows`));
+          } catch (err) {
+            errors.push(err);
+          }
+        }
+      })();
+      const runs: Promise<Candle[]>[] = [];
+      for (let round = 0; round < 25; round++) {
+        for (const w of writers) runs.push(w.closedCandles('futures', 'BTCUSDT', '4h', (4000 + round) * H));
+      }
+      const results = await Promise.allSettled(runs);
+      writing = false;
+      await reader;
+
+      expect(results.filter((r) => r.status === 'rejected')).toEqual([]);
+      expect(errors).toEqual([]);
+      const leftovers = (await readdir(shared)).filter((f) => f.endsWith('.tmp'));
+      expect(leftovers).toEqual([]);
+    } finally {
+      await rm(shared, { recursive: true, force: true });
+    }
   });
 });

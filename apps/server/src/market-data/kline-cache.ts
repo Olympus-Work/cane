@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { fileURLToPath } from 'node:url';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { Decimal } from 'decimal.js';
 import type { Candle, Timeframe } from '@cane/core';
@@ -52,6 +53,22 @@ function fromCachedRow(row: unknown): Candle {
   };
 }
 
+/**
+ * The live engine and the replay-diff child share the cache files: write a
+ * temp file in the same directory and rename it over the target, so a reader
+ * never sees a half-written file.
+ */
+async function writeAtomic(file: string, data: string): Promise<void> {
+  const tmp = `${file}.${process.pid}.${randomUUID()}.tmp`;
+  try {
+    await writeFile(tmp, data);
+    await rename(tmp, file);
+  } catch (err) {
+    await rm(tmp, { force: true });
+    throw err;
+  }
+}
+
 @Injectable()
 export class KlineCache {
   constructor(
@@ -97,7 +114,7 @@ export class KlineCache {
       .sort((a, b) => a.openTime - b.openTime);
 
     await mkdir(this.dir, { recursive: true });
-    await writeFile(file, JSON.stringify(closed.map(toCachedRow), null, 2));
+    await writeAtomic(file, JSON.stringify(closed.map(toCachedRow), null, 2));
 
     return closed;
   }
