@@ -1,6 +1,7 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
 import type { Candle, Timeframe } from '@cane/core';
+import { publicGetJson } from './public-get.js';
 
 export type KlineMarket = 'spot' | 'futures';
 
@@ -31,7 +32,6 @@ export type FetchFn = (
 }>;
 
 const SYMBOL_RE = /^[A-Z0-9]{2,20}$/;
-const MAX_ATTEMPTS = 5;
 const PAGE_DELAY_MS = 200;
 
 function isDecimalString(value: unknown): value is string {
@@ -150,29 +150,10 @@ export class KlinesClient {
   }
 
   private async fetchPage(url: string): Promise<unknown[]> {
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-      const res = await this.fetchFn(url, { method: 'GET' });
-      if (res.ok) {
-        const body = await res.json();
-        if (!Array.isArray(body)) {
-          throw new Error(`Invalid klines response: expected an array, got ${JSON.stringify(body)}`);
-        }
-        return body;
-      }
-      if (res.status !== 429 && res.status !== 418 && res.status < 500) {
-        throw new Error(`Klines request failed with status ${res.status}`);
-      }
-      if (attempt === MAX_ATTEMPTS) {
-        throw new Error(`Klines request failed after ${MAX_ATTEMPTS} attempts with status ${res.status}`);
-      }
-      const retryAfter = res.headers.get('Retry-After');
-      const delayMs =
-        retryAfter !== null && retryAfter !== '' && !Number.isNaN(Number(retryAfter))
-          ? Number(retryAfter) * 1000
-          : 1000 * 2 ** (attempt - 1);
-      await this.doSleep(delayMs);
+    const body = await publicGetJson(this.fetchFn, (ms) => this.doSleep(ms), url, 'Klines');
+    if (!Array.isArray(body)) {
+      throw new Error(`Invalid klines response: expected an array, got ${JSON.stringify(body)}`);
     }
-    // Unreachable: the loop always returns or throws.
-    throw new Error('Klines request failed');
+    return body;
   }
 }

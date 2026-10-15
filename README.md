@@ -139,6 +139,13 @@ There is one Railway service plus the Postgres add-on. The server also serves th
    ```
    The log then says `daily replay-diff scheduled (00:15 UTC)`. Every day at 00:15 UTC (07:15 Bangkok) a `Live vs replay check` message arrives per strategy. To run it by hand in the service Console: `node apps/server/dist/replay-diff-cli.js --day YYYY-MM-DD`. Record the results in `intent/cane-auto-trader/live-log.md`.
 
+9. **Funding data (funding-arb F01).** Public market data only; no key is involved. Backfill and check two years once, from the service Console:
+   ```sh
+   node apps/server/dist/funding-cli.js backfill --symbols BTCUSDT,ETHUSDT --days 730
+   node apps/server/dist/funding-cli.js check --symbols BTCUSDT,ETHUSDT --days 730
+   ```
+   `check` prints one JSON line per symbol (rows, first/last event, interval changes, gaps) and exits 1 if any gap is found. To keep the table current, set `FUNDING_SYNC_SYMBOLS=BTCUSDT,ETHUSDT` and redeploy: the server then syncs every 15 minutes (log: `live funding sync every 15 min`). Unset means off.
+
 Rollback: use the Kill switch in the UI, or unset `TRADING_ENABLED` and redeploy (stops stay on Binance), or use Railway's "rollback to previous deployment".
 
 ## Web app (development)

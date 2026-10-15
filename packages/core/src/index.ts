@@ -89,3 +89,16 @@ export {
   type JevResult,
   type PositionExitReason,
 } from './signals/flip.js';
+export {
+  FUNDING_INTERVAL_HOURS,
+  HOUR_MS,
+  fundingApr,
+  fundingGaps,
+  hoursBetween,
+  withIntervals,
+  type FundingEvent,
+  type FundingGap,
+  type FundingGapReason,
+  type IntervalContext,
+  type SettledFunding,
+} from './funding/funding.js';
