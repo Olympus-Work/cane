@@ -144,7 +144,7 @@ There is one Railway service plus the Postgres add-on. The server also serves th
    node apps/server/dist/funding-cli.js backfill --symbols BTCUSDT,ETHUSDT --days 730
    node apps/server/dist/funding-cli.js check --symbols BTCUSDT,ETHUSDT --days 730
    ```
-   `check` prints one JSON line per symbol (rows, first/last event, interval changes, gaps) and exits 1 if any gap is found. To keep the table current, set `FUNDING_SYNC_SYMBOLS=BTCUSDT,ETHUSDT` and redeploy: the server then syncs every 15 minutes (log: `live funding sync every 15 min`). Unset means off.
+   `check` prints one JSON line per symbol (rows, first/last event, interval changes, gaps) and exits 1 if any gap is found. To keep the table current, set `FUNDING_SYNC_SYMBOLS=BTCUSDT,ETHUSDT` and redeploy: the server then syncs right after each funding settlement (log: `live funding sync after each settlement`). Unset means off.
 
 Rollback: use the Kill switch in the UI, or unset `TRADING_ENABLED` and redeploy (stops stay on Binance), or use Railway's "rollback to previous deployment".
 

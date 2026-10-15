@@ -56,10 +56,14 @@ Spec: B1–B3, Data `funding_rate`, Interfaces `/fapi/v1/fundingRate`,
    has the commands. The CLI module loads
    only the funding and DB modules, never trading, settings or keys (isolation test,
    like the replay-diff's).
-5. **Live sync inside the server:** `FundingSyncScheduleModule` runs `FundingSync` every
-   15 minutes for the symbols in `FUNDING_SYNC_SYMBOLS` (comma list). Unset = off, which
-   is the default until the strategy exists. A failure is logged and retried at the next
-   tick; it never touches trading. It cross-checks the newest interval against
+5. **Live sync inside the server** (owner, 2026-10-15: right after each settlement):
+   `FundingSyncScheduleModule` ticks every minute for the symbols in
+   `FUNDING_SYNC_SYMBOLS` (comma list). Unset = off, which is the default until the
+   strategy exists. A symbol syncs once at start, then at the next settlement time
+   announced by `/fapi/v1/premiumIndex` plus 60 s. If that settlement is not published
+   yet it retries every minute, for up to 30 minutes, then logs a warning and moves on
+   to the next settlement. A failed request backs off 5 minutes. Failures are logged and
+   never touch trading. After a sync it cross-checks the newest interval against
    `/fapi/v1/fundingInfo` and logs a warning when they differ.
 
 ### Gap rule
@@ -95,11 +99,12 @@ events carry a few ms of offset). Between two consecutive stored events with gap
 
 ## Risks
 - `/fapi/v1/fundingRate` shares a 500 requests / 5 min / IP limit. A 2-year backfill is
-  ~3 pages per symbol; the 15-minute sync is 1 request per symbol plus 1 for
-  `fundingInfo`. Far below the limit.
+  ~3 pages per symbol; each settlement costs 1 `fundingRate` + 1 `premiumIndex` request
+  per symbol plus 1 `fundingInfo`, and a few retries while it is not published. Far
+  below the limit.
 - History older than Binance keeps, or a symbol listed less than 2 years ago, makes the
   coverage check fail; `check` reports it per symbol and the owner decides.
 
 ## Open questions
-1. Is "every 15 minutes" fresh enough for live funding data before F04 decides entries?
-   (Proposed; F04 may ask for a sync right after each settlement instead.)
+None open for F01. Resolved: live sync runs right after each settlement, not on a fixed
+15-minute timer (owner, 2026-10-15).

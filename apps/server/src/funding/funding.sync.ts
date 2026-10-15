@@ -76,6 +76,11 @@ export class FundingSync {
     return out;
   }
 
+  /** Next settlement time the exchange announces for `symbol` (`/fapi/v1/premiumIndex`). */
+  async nextFundingTime(symbol: string): Promise<number> {
+    return (await this.client.premiumIndex(symbol)).nextFundingTime;
+  }
+
   /** Interval from a lone settled event to the next settlement the exchange announces. */
   private async nextIntervalHours(symbol: string, fundingTime: number): Promise<number> {
     const premium = await this.client.premiumIndex(symbol);
