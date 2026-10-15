@@ -112,6 +112,8 @@ A coin disabled on the whitelist with no open pair shows a neutral "Coin disable
    | Max whitelisted coins | coins | 5 | yes |
    | Max total exposure | USDT | 25000 | yes |
    | Recommendation digest | on/off | off | |
+
+   Known mismatch: the prototype still shows the BNB buffer as "BNB buffer target" in days (`bnb_buffer_days`). Follow spec B23 instead: `bnb_buffer_trades`, unit round trips, default 10.
 4. **Sticky save bar** when anything (parameters, caps or overrides) changed: "{n} unsaved changes · applies to new decisions, not past trades" + Discard + "Review and save".
 5. **Alert messages** card: Critical / Warning / Info segmented control showing each LINE/Telegram template as a chat bubble (`--surface`, radius 4 14 14 14, `white-space: pre-line`) with event name and "Includes: …". Info has a "Mute info messages" switch. Severity markers use **both emoji and a text prefix**: `🔴 CRITICAL`, `🟠 WARNING`, `🔵 INFO`. Critical messages always end with a deep link (`cane.app/arb/{SYMBOL}`). Exact template text is in `AP_MSGS` in the prototype.
 6. **Strategy log**: owner actions across the strategy (what, old → new in mono, who, when).

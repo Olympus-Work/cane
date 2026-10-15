@@ -98,11 +98,11 @@ Out (v1):
 ### BNB fee buffer
 - B23. SPOT and UMFUTURE wallets each keep a BNB buffer of at least the fees of
   `bnb_buffer_trades` round trips (10, owner 2026-10-14). One round trip is the open + close
-  of one pair: 2 fills per wallet at the largest enabled whitelist cap, priced with the
-  account's taker fee rate for that wallet (B6). There is no maximum; extra BNB the owner
-  adds is kept.
-- B24. Below the minimum, the system tops up to the minimum: it redeems from Simple Earn Flexible, else buys BNB on
-  spot, then transfers to the short wallet.
+  of one pair: 2 fills per wallet at the largest per-coin capital cap (B34) among enabled
+  whitelist coins, priced with the account's taker fee rate for that wallet (B6). There is
+  no maximum; extra BNB the owner adds is kept.
+- B24. Below the minimum, the system tops up to the minimum: it redeems from Simple Earn
+  Flexible, else buys BNB on spot, then transfers to the short wallet.
 - B25. If a fill reports `commissionAsset != BNB`, the system notifies.
 
 ### Accounting
