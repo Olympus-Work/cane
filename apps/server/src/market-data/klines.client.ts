@@ -5,6 +5,9 @@ import { publicGetJson } from './public-get.js';
 
 export type KlineMarket = 'spot' | 'futures';
 
+/** Kline intervals market data serves: the strategy timeframes plus `1h` for the funding-arb backtest (plan F02). */
+export type KlineInterval = Timeframe | '1h';
+
 export const KLINES_URL: Record<KlineMarket, string> = {
   spot: 'https://api.binance.com/api/v3/klines',
   futures: 'https://fapi.binance.com/fapi/v1/klines',
@@ -109,7 +112,7 @@ export class KlinesClient {
   async fetchRange(
     market: KlineMarket,
     symbol: string,
-    interval: Timeframe,
+    interval: KlineInterval,
     startTime: number,
     endTime: number,
   ): Promise<Candle[]> {

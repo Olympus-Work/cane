@@ -146,6 +146,12 @@ There is one Railway service plus the Postgres add-on. The server also serves th
    ```
    `check` prints one JSON line per symbol (rows, first/last event, interval changes, gaps) and exits 1 if any gap is found. To keep the table current, set `FUNDING_SYNC_SYMBOLS=BTCUSDT,ETHUSDT` and redeploy: the server then syncs right after each funding settlement (log: `live funding sync after each settlement`). Unset means off.
 
+10. **Funding-arb backtest (F02).** Reads `funding_rate` through the read-only `cane_replay` user (`REPLAY_DATABASE_URL`, step 8) and public 1h klines; never loads trading or keys. After step 9's `check` shows no gaps, run it from the service Console:
+    ```sh
+    node apps/server/dist/funding-backtest-cli.js --out /tmp/backtest-report.md && cat /tmp/backtest-report.md
+    ```
+    The defaults are BTCUSDT and ETHUSDT, 730 days, and an 18-set grid (`--n 3,9,21 --entry-apr 5,10,15 --exit-apr 0,3 --k 3 --breakeven-days 10`). `--help` lists the cost and risk options. Commit the report as `intent/funding-arb/backtest-report.md` (spec AC2). Locally: `REPLAY_DATABASE_URL=... pnpm --filter @cane/server funding-backtest --out ../../intent/funding-arb/backtest-report.md`.
+
 Rollback: use the Kill switch in the UI, or unset `TRADING_ENABLED` and redeploy (stops stay on Binance), or use Railway's "rollback to previous deployment".
 
 ## Web app (development)

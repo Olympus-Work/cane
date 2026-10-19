@@ -4,8 +4,8 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { Decimal } from 'decimal.js';
-import type { Candle, Timeframe } from '@cane/core';
-import { KlinesClient, type KlineMarket } from './klines.client.js';
+import type { Candle } from '@cane/core';
+import { KlinesClient, type KlineInterval, type KlineMarket } from './klines.client.js';
 
 export const KLINE_CACHE_DIR = Symbol('KLINE_CACHE_DIR');
 
@@ -76,14 +76,14 @@ export class KlineCache {
     @Inject(KLINE_CACHE_DIR) private readonly dir: string,
   ) {}
 
-  private filePath(market: KlineMarket, symbol: string, interval: Timeframe): string {
+  private filePath(market: KlineMarket, symbol: string, interval: KlineInterval): string {
     return path.join(this.dir, `${market}-${symbol}-${interval}.json`);
   }
 
   async closedCandles(
     market: KlineMarket,
     symbol: string,
-    interval: Timeframe,
+    interval: KlineInterval,
     nowMs: number,
   ): Promise<Candle[]> {
     const file = this.filePath(market, symbol, interval);
