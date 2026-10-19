@@ -99,8 +99,8 @@ events carry a few ms of offset). Between two consecutive stored events with gap
 
 ## F02: backtest / replay CLI
 Spec: B3–B6, B14, B17 (evidence only), B23, B26–B27.5, AC2, Open questions 2 and 3.
-Started 2026-10-19 (owner: "start F02"). Choices below are Claude Code's and await the
-owner's OK in the PR.
+Started 2026-10-19 (owner: "start F02"). Choices below are Claude Code's; the owner
+answered the three open questions on 2026-10-19 (see Open questions).
 
 ### What it builds
 1. **Core (`packages/core/src/funding/arb.ts`), pure functions** that F10 (live) will
@@ -194,7 +194,7 @@ Money in USDT, 2 decimals; rates in %.
 ### Not in F02
 - Scanner score weights, liquidity thresholds and `min_consistency` (spec Open
   question 8): liquidity needs order-book depth, which has no history, and the score
-  needs the F14 scanner. Proposed: move them to F14 (owner question 1 below).
+  needs the F14 scanner. Moved to F14 (owner, 2026-10-19).
 - Execution choices (leg order, maker timeout, retries): testnet in F05.
 - Simulating the L2 rebalance or the BNB price risk of the buffer.
 
@@ -214,8 +214,8 @@ Money in USDT, 2 decimals; rates in %.
 None open for F01. Resolved: live sync runs right after each settlement, not on a fixed
 15-minute timer (owner, 2026-10-15).
 
-F02 (owner):
+Resolved for F02 (owner, 2026-10-19):
 1. Scanner score weights, liquidity thresholds and `min_consistency` move from F02 to
-   F14 (see "Not in F02")?
-2. Capital used counts for the whole window, flat or not (see Model). OK?
-3. The per-coin capital cap (B7, B34) is read as the notional of each leg. OK?
+   F14 (spec B29–B31 and Open question 8 updated).
+2. Capital used counts for the whole window, flat or not (see Model).
+3. The per-coin capital cap (B7, B34) is the notional of each leg (spec B34 updated).
