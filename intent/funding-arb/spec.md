@@ -110,6 +110,7 @@ Out (v1):
   (spot PnL + perp PnL excluding funding), net PnL, net APR on total capital used
   (spot notional + perp margin + BNB buffer).
 - B27. Metric definitions are identical in backtest (F02) and live so they are comparable.
+  Capital used counts for the whole period, with or without an open pair (owner, 2026-10-19).
 - B27.5. Hurdle: net APR (B26) target is **6% / yr** (owner 2026-10-14, fixed number).
   F02 chooses `entry_apr_min` / `exit_apr_min` so the backtest net APR meets it, and the
   F12 report compares live net APR with it.
@@ -120,9 +121,10 @@ Out (v1):
 - B29. Per coin the snapshot holds: rank, score (0–100), avg funding APR 7d, avg funding
   APR 30d, consistency (% of settled intervals with positive funding over 30d),
   estimated break-even days (B5 formula), liquidity pass/fail with a reason on fail,
-  and a one-line "why" text. Score weights are set from F02 **(proposed)**.
+  and a one-line "why" text. Score weights are set in F14 **(proposed)** (owner,
+  2026-10-19: moved from F02).
 - B30. Liquidity check: 24h volume and order-book depth at the capital cap, both legs.
-  Thresholds TBD from F02. A coin that fails stays in the list, marked not eligible,
+  Thresholds TBD in F14. A coin that fails stays in the list, marked not eligible,
   with the reason (e.g. "Order book depth below threshold").
 - B31. A coin drops out of the recommendation list when consistency < `min_consistency`
   (60% **(proposed)**), funding is negative for K intervals in a row, or it fails liquidity.
@@ -131,8 +133,8 @@ Out (v1):
 - B33. The scanner uses market data only and never loads the order executor or trading keys.
 
 ### Symbol whitelist (F15)
-- B34. Per coin the whitelist holds: symbol, enabled, capital cap (USDT, default
-  `capital_per_symbol`), optional entry APR override (% / yr), source (recommendation
+- B34. Per coin the whitelist holds: symbol, enabled, capital cap (USDT notional of each
+  leg, owner 2026-10-19; default `capital_per_symbol`), optional entry APR override (% / yr), source (recommendation
   rank at add time, or manual), added time.
 - B35. Add (from a recommendation or by hand) runs the same checks and rejects with one of
   these reasons: no USDⓈ-M perp market · too little liquidity (B30) · cap below exchange
@@ -306,7 +308,8 @@ All fields are `internal` (owner's own trading data, no customer data). No `pii`
    2026-10-14.
 6. Isolated vs cross margin on the sub-account — confirm after F05 testnet.
 7. API outage alert threshold — owner.
-8. Scanner score weights, liquidity thresholds, `min_consistency` — from F02.
+8. Scanner score weights, liquidity thresholds, `min_consistency` — in F14 (owner,
+   2026-10-19: liquidity needs order-book depth, which has no history).
 9. Jev top N (10 proposed) — owner, based on token cost.
 10. ~~`max_whitelisted_coins`, `max_total_exposure`~~ — resolved: owner settings (B48);
     defaults 5 coins / 25,000 USDT **(proposed)**, 2026-10-14.
