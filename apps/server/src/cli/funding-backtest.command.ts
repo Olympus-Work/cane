@@ -44,19 +44,19 @@ export const BACKTEST_DEFAULTS = {
   notional: '10000',
 } as const;
 
-function list(value: string): string[] {
+export function list(value: string): string[] {
   const items = value.split(',').map((s) => s.trim()).filter(Boolean);
   if (items.length === 0) throw new Error('Expected a comma list');
   return items;
 }
 
-function wholeNumber(value: string, min: number): number {
+export function wholeNumber(value: string, min: number): number {
   const n = Number(value);
   if (!Number.isInteger(n) || n < min) throw new Error(`Expected a whole number >= ${min}, got "${value}"`);
   return n;
 }
 
-function decimal(value: string, { positive = false } = {}): Decimal {
+export function decimal(value: string, { positive = false } = {}): Decimal {
   if (!/^-?\d+(\.\d+)?$/.test(value)) throw new Error(`Expected a number, got "${value}"`);
   const d = new Decimal(value);
   if (positive ? !d.gt(0) : d.lt(0)) throw new Error(`Expected a number ${positive ? '> 0' : '>= 0'}, got "${value}"`);
