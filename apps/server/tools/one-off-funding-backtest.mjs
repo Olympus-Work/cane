@@ -8,7 +8,7 @@ import path from 'node:path';
 import { Decimal } from 'decimal.js';
 import { withIntervals } from '@cane/core';
 import { FundingClient } from '../dist/funding/funding.client.js';
-import { KlinesClient, FETCH_FN } from '../dist/market-data/klines.client.js';
+import { KlinesClient } from '../dist/market-data/klines.client.js';
 import { KlineCache } from '../dist/market-data/kline-cache.js';
 import { FundingBacktestService } from '../dist/funding-backtest/funding-backtest.service.js';
 import { formatBacktestReport } from '../dist/funding-backtest/report.js';
