@@ -98,7 +98,12 @@ export interface BacktestResult {
   sets: SetRun[];
 }
 
+/** Upper bound on the grid, so a long comma list cannot make a Console run open-ended (PR #41 review). */
+export const MAX_PARAMETER_SETS = 1000;
+
 export function parameterSets(grid: BacktestGrid): ArbParams[] {
+  const count = grid.n.length * grid.entryAprMin.length * grid.exitAprMin.length * grid.k.length * grid.maxBreakevenDays.length;
+  if (count > MAX_PARAMETER_SETS) throw new Error(`backtest: ${count} parameter sets, more than ${MAX_PARAMETER_SETS}; shorten the option lists`);
   const out: ArbParams[] = [];
   for (const n of grid.n)
     for (const entryAprMin of grid.entryAprMin)
@@ -156,10 +161,15 @@ export class FundingBacktestService {
 
     const sets: SetRun[] = parameterSets(settings.grid).map((params, i) => {
       const symbols: SymbolRun[] = inputs.map(({ symbol, events, spot, perp }) => {
-        const result =
-          events.length === 0
-            ? emptyResult()
-            : simulateArb({ events, spot, perp, params, costs: settings.costs, notional: settings.notional, leverage: settings.leverage, mmr: settings.mmr, endTime: to });
+        let result: SimulateArbResult;
+        try {
+          result =
+            events.length === 0
+              ? emptyResult()
+              : simulateArb({ events, spot, perp, params, costs: settings.costs, notional: settings.notional, leverage: settings.leverage, mmr: settings.mmr, endTime: to });
+        } catch (err) {
+          throw new Error(`${symbol}: ${err instanceof Error ? err.message : String(err)}`, { cause: err });
+        }
         return { symbol, result, capital, netApr: netApr(result.net, capital, days), inPair: result.daysInPair.dividedBy(days) };
       });
       return { id: i + 1, params, symbols, all: totals(symbols, days) };

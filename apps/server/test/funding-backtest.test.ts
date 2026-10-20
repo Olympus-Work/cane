@@ -2,7 +2,7 @@ import { Decimal } from 'decimal.js';
 import { describe, expect, it, vi } from 'vitest';
 import type { Candle, FundingEvent } from '@cane/core';
 import { BACKTEST_DEFAULTS, backtestSettings } from '../src/cli/funding-backtest.command.js';
-import { FundingBacktestService, parameterSets, type BacktestSettings, type FundingReader } from '../src/funding-backtest/funding-backtest.service.js';
+import { FundingBacktestService, MAX_PARAMETER_SETS, parameterSets, type BacktestSettings, type FundingReader } from '../src/funding-backtest/funding-backtest.service.js';
 import { formatBacktestReport, topSet } from '../src/funding-backtest/report.js';
 import type { KlineCache } from '../src/market-data/kline-cache.js';
 
@@ -67,6 +67,17 @@ describe('FundingBacktestService (plan F02)', () => {
     const result = await new FundingBacktestService(klines, reader).run(settings);
     expect(result.data.map((x) => x.gaps.map((g) => g.reason))).toEqual([[], ['irregular_interval']]);
     expect(result.data[0]).toMatchObject({ symbol: 'BTCUSDT', fundingRows: 90, spotCandles: DAYS * 24, perpCandles: DAYS * 24, missingCandles: 0 });
+  });
+
+  it('names the symbol when one cannot be simulated', async () => {
+    const bad: FundingReader = { range: async (symbol: string) => funding(symbol).map((e) => ({ ...e, intervalHours: symbol === 'ETHUSDT' ? 0 : 8 })) };
+    await expect(new FundingBacktestService(klines, bad).run(settings)).rejects.toThrow(/^ETHUSDT: fundingApr: interval must be > 0/);
+  });
+
+  it('refuses a grid above the set limit', async () => {
+    const n = Array.from({ length: MAX_PARAMETER_SETS + 1 }, (_, i) => i + 1);
+    expect(() => parameterSets({ ...settings.grid, entryAprMin: [d(0)], n })).toThrow(/1001 parameter sets/);
+    await expect(new FundingBacktestService(klines, reader).run({ ...settings, grid: { ...settings.grid, entryAprMin: [d(0)], n } })).rejects.toThrow(/parameter sets/);
   });
 
   it('rejects an empty window', async () => {

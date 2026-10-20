@@ -82,11 +82,10 @@ export function arbEntry(history: readonly FundingEvent[], params: ArbParams, co
 
 export type ArbExitReason = 'hold' | 'below_exit_apr' | 'negative_k';
 
-export interface ArbExitDecision {
-  close: boolean;
-  reason: ArbExitReason;
-  avgApr: Decimal | null;
-}
+/** Narrowed on `close`, so a closing decision always carries a closing reason. */
+export type ArbExitDecision =
+  | { close: true; reason: Exclude<ArbExitReason, 'hold'>; avgApr: Decimal | null }
+  | { close: false; reason: 'hold'; avgApr: Decimal | null };
 
 /** spec B14 for an open pair. `history` ends with the latest settled event. */
 export function arbExit(history: readonly FundingEvent[], params: ArbParams): ArbExitDecision {
@@ -277,7 +276,7 @@ export function simulateArb(input: SimulateArbInput): SimulateArbResult {
       }
       const exit = arbExit(history, params);
       if (exit.close && spotBar && perpBar) {
-        close(open, hour, spotBar.open, perpBar.open, exit.reason as Exclude<ArbExitReason, 'hold'>);
+        close(open, hour, spotBar.open, perpBar.open, exit.reason);
         open = null;
       }
       continue;
