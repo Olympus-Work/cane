@@ -82,19 +82,26 @@ describe('BinanceFundingOps.transfer', () => {
     };
     const { rest, calls } = fakeRest((c) => (Number(c.params.current) === 1 ? page1 : page2));
     const ops = new BinanceFundingOps(rest, true, noSleep);
-    const rec = await ops.queryTransfer({ type: TYPE, tranId: 9999999 });
+    const rec = await ops.queryTransfer({ type: TYPE, tranId: 9999999, from: 1544000000000 });
     expect(rec!.status).toBe('PENDING');
     const get = calls.find((c) => c.method === 'GET')!;
-    expect(get.params).toMatchObject({ type: 'MAIN_UMFUTURE', current: 1, size: 100 });
+    expect(get.params).toMatchObject({ type: 'MAIN_UMFUTURE', current: 1, size: 100, startTime: 1544000000000 });
     expect(get.params.currentPage).toBeUndefined();
     expect(get.params.limit).toBeUndefined();
+  });
+
+  it('queryTransfer requires from: the 7-day default window must not read as "not found" (re-review item 4)', async () => {
+    const { rest } = fakeRest(() => ({ total: 0, rows: [] }));
+    const ops = new BinanceFundingOps(rest, true, noSleep);
+    // @ts-expect-error from is required — no implicit 7-day default for a lost-transfer lookup
+    await expect(ops.queryTransfer({ type: TYPE, tranId: 42 })).rejects.toThrow(/from is required/);
   });
 
   it('stops paging when the server repeats page 1 (ignores current): no spin, still finds nothing', async () => {
     const repeated = { total: 200, rows: [{ asset: 'USDT', amount: '1', type: 'MAIN_UMFUTURE', status: 'CONFIRMED', tranId: 1, timestamp: 1 }] };
     const { rest, calls } = fakeRest(() => repeated);
     const ops = new BinanceFundingOps(rest, true, noSleep);
-    expect(await ops.queryTransfer({ type: TYPE, tranId: 42 })).toBeNull();
+    expect(await ops.queryTransfer({ type: TYPE, tranId: 42, from: 0 })).toBeNull();
     expect(calls.length).toBe(2); // one page, then the no-new-rows stop
   });
 
@@ -172,6 +179,31 @@ describe('BinanceFundingOps fee burn', () => {
     expect(posts.length).toBe(2);
     expect(posts[0]!.params.interestBNBBurn).toBeUndefined(); // left as-is
   });
+
+  it('assertFeeBurnEnabled THROWS when a burn does not stick — no silent success:true (re-review item 1)', async () => {
+    // Perp POST succeeds but GET still reports off: the old code claimed both on.
+    const { rest } = fakeRest((c) => {
+      const key = c.method + ' ' + c.path;
+      if (key === 'GET /sapi/v1/bnbBurn') return { spotBNBBurn: true, interestBNBBurn: false };
+      if (key === 'GET /fapi/v1/feeBurn') return { feeBurn: false };
+      if (key === 'POST /fapi/v1/feeBurn') return { code: 200, msg: 'success' };
+      return {};
+    });
+    const ops = new BinanceFundingOps(rest, true, noSleep);
+    await expect(ops.assertFeeBurnEnabled()).rejects.toThrow(/feeBurn still off/);
+  });
+
+  it('assertFeeBurnEnabled throws when the spot echo comes back off', async () => {
+    const { rest } = fakeRest((c) => {
+      const key = c.method + ' ' + c.path;
+      if (key === 'GET /sapi/v1/bnbBurn') return { spotBNBBurn: false, interestBNBBurn: false };
+      if (key === 'POST /sapi/v1/bnbBurn') return { spotBNBBurn: false, interestBNBBurn: false }; // ignored
+      if (key === 'GET /fapi/v1/feeBurn') return { feeBurn: true };
+      return {};
+    });
+    const ops = new BinanceFundingOps(rest, true, noSleep);
+    await expect(ops.assertFeeBurnEnabled()).rejects.toThrow(/spotBNBBurn still off/);
+  });
 });
 
 describe('BinanceFundingOps.income', () => {
@@ -196,6 +228,24 @@ describe('BinanceFundingOps.income', () => {
     tranId: 9689322393,
     tradeId: '2059192',
   };
+
+  it('keeps rows that share a tranId across incomeTypes — the key is type:tranId (re-review item 1)', async () => {
+    const shared = { ...docRowCommission, tranId: 5, time: 1570636800000 };
+    const { rest } = fakeRest((c) => (c.params.incomeType === 'FUNDING_FEE' ? [{ ...shared, incomeType: 'FUNDING_FEE', income: '0.9', info: '' }] : [shared]));
+    const ops = new BinanceFundingOps(rest, true, noSleep, () => 1570636800000);
+    const rows = await ops.income({ incomeTypes: ['FUNDING_FEE', 'COMMISSION'], from: 1570636700000, to: 1570636800000 });
+    expect(rows.length).toBe(2); // one FUNDING_FEE + one COMMISSION, both tranId 5
+    expect(new Set(rows.map((r) => r.incomeType))).toEqual(new Set(['FUNDING_FEE', 'COMMISSION']));
+  });
+
+  it('stops when the server ignores page and repeats the same full page (re-review item 2)', async () => {
+    const full = Array.from({ length: 1000 }, (_, i) => ({ ...docRowCommission, tranId: i, time: 1570636800000 + i }));
+    const { rest, calls } = fakeRest(() => full); // ignores `page` entirely
+    const ops = new BinanceFundingOps(rest, true, noSleep, () => 1570636800000);
+    const rows = await ops.income({ incomeTypes: ['COMMISSION'], from: 1570636000000, to: 1570636800000 });
+    expect(rows.length).toBe(1000);
+    expect(calls.length).toBe(2); // one page, then the no-new-rows stop — not 200 requests
+  });
 
   it('parses the documented row shape (income field; symbol/tradeId may be empty)', async () => {
     const { rest } = fakeRest(() => [docRowTransfer, docRowCommission]);
