@@ -190,6 +190,12 @@ Money in USDT, 2 decimals; rates in %.
   this PR. The owner picks the set; its `entry_apr_min`, `exit_apr_min`, N, K and
   `max_breakeven_days` go into spec.md (B4, B5, B14, B48) and lose their **(proposed)**
   tag. The L1/L2/L3 values follow from the margin stress table.
+- **AC2 as actually produced (PR #42, deviation):** the committed report came from
+  `apps/server/tools/one-off-funding-backtest.mjs`, which runs the same service/rules
+  but reads funding from the public `/fapi/v1/fundingRate` through `FundingClient` +
+  `withIntervals` (the F01 backfill path) because the deployment DB was not reachable
+  from the agent box. The `REPLAY_DATABASE_URL` run above is still pending as the
+  confirmation; the runner is single-use and is removed after that DB-backed rerun.
 
 ### Not in F02
 - Scanner score weights, liquidity thresholds and `min_consistency` (spec Open
