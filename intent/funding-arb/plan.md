@@ -198,6 +198,49 @@ Money in USDT, 2 decimals; rates in %.
 - Execution choices (leg order, maker timeout, retries): testnet in F05.
 - Simulating the L2 rebalance or the BNB price risk of the buffer.
 
+## F03: Binance adapter extensions for funding arb
+Spec: B17 (transfer), B22 (fee-burn assert), B23–B25 (BNB buffer top-up), B13/B26
+(income accounting). Ticket: z8p2987e25. Money-affecting: yes (transfer, redeem).
+
+### What it builds
+`BinanceFundingOps` (`apps/server/src/binance/funding-ops.ts`) on the S05
+`BinanceRestClient` — an adapter only, no callers yet:
+1. Universal transfer `POST /sapi/v1/asset/transfer` (the six SPOT/UMFUTURE/FUNDING
+   types) + history `GET` paging by the documented `current`/`size`. The endpoint has
+   no client-tran-id parameter: an unclear outcome (network loss / `UnknownOutcomeError`)
+   is resolved with `findTransfers` (type+asset+amount+time); a transfer whose outcome
+   is unknown is NEVER auto-resent.
+2. Fee burn: `GET/POST /sapi/v1/bnbBurn` (spot) and `GET/POST /fapi/v1/feeBurn`
+   (perp; the POST answers `{code,msg}` so the new state is confirmed with GET).
+   `assertFeeBurnEnabled()` implements the B22 startup assert and reports what changed
+   for the audit event.
+3. Income history `GET /fapi/v1/income` (B13/B26): per incomeType, month-chunked,
+   paged by `page`/`limit` (max 1000), deduped on `tranId`. Binance keeps only the
+   last 3 months — a `from` older than that throws instead of a silent partial history.
+4. Simple Earn flexible position + redeem (`/sapi/v1/simple-earn/flexible/*`) for the
+   B24 BNB refill. Redeem sends `redeemAll` or an explicit `amount` (docs: amount is
+   mandatory without redeemAll) and returns `redeemId`.
+5. Money guard: all write methods throw `MoneyOpsDisabledError` when constructed
+   disabled, mirroring `BinanceTrading.tradingEnabled`. Future callers wire it to the
+   same flag as `TRADING_ENABLED` (review item 9).
+
+### Proof (F03)
+- `test/funding-ops.test.ts`: mocks copied verbatim from developers.binance.com
+  example payloads (the first review caught a suite that shared the adapter's wrong
+  shapes); covers the guard with zero requests, param validation, `once` semantics
+  incl. the unresolved-transfer case, B22 both-changed/idle, income paging+dedupe+
+  lookback rejection, earn `totalAmount`/`current` paging and both redeem modes.
+- `test/integration/funding-ops-demo.test.ts`: Demo run (skipIf no keys,
+  `test:integration`, not CI) for `/fapi/v1/income` and the burn reads. Demo does not
+  serve universal transfer or Simple Earn — those paths are the mocked cases only.
+
+### Recorded decision (PR #43 review item 8)
+The spec is still draft (F02 produced no passing set), and the plan gate names F03 as
+an order-placing step. It is not: this adapter places no orders and has no callers;
+the ticket itself scopes it to wallet/fee/income plumbing, and the live wiring starts
+no earlier than F07/F08 — by which time the spec will carry the owner's F02 decision.
+Starting the adapter now is the owner's call, recorded here.
+
 ## Risks
 - `/fapi/v1/fundingRate` shares a 500 requests / 5 min / IP limit. A 2-year backfill is
   ~3 pages per symbol; each settlement costs 1 `fundingRate` + 1 `premiumIndex` request
