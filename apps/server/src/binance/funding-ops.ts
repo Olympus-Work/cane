@@ -154,8 +154,14 @@ export class BinanceFundingOps {
     return { tranId: num(body.tranId, 'transfer tranId') };
   }
 
-  /** GET /sapi/v1/asset/transfer: the record for `tranId`, or null while Binance has not indexed it. */
-  async queryTransfer(args: { type: UniversalTransferType; tranId: number; from?: number; to?: number }): Promise<TransferRecord | null> {
+  /**
+   * GET /sapi/v1/asset/transfer: the record for `tranId`, or null while Binance
+   * has not indexed it. `from` is required because the endpoint defaults to the
+   * last 7 days (docs) — a caller resolving an older lost transfer must widen the
+   * window itself, never silently read "not in the 7-day default" as "not found".
+   */
+  async queryTransfer(args: { type: UniversalTransferType; tranId: number; from: number; to?: number }): Promise<TransferRecord | null> {
+    if (!Number.isFinite(args.from)) throw new Error(`queryTransfer: from is required — the endpoint defaults to the last 7 days (docs), so an implicit window must never read as "not found" for a lost transfer`);
     const rows = await this.transferHistory(args);
     return rows.find((r) => r.tranId === args.tranId) ?? null;
   }
@@ -230,33 +236,41 @@ export class BinanceFundingOps {
   }
 
   /**
-   * B22 startup assert: both burns must be on. Enables what is off and reports
-   * what changed so the caller can write the audit event.
+   * B22 startup assert: both burns must be on. Enables what is off, uses the
+   * **confirmed** value of each toggle (the perp POST is confirmed by GET, and the
+   * spot POST echoes the state), and throws when a burn is still off after enabling
+   * — so a caller never logs a B22 success the exchange does not have.
    */
   async assertFeeBurnEnabled(): Promise<{ spotBNBBurn: boolean; feeBurn: boolean; changedSpot: boolean; changedPerp: boolean }> {
     const spot = await this.getBnbBurn();
+    let spotBNBBurn = spot.spotBNBBurn;
     let changedSpot = false;
-    if (!spot.spotBNBBurn) {
-      await this.setBnbBurn({ spotBNBBurn: true });
+    if (!spotBNBBurn) {
+      spotBNBBurn = (await this.setBnbBurn({ spotBNBBurn: true })).spotBNBBurn;
+      if (!spotBNBBurn) throw new Error('assertFeeBurnEnabled: spotBNBBurn still off after enabling');
       changedSpot = true;
     }
-    const feeBurn = await this.getFeeBurn();
+    let feeBurn = await this.getFeeBurn();
     let changedPerp = false;
     if (!feeBurn) {
-      await this.setFeeBurn(true);
+      feeBurn = await this.setFeeBurn(true);
+      if (!feeBurn) throw new Error('assertFeeBurnEnabled: feeBurn still off after enabling');
       changedPerp = true;
     }
-    return { spotBNBBurn: true, feeBurn: true, changedSpot, changedPerp };
+    return { spotBNBBurn, feeBurn, changedSpot, changedPerp };
   }
 
   // --- Income history (B13, B26) ---
 
   /**
    * GET /fapi/v1/income per incomeType over `[from, to]`. Month-chunked so each
-   * query is bounded, paged with the documented `page`/`limit` (max 1000), and
-   * deduped on `tranId` (unique per incomeType, docs). Binance keeps only the
-   * last three months, so a `from` older than that throws instead of answering a
-   * silent partial history. Sorted ascending by time, then `tranId`.
+   * query is bounded, paged with `page`/`limit` (max 1000; `page` is listed on the
+   * current Get Income History parameters table), and deduped on
+   * `${incomeType}:${tranId}` — `tranId` is unique only within one incomeType (docs),
+   * and the dedupe also doubles as the paging stop: if a server ignored `page`, the
+   * repeated rows add nothing and the loop ends. Binance keeps only the last three
+   * months, so a `from` older than that throws instead of answering a silent partial
+   * history. Sorted ascending by time, then tranId.
    */
   async income(args: { symbol?: string; incomeTypes: readonly string[]; from: number; to: number }): Promise<IncomeRecord[]> {
     if (args.incomeTypes.length === 0) throw new Error('income: no incomeType given');
@@ -265,7 +279,7 @@ export class BinanceFundingOps {
       throw new Error(`income: from ${new Date(args.from).toISOString()} is older than the 3-month history Binance keeps`);
     }
     const out: IncomeRecord[] = [];
-    const seen = new Set<number>();
+    const seen = new Set<string>();
     for (const incomeType of args.incomeTypes) {
       for (let windowStart = args.from; windowStart <= args.to; windowStart += INCOME_WINDOW_MS) {
         const windowEnd = Math.min(windowStart + INCOME_WINDOW_MS - 1, args.to);
@@ -274,13 +288,16 @@ export class BinanceFundingOps {
           if (args.symbol !== undefined) params.symbol = args.symbol;
           const rows = await this.rest.request('futures', 'GET', '/fapi/v1/income', params, 'signed', 'safe');
           if (!Array.isArray(rows)) throw new Error(`Invalid Binance income response: expected an array, got ${JSON.stringify(rows)}`);
+          let added = 0;
           for (const raw of rows) {
             const record = this.parseIncomeRow(obj(raw, 'income row'));
-            if (seen.has(record.tranId)) continue;
-            seen.add(record.tranId);
+            const key = `${record.incomeType}:${record.tranId}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
             out.push(record);
+            added++;
           }
-          if (rows.length < INCOME_PAGE) break;
+          if (added === 0 || rows.length < INCOME_PAGE) break;
           await this.sleep(50);
         }
       }
