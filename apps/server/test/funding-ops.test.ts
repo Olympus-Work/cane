@@ -238,13 +238,34 @@ describe('BinanceFundingOps.income', () => {
     expect(new Set(rows.map((r) => r.incomeType))).toEqual(new Set(['FUNDING_FEE', 'COMMISSION']));
   });
 
+  it('pages a server that ignores page by moving the time cursor: 1500 rows, all returned (re-review item)', async () => {
+    // Honours startTime/endTime/limit only (the reviewer's simulation shape).
+    const universe = Array.from({ length: 1500 }, (_, i) => ({ ...docRowCommission, tranId: 100 + i, time: 1570636800000 + i }));
+    const { rest, calls } = fakeRest((c) => {
+      const start = Number(c.params.startTime);
+      const end = Number(c.params.endTime);
+      return universe.filter((r) => r.time >= start && r.time <= end).slice(0, 1000);
+    });
+    const ops = new BinanceFundingOps(rest, true, noSleep, () => 1570636800000);
+    const rows = await ops.income({ incomeTypes: ['COMMISSION'], from: 1570636800000, to: 1570636801499 });
+    expect(rows.length).toBe(1500); // no silent truncation at 1000
+    expect(calls.length).toBe(2); // page 1 full (cursor moves to last time), page 2 partial (501, incl. the boundary dup) -> stop
+    expect(calls[1]!.params.startTime).toBe(1570636800999); // last row time, inclusive
+  });
+
+  it('throws instead of truncating when >1000 rows share one timestamp (cursor cannot advance)', async () => {
+    const sameTime = Array.from({ length: 1000 }, (_, i) => ({ ...docRowCommission, tranId: i, time: 1570636800000 }));
+    const { rest } = fakeRest(() => sameTime);
+    const ops = new BinanceFundingOps(rest, true, noSleep, () => 1570636800000);
+    await expect(ops.income({ incomeTypes: ['COMMISSION'], from: 1570636800000, to: 1570636801000 })).rejects.toThrow(/paging stalled/);
+  });
+
   it('stops when the server ignores page and repeats the same full page (re-review item 2)', async () => {
     const full = Array.from({ length: 1000 }, (_, i) => ({ ...docRowCommission, tranId: i, time: 1570636800000 + i }));
-    const { rest, calls } = fakeRest(() => full); // ignores `page` entirely
+    const { rest, calls } = fakeRest(() => full); // ignores page AND the time window
     const ops = new BinanceFundingOps(rest, true, noSleep, () => 1570636800000);
-    const rows = await ops.income({ incomeTypes: ['COMMISSION'], from: 1570636000000, to: 1570636800000 });
-    expect(rows.length).toBe(1000);
-    expect(calls.length).toBe(2); // one page, then the no-new-rows stop — not 200 requests
+    await expect(ops.income({ incomeTypes: ['COMMISSION'], from: 1570636000000, to: 1570636800000 })).rejects.toThrow(/paging stalled/);
+    expect(calls.length).toBe(2); // one page, then the stall throw — not an endless loop
   });
 
   it('parses the documented row shape (income field; symbol/tradeId may be empty)', async () => {

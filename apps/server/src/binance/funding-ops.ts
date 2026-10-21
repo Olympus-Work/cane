@@ -264,12 +264,15 @@ export class BinanceFundingOps {
 
   /**
    * GET /fapi/v1/income per incomeType over `[from, to]`. Month-chunked so each
-   * query is bounded, paged with `page`/`limit` (max 1000; `page` is listed on the
-   * current Get Income History parameters table), and deduped on
-   * `${incomeType}:${tranId}` — `tranId` is unique only within one incomeType (docs),
-   * and the dedupe also doubles as the paging stop: if a server ignored `page`, the
-   * repeated rows add nothing and the loop ends. Binance keeps only the last three
-   * months, so a `from` older than that throws instead of answering a silent partial
+   * query is bounded and paged **by time, not by `page`**: the live docs table
+   * disagreement in review (and the fact that a `page`-ignoring server would
+   * otherwise truncate silently) means the adapter refuses to depend on it.
+   * A full page moves `startTime` to the last row's `time` (inclusive) and the
+   * `${incomeType}:${tranId}` dedupe absorbs the boundary row — `tranId` is only
+   * unique within one incomeType (docs). If a full page adds NO new rows the
+   * cursor cannot advance (>1000 rows sharing one timestamp): throw rather than
+   * return a history that looks complete. Binance keeps only the last three
+   * months, so a `from` older than that throws instead of a silent partial
    * history. Sorted ascending by time, then tranId.
    */
   async income(args: { symbol?: string; incomeTypes: readonly string[]; from: number; to: number }): Promise<IncomeRecord[]> {
@@ -283,21 +286,28 @@ export class BinanceFundingOps {
     for (const incomeType of args.incomeTypes) {
       for (let windowStart = args.from; windowStart <= args.to; windowStart += INCOME_WINDOW_MS) {
         const windowEnd = Math.min(windowStart + INCOME_WINDOW_MS - 1, args.to);
-        for (let page = 1; ; page++) {
-          const params: Params = { incomeType, startTime: windowStart, endTime: windowEnd, page, limit: INCOME_PAGE };
+        let cursor = windowStart;
+        for (;;) {
+          const params: Params = { incomeType, startTime: cursor, endTime: windowEnd, limit: INCOME_PAGE };
           if (args.symbol !== undefined) params.symbol = args.symbol;
           const rows = await this.rest.request('futures', 'GET', '/fapi/v1/income', params, 'signed', 'safe');
           if (!Array.isArray(rows)) throw new Error(`Invalid Binance income response: expected an array, got ${JSON.stringify(rows)}`);
           let added = 0;
+          let lastTime = cursor;
           for (const raw of rows) {
             const record = this.parseIncomeRow(obj(raw, 'income row'));
+            lastTime = Math.max(lastTime, record.time);
             const key = `${record.incomeType}:${record.tranId}`;
             if (seen.has(key)) continue;
             seen.add(key);
             out.push(record);
             added++;
           }
-          if (added === 0 || rows.length < INCOME_PAGE) break;
+          if (rows.length < INCOME_PAGE) break; // last page of this window
+          if (added === 0) {
+            throw new Error(`income: paging stalled at ${new Date(lastTime).toISOString()} for ${incomeType} — a full page added no new rows (>1000 rows share one timestamp); refusing to return a truncated history`);
+          }
+          cursor = lastTime; // inclusive; the dedupe absorbs the boundary row
           await this.sleep(50);
         }
       }
