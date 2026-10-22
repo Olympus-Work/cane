@@ -116,7 +116,7 @@ export class FundingCheckCommand extends FundingCommand {
 
   override async run(_args: string[], options: FundingOptions): Promise<void> {
     const now = Date.now();
-    const { targets, noSpot } = await this.targets(options, now);
+    const { targets, noSpot, unsupported } = await this.targets(options, now);
     const withGaps: string[] = [];
     const listedLate: string[] = [];
     for (const t of targets) {
@@ -145,7 +145,7 @@ export class FundingCheckCommand extends FundingCommand {
       covered: targets.length - withGaps.length,
       withGaps,
       listedInsideWindow: listedLate,
-      ...(options.candidates ? { excludedNoSpot: { count: noSpot.length, symbols: noSpot } } : {}),
+      ...(options.candidates ? { excludedNoSpot: { count: noSpot.length, symbols: noSpot }, excludedUnsupported: unsupported } : {}),
     };
     process.stdout.write(`${JSON.stringify({ summary })}\n`);
     if (withGaps.length > 0) process.exitCode = 1;

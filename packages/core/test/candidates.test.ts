@@ -55,6 +55,25 @@ describe('fundingCandidates (plan F01b, spec B28)', () => {
     expect(list.noSpot).toEqual(['1000PEPEUSDT', '2000SCRTUSDT']);
   });
 
+  it('puts a non-ASCII perp into unsupported even when its spot exists, not into candidates or noSpot', () => {
+    const list = fundingCandidates([perp('币安人生USDT')], new Set(['币安人生USDT']));
+    expect(list.candidates).toEqual([]);
+    expect(list.noSpot).toEqual([]);
+    expect(list.unsupported).toEqual(['币安人生USDT']);
+  });
+
+  it('puts a lowercase perp into unsupported', () => {
+    const list = fundingCandidates([perp('btcusdt')], new Set(['btcusdt']));
+    expect(list.candidates).toEqual([]);
+    expect(list.noSpot).toEqual([]);
+    expect(list.unsupported).toEqual(['btcusdt']);
+  });
+
+  it('sorts unsupported by symbol', () => {
+    const list = fundingCandidates([perp('币安人生USDT'), perp('btcusdt'), perp('abcusdt')], new Set());
+    expect(list.unsupported).toEqual(['abcusdt', 'btcusdt', '币安人生USDT']);
+  });
+
   it('keeps the first of duplicate symbols', () => {
     const list = fundingCandidates(
       [perp('BTCUSDT', { onboardDate: T0 }), perp('BTCUSDT', { onboardDate: T0 + 1 }), perp('BTCUSDT')],

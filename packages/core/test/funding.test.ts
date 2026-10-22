@@ -128,4 +128,48 @@ describe('fundingGaps (plan F01 gap rule)', () => {
   it('ignores ms offsets when checking', () => {
     expect(fundingGaps(withIntervals(settled(every(8, 5), 5)), at(0), at(36))).toEqual([]);
   });
+
+  // Aligned interval changes (plan "Gap rule", F01b): a short step onto a longer
+  // interval's grid is not a gap. Real dates, as Binance reported them for ARKUSDT.
+  const d8 = (h: number) => Date.UTC(2026, 9, 8, h); // 2026-10-08 UTC
+  const d9 = (h: number) => Date.UTC(2026, 9, 9, h); // 2026-10-09 UTC
+  const HALF_HOUR = 30 * 60 * 1000;
+  const realEvents = (times: number[]): FundingEvent[] =>
+    withIntervals(times.map((fundingTime) => ({ fundingTime, rate: new Decimal('0.0001'), markPrice: null })));
+
+  it('accepts the ARKUSDT 1h -> 4h change: 17:00 -> 20:00 is 3h but lands on the 4h grid', () => {
+    const times = [d8(12), d8(13), d8(14), d8(15), d8(16), d8(17), d8(20), d9(0), d9(4), d9(8)];
+    expect(fundingGaps(realEvents(times), d8(12), d9(8) + HALF_HOUR)).toEqual([]);
+  });
+
+  it('accepts the aligned 3h step when it is the last step (events end at 20:00)', () => {
+    const times = [d8(12), d8(13), d8(14), d8(15), d8(16), d8(17), d8(20)];
+    expect(fundingGaps(realEvents(times), d8(12), d8(20) + HALF_HOUR)).toEqual([]);
+  });
+
+  it('flags a 3h step whose later event is off the 4h grid (18:00 -> 21:00)', () => {
+    const times = [d8(12), d8(13), d8(14), d8(15), d8(16), d8(17), d8(18), d8(21), d9(1), d9(5)];
+    expect(fundingGaps(realEvents(times), d8(12), d9(5) + HALF_HOUR)).toEqual([
+      { reason: 'irregular_interval', after: d8(18), before: d8(21), hours: 3 },
+    ]);
+  });
+
+  it('flags an on-grid 3h step followed by a 1h step instead of the 4h interval', () => {
+    const times = [d8(12), d8(13), d8(14), d8(15), d8(16), d8(17), d8(20), d8(21)];
+    expect(fundingGaps(realEvents(times), d8(12), d8(21) + HALF_HOUR)).toEqual([
+      { reason: 'irregular_interval', after: d8(17), before: d8(20), hours: 3 },
+    ]);
+  });
+
+  it('accepts a 6h step onto the 8h grid (10:00 -> 16:00, then 8h steps)', () => {
+    const times = [d8(2), d8(6), d8(10), d8(16), d9(0), d9(8)];
+    expect(fundingGaps(realEvents(times), d8(2), d9(8) + HALF_HOUR)).toEqual([]);
+  });
+
+  it('flags a 5h step off the 8h grid (04:00 -> 09:00)', () => {
+    const times = [d8(0), d8(4), d8(9), d8(17), d9(1)];
+    expect(fundingGaps(realEvents(times), d8(0), d9(1) + HALF_HOUR)).toEqual([
+      { reason: 'irregular_interval', after: d8(4), before: d8(9), hours: 5 },
+    ]);
+  });
 });

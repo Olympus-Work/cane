@@ -31,6 +31,8 @@ export interface TargetList {
   targets: FundingTarget[];
   /** TRADING USDT perpetuals left out for having no spot market under their symbol (empty when candidates are off). */
   noSpot: string[];
+  /** Candidates whose symbol is outside the Binance ASCII format; not synced. */
+  unsupported: string[];
 }
 
 /**
@@ -48,14 +50,14 @@ export class FundingCandidateSource {
     if (!opts.candidates) {
       const days = opts.depthDays?.whitelist ?? WHITELIST_DEPTH_DAYS;
       const targets = [...whitelist].map((symbol) => ({ symbol, from: now - days * FUNDING_DAY_MS, depthDays: days, listedAt: null }));
-      return { targets, noSpot: [] };
+      return { targets, noSpot: [], unsupported: [] };
     }
     const { list, onboard } = await this.listings(now);
     const symbols = new Set([...whitelist, ...list.candidates.map((c) => c.symbol)]);
     const targets = [...symbols]
       .sort()
       .map((symbol) => ({ symbol, ...fundingDepth(symbol, whitelist, onboard.get(symbol) ?? null, now, opts.depthDays) }));
-    return { targets, noSpot: list.noSpot };
+    return { targets, noSpot: list.noSpot, unsupported: list.unsupported };
   }
 
   private async listings(now: number): Promise<{ list: CandidateList; onboard: Map<string, number> }> {
