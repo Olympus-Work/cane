@@ -111,7 +111,7 @@ F01b now. F01b places no orders and reads only public endpoints. Its data is the
 F14 needs, and it lets a later F02 rerun include more coins than BTC and ETH.
 
 ### What it builds
-1. **Core (`packages/core/src/funding-candidates.ts`), pure functions:**
+1. **Core (`packages/core/src/funding/candidates.ts`), pure functions:**
    - `fundingCandidates(perps, spotSymbols)`: a candidate is a USDⓈ-M perp with
      `contractType` PERPETUAL, `status` TRADING and quote USDT, whose symbol is also a
      TRADING spot symbol. It returns the candidates (symbol, `onboardDate`) and the
