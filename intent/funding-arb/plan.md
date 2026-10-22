@@ -163,7 +163,9 @@ F14 needs, and it lets a later F02 rerun include more coins than BTC and ETH.
    - Off by default. Symbols = `FUNDING_SYNC_SYMBOLS` (depth 730 days), plus every
      candidate (depth 30 days) when `FUNDING_SYNC_CANDIDATES=true`. Both unset = off.
      Every merge redeploys the live S-01 server, so the owner turns candidates on as part
-     of the owner run.
+     of the owner run. An invalid value in either variable (e.g. `FUNDING_SYNC_CANDIDATES=1`)
+     logs an error and leaves funding sync off. It never stops the server boot, because
+     that would also stop S-01 (PR #44 review).
    - The candidate list is refreshed once an hour. A symbol that stops being a candidate
      (delisted, or spot removed) stops syncing; its stored rows stay.
    - A symbol is synced with the per-symbol `sync` the first time the process sees it
