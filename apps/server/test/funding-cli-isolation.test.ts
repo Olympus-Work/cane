@@ -22,7 +22,7 @@ describe('funding CLI isolation', () => {
   beforeAll(async () => {
     // The pool connects lazily: nothing reaches this URL during the test.
     process.env.DATABASE_URL = 'postgres://nobody@127.0.0.1:1/none';
-    const moduleRef = await Test.createTestingModule({ imports: [FundingCliModule] })
+    const moduleRef = await Test.createTestingModule({ imports: [FundingCliModule.withWhitelist('')] })
       .overrideProvider(FETCH_FN)
       .useValue(() => Promise.reject(new Error('network disabled in test')))
       .compile();

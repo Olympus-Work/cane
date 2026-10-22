@@ -146,6 +146,13 @@ There is one Railway service plus the Postgres add-on. The server also serves th
    ```
    `check` prints one JSON line per symbol (rows, first/last event, interval changes, gaps) and exits 1 if any gap is found. To keep the table current, set `FUNDING_SYNC_SYMBOLS=BTCUSDT,ETHUSDT` and redeploy: the server then syncs right after each funding settlement (log: `live funding sync after each settlement`). Unset means off.
 
+   **All scanner candidates (F01b).** Every USDT perpetual that also has a spot market under the same symbol: 30 days each, the whitelist (`--symbols`, else `FUNDING_SYNC_SYMBOLS`) 730 days. The requests are paced (about 430 per 5 minutes), so the first backfill takes several minutes:
+   ```sh
+   node apps/server/dist/funding-cli.js backfill --candidates
+   node apps/server/dist/funding-cli.js check --candidates
+   ```
+   `check` ends with a `summary` line: symbol count, symbols with gaps, symbols listed inside their window (not a gap) and the perps left out for having no spot market. To keep them current, set `FUNDING_SYNC_CANDIDATES=true` and redeploy. Do not run `backfill` while that is on, because both share the IP's `fundingRate` limit.
+
 10. **Funding-arb backtest (F02).** Reads `funding_rate` through the read-only `cane_replay` user (`REPLAY_DATABASE_URL`, step 8) and public 1h klines; never loads trading or keys. After step 9's `check` shows no gaps, run it from the service Console:
     ```sh
     node apps/server/dist/funding-backtest-cli.js --out /tmp/backtest-report.md && cat /tmp/backtest-report.md

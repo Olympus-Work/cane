@@ -8,8 +8,11 @@ export type KlineMarket = 'spot' | 'futures';
 /** Kline intervals market data serves: the strategy timeframes plus `1h` for the funding-arb backtest (plan F02). */
 export type KlineInterval = Timeframe | '1h';
 
+/** Public spot REST host (klines here; exchangeInfo for the funding candidates, plan F01b). */
+export const SPOT_API_BASE = 'https://api.binance.com';
+
 export const KLINES_URL: Record<KlineMarket, string> = {
-  spot: 'https://api.binance.com/api/v3/klines',
+  spot: `${SPOT_API_BASE}/api/v3/klines`,
   futures: 'https://fapi.binance.com/fapi/v1/klines',
 };
 

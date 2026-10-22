@@ -103,6 +103,17 @@ export {
   type SettledFunding,
 } from './funding/funding.js';
 export {
+  CANDIDATE_DEPTH_DAYS,
+  FUNDING_DAY_MS,
+  WHITELIST_DEPTH_DAYS,
+  fundingCandidates,
+  fundingDepth,
+  type CandidateList,
+  type FundingCandidate,
+  type FundingDepth,
+  type PerpListing,
+} from './funding/candidates.js';
+export {
   ARB_NET_APR_HURDLE,
   arbEntry,
   arbExit,

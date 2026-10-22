@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { FUNDING_PAGE_LIMIT, FundingClient, parseFundingRow } from '../src/funding/funding.client.js';
 import type { FetchFn } from '../src/market-data/klines.client.js';
@@ -132,5 +133,147 @@ describe('FundingClient.premiumIndex and fundingInfo', () => {
   it('rejects a malformed fundingInfo row', async () => {
     const { client } = makeClient(vi.fn().mockResolvedValue(makeResponse([{ symbol: 'X' }])));
     await expect(client.fundingInfo()).rejects.toThrow(/Invalid fundingInfo row/);
+  });
+});
+
+/** A recorded Binance response body, parsed fresh so a test may edit it. */
+function fixture(name: string): unknown {
+  return JSON.parse(readFileSync(new URL(`./fixtures/binance/${name}`, import.meta.url), 'utf8'));
+}
+
+/** Shape of one `/fapi/v1/premiumIndex` array row (Binance docs, 2026). */
+function premiumRow(symbol: string, nextFundingTime = T0 + H8) {
+  return {
+    symbol,
+    markPrice: '64000.50000000',
+    indexPrice: '64010.00000000',
+    estimatedSettlePrice: '64005.00000000',
+    lastFundingRate: '0.00012000',
+    interestRate: '0.00010000',
+    nextFundingTime,
+    time: T0 + 1000,
+  };
+}
+
+describe('FundingClient.perpListings', () => {
+  it('parses every symbol of the recorded futures exchangeInfo', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(makeResponse(fixture('futures-exchange-info-candidates.json')));
+    const { client } = makeClient(fetchFn);
+
+    const listings = await client.perpListings();
+
+    expect(listings).toHaveLength(8);
+    const btc = listings.find((l) => l.symbol === 'BTCUSDT')!;
+    expect(btc.contractType).toBe('PERPETUAL');
+    expect(btc.status).toBe('TRADING');
+    expect(btc.quoteAsset).toBe('USDT');
+    expect(Number.isInteger(btc.onboardDate)).toBe(true);
+    for (const l of listings) expect(Number.isInteger(l.onboardDate)).toBe(true);
+    expect(fetchFn.mock.calls[0]![0]).toBe('https://fapi.binance.com/fapi/v1/exchangeInfo');
+  });
+
+  it('throws on a body without a symbols array', async () => {
+    const { client } = makeClient(vi.fn().mockResolvedValue(makeResponse({ timezone: 'UTC', serverTime: T0 })));
+    await expect(client.perpListings()).rejects.toThrow(/no symbols array/);
+  });
+});
+
+describe('FundingClient.spotSymbols', () => {
+  it('collects the TRADING spot symbols and leaves other statuses out', async () => {
+    const body = fixture('spot-exchange-info-trading.json') as { symbols: unknown[] };
+    body.symbols.push({ symbol: 'LUNAUSDT', status: 'BREAK' });
+    const fetchFn = vi.fn().mockResolvedValue(makeResponse(body));
+    const { client } = makeClient(fetchFn);
+
+    const symbols = await client.spotSymbols();
+
+    expect(symbols).toBeInstanceOf(Set);
+    expect([...symbols].sort()).toEqual(['BTCUSDT', 'ETHUSDT', 'PEPEUSDT']);
+    expect(symbols.has('LUNAUSDT')).toBe(false);
+    expect(fetchFn.mock.calls[0]![0]).toBe('https://api.binance.com/api/v3/exchangeInfo?symbolStatus=TRADING');
+  });
+});
+
+describe('FundingClient.premiumIndexAll', () => {
+  it('parses an array body without a query string', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(makeResponse([premiumRow('BTCUSDT'), premiumRow('ETHUSDT', T0 + 2 * H8)]));
+    const { client } = makeClient(fetchFn);
+
+    const rows = await client.premiumIndexAll();
+
+    expect(rows.map((r) => r.symbol)).toEqual(['BTCUSDT', 'ETHUSDT']);
+    expect(rows[0]!.markPrice.toString()).toBe('64000.5');
+    expect(rows[0]!.predictedRate.toString()).toBe('0.00012');
+    expect(rows[1]!.nextFundingTime).toBe(T0 + 2 * H8);
+    expect(rows[0]!.time).toBe(T0 + 1000);
+    expect(fetchFn.mock.calls[0]![0]).toBe('https://fapi.binance.com/fapi/v1/premiumIndex');
+  });
+
+  it('rejects a non-array body', async () => {
+    const { client } = makeClient(vi.fn().mockResolvedValue(makeResponse(premiumRow('BTCUSDT'))));
+    await expect(client.premiumIndexAll()).rejects.toThrow(/expected an array/);
+  });
+});
+
+describe('FundingClient.settledAt', () => {
+  const slot = Date.UTC(2024, 0, 1, 8);
+
+  it('asks for the window around the slot, without a symbol', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(
+      makeResponse([
+        { ...row(slot), symbol: 'BTCUSDT' },
+        { ...row(slot), symbol: 'ETHUSDT', fundingRate: '-0.00020000' },
+      ]),
+    );
+    const { client } = makeClient(fetchFn);
+
+    const rows = await client.settledAt(slot);
+
+    expect(fetchFn.mock.calls[0]![0]).toBe(
+      `https://fapi.binance.com/fapi/v1/fundingRate?startTime=${slot - 300000}&endTime=${slot + 300000}&limit=1000`,
+    );
+    expect(rows!.map((r) => [r.symbol, r.fundingTime])).toEqual([
+      ['BTCUSDT', slot],
+      ['ETHUSDT', slot],
+    ]);
+    expect(rows![1]!.rate.toString()).toBe('-0.0002');
+  });
+
+  it('returns null when the page is full: it may be truncated', async () => {
+    const fullPage = Array.from({ length: FUNDING_PAGE_LIMIT }, (_, i) => ({ ...row(slot), symbol: `S${i}USDT` }));
+    const { client } = makeClient(vi.fn().mockResolvedValue(makeResponse(fullPage)));
+    expect(await client.settledAt(slot)).toBeNull();
+  });
+});
+
+describe('FundingClient pacing', () => {
+  it('sleeps between two requests when a pace is set', async () => {
+    const order: string[] = [];
+    const fetchFn = vi.fn(async () => {
+      order.push('fetch');
+      return makeResponse(premiumRow('BTCUSDT'));
+    });
+    const sleep = vi.fn(async (_ms: number) => {
+      order.push('sleep');
+    });
+    const client = new FundingClient(fetchFn as unknown as FetchFn, sleep, 700);
+
+    await client.premiumIndex('BTCUSDT');
+    await client.premiumIndex('BTCUSDT');
+
+    expect(order).toEqual(['fetch', 'sleep', 'fetch']);
+    expect(sleep).toHaveBeenCalledTimes(1);
+    const waited = sleep.mock.calls[0]![0];
+    expect(waited).toBeGreaterThan(0);
+    expect(waited).toBeLessThanOrEqual(700);
+  });
+
+  it('does not pace without a third argument', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(makeResponse(premiumRow('BTCUSDT')));
+    const { client, sleep } = makeClient(fetchFn);
+    await client.premiumIndex('BTCUSDT');
+    await client.premiumIndex('BTCUSDT');
+    expect(sleep).not.toHaveBeenCalled();
+    expect(fetchFn).toHaveBeenCalledTimes(2);
   });
 });

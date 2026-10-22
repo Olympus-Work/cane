@@ -1,16 +1,22 @@
+import { Inject } from '@nestjs/common';
 import { Command, CommandRunner, Option } from 'nest-commander';
-import { fundingGaps } from '@cane/core';
+import { CANDIDATE_DEPTH_DAYS, fundingGaps } from '@cane/core';
+import { parseSyncSymbols } from '../funding-sync-schedule/funding-sync.schedule.js';
+import { FundingCandidateSource, type TargetList } from './funding.candidates.js';
 import { assertSymbol } from './funding.client.js';
 import { FundingStore } from './funding.store.js';
 import { FundingSync } from './funding.sync.js';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 export const DEFAULT_SYMBOLS = ['BTCUSDT', 'ETHUSDT'];
 export const DEFAULT_DAYS = 730;
+/** Nest token for the `FUNDING_SYNC_SYMBOLS` value; the CLI module reads the env (funding/ never does). */
+export const FUNDING_SYNC_SYMBOLS_ENV = Symbol('FUNDING_SYNC_SYMBOLS_ENV');
 
 interface FundingOptions {
   symbols?: string[];
   days?: number;
+  candidates?: boolean;
+  candidateDays?: number;
 }
 
 function parseSymbols(value: string): string[] {
@@ -26,56 +32,106 @@ function parseDays(value: string): number {
   return days;
 }
 
+/** `--symbols`, else `FUNDING_SYNC_SYMBOLS` (the whitelist until F15), else BTCUSDT,ETHUSDT. */
+export function whitelistOf(options: FundingOptions, env: string | undefined): string[] {
+  if (options.symbols) return options.symbols;
+  const fromEnv = parseSyncSymbols(env);
+  return fromEnv.length > 0 ? fromEnv : DEFAULT_SYMBOLS;
+}
+
 const iso = (ms: number | null) => (ms === null ? null : new Date(ms).toISOString());
 
 abstract class FundingCommand extends CommandRunner {
-  @Option({ flags: '--symbols <list>', description: `Comma list (default ${DEFAULT_SYMBOLS.join(',')})` })
+  constructor(
+    protected readonly source: FundingCandidateSource,
+    private readonly whitelistEnv: string,
+  ) {
+    super();
+  }
+
+  @Option({ flags: '--symbols <list>', description: `Comma list (default FUNDING_SYNC_SYMBOLS, else ${DEFAULT_SYMBOLS.join(',')})` })
   parseSymbols(value: string): string[] {
     return parseSymbols(value);
   }
 
-  @Option({ flags: '--days <n>', description: `Window in days back from now (default ${DEFAULT_DAYS})` })
+  @Option({ flags: '--days <n>', description: `Window of those symbols in days back from now (default ${DEFAULT_DAYS})` })
   parseDays(value: string): number {
     return parseDays(value);
   }
+
+  @Option({ flags: '--candidates', description: 'Also every scanner candidate: USDT perpetual with a spot market (plan F01b)' })
+  parseCandidates(): boolean {
+    return true;
+  }
+
+  @Option({ flags: '--candidate-days <n>', description: `Window of the other candidates (default ${CANDIDATE_DEPTH_DAYS})` })
+  parseCandidateDays(value: string): number {
+    return parseDays(value);
+  }
+
+  protected targets(options: FundingOptions, now: number): Promise<TargetList> {
+    return this.source.targets(
+      {
+        whitelist: whitelistOf(options, this.whitelistEnv),
+        candidates: options.candidates ?? false,
+        depthDays: { whitelist: options.days ?? DEFAULT_DAYS, candidate: options.candidateDays ?? CANDIDATE_DEPTH_DAYS },
+      },
+      now,
+    );
+  }
 }
 
-@Command({ name: 'backfill', description: 'Fetch settled funding history into funding_rate (plan F01)' })
+@Command({ name: 'backfill', description: 'Fetch settled funding history into funding_rate (plan F01, F01b)' })
 export class FundingBackfillCommand extends FundingCommand {
-  constructor(private readonly sync: FundingSync) {
-    super();
+  constructor(
+    source: FundingCandidateSource,
+    @Inject(FUNDING_SYNC_SYMBOLS_ENV) whitelistEnv: string,
+    private readonly sync: FundingSync,
+  ) {
+    super(source, whitelistEnv);
   }
 
   override async run(_args: string[], options: FundingOptions): Promise<void> {
     const now = Date.now();
-    const from = now - (options.days ?? DEFAULT_DAYS) * DAY_MS;
-    for (const symbol of options.symbols ?? DEFAULT_SYMBOLS) {
-      const r = await this.sync.sync(symbol, from, now);
-      process.stdout.write(`${JSON.stringify({ symbol, added: r.added, newest: iso(r.newest) })}\n`);
+    const { targets } = await this.targets(options, now);
+    let added = 0;
+    for (const t of targets) {
+      const r = await this.sync.sync(t.symbol, t.from, now);
+      added += r.added;
+      process.stdout.write(`${JSON.stringify({ symbol: t.symbol, days: t.depthDays, added: r.added, newest: iso(r.newest) })}\n`);
     }
+    process.stdout.write(`${JSON.stringify({ summary: { symbols: targets.length, added } })}\n`);
   }
 }
 
-@Command({ name: 'check', description: 'Row counts, interval changes and gaps in funding_rate; exit 1 on any gap (AC1)' })
+@Command({ name: 'check', description: 'Row counts, interval changes and gaps in funding_rate; exit 1 on any gap (AC1, F01b)' })
 export class FundingCheckCommand extends FundingCommand {
-  constructor(private readonly store: FundingStore) {
-    super();
+  constructor(
+    source: FundingCandidateSource,
+    @Inject(FUNDING_SYNC_SYMBOLS_ENV) whitelistEnv: string,
+    private readonly store: FundingStore,
+  ) {
+    super(source, whitelistEnv);
   }
 
   override async run(_args: string[], options: FundingOptions): Promise<void> {
     const now = Date.now();
-    const from = now - (options.days ?? DEFAULT_DAYS) * DAY_MS;
-    let gapCount = 0;
-    for (const symbol of options.symbols ?? DEFAULT_SYMBOLS) {
-      const events = await this.store.range(symbol, from, now);
-      const gaps = fundingGaps(events, from, now);
-      gapCount += gaps.length;
+    const { targets, noSpot } = await this.targets(options, now);
+    const withGaps: string[] = [];
+    const listedLate: string[] = [];
+    for (const t of targets) {
+      const events = await this.store.range(t.symbol, t.from, now);
+      const gaps = fundingGaps(events, t.from, now);
+      if (gaps.length > 0) withGaps.push(t.symbol);
+      if (t.listedAt !== null) listedLate.push(t.symbol);
       const intervalChanges = events
         .filter((e, i) => i === 0 || e.intervalHours !== events[i - 1]!.intervalHours)
         .map((e) => ({ from: iso(e.fundingTime), hours: e.intervalHours }));
       const report = {
-        symbol,
-        window: { from: iso(from), to: iso(now) },
+        symbol: t.symbol,
+        days: t.depthDays,
+        window: { from: iso(t.from), to: iso(now) },
+        ...(t.listedAt !== null ? { listed: iso(t.listedAt) } : {}),
         rows: events.length,
         first: iso(events[0]?.fundingTime ?? null),
         last: iso(events.at(-1)?.fundingTime ?? null),
@@ -84,6 +140,14 @@ export class FundingCheckCommand extends FundingCommand {
       };
       process.stdout.write(`${JSON.stringify(report)}\n`);
     }
-    if (gapCount > 0) process.exitCode = 1;
+    const summary = {
+      symbols: targets.length,
+      covered: targets.length - withGaps.length,
+      withGaps,
+      listedInsideWindow: listedLate,
+      ...(options.candidates ? { excludedNoSpot: { count: noSpot.length, symbols: noSpot } } : {}),
+    };
+    process.stdout.write(`${JSON.stringify({ summary })}\n`);
+    if (withGaps.length > 0) process.exitCode = 1;
   }
 }
