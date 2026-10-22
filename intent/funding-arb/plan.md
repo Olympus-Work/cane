@@ -72,7 +72,17 @@ Spec: B1–B3, Data `funding_rate`, Interfaces `/fapi/v1/fundingRate`,
 Binance settles funding every 1, 2, 4 or 8 hours per symbol, and a symbol's interval
 can change. Funding times are compared after rounding to the minute (some historic
 events carry a few ms of offset). Between two consecutive stored events with gap `d`:
-- `d` is not one of 1, 2, 4, 8 hours → **gap**.
+- `d` is not one of 1, 2, 4, 8 hours → **gap**, unless it is an **aligned interval
+  change** (F01b, found in the first all-candidate run on 2026-10-22). When Binance moves
+  a symbol from 1h to 4h it settles once more on the new grid, so the step is shorter
+  than the new interval: ARKUSDT 2026-10-08 settled at 16:00, 17:00, 20:00, then 00:00.
+  So `d` is not a gap when the event after it lies on the UTC grid of the smallest
+  funding interval `N` above `d` (here 20:00 on the 4h grid), and the gap after it, if
+  there is one yet, equals `N`. The stored interval of that one event stays the one
+  carried from before (`interval_hours` allows only 1, 2, 4 and 8). Its APR therefore
+  uses the old interval for one settlement, which overstates that event's annualised
+  rate: 1h stored for a 3h step is 3× that event. Recorded for F04, where the entry
+  average uses N events.
 - `d` is a multiple (2× or more) of the gap before it **and** of the gap after it, and
   those two are equal → **gap** (one or more events missing inside a steady interval;
   a real interval change lasts longer than one event).
@@ -118,7 +128,9 @@ F14 needs, and it lets a later F02 rerun include more coins than BTC and ETH.
      perps it excluded because they have no spot market under that symbol.
      **Rule:** the match is on the exact symbol. Multiplier contracts (`1000PEPEUSDT`,
      `1000000MOGUSDT`) trade spot under the bare name and a different quantity unit, so
-     they are excluded with reason `no_spot` in v1. `check` prints the excluded count
+     they are excluded with reason `no_spot` in v1. Symbols outside the Binance ASCII
+     format (`^[A-Z0-9]{2,20}$`, e.g. `币安人生USDT`) are listed as `unsupported` and
+     not synced: the first run aborted on one. `check` prints the excluded count
      and names, so the owner can see what this rule drops. A probe on 2026-10-22 found
      524 TRADING USDT perps and 356 candidates.
    - `fundingDepth(symbol, whitelist, onboardDate, now)`: whitelisted symbols get
