@@ -98,6 +98,15 @@ describe.skipIf(!DATABASE_URL)('FundingSync on Postgres (plan F01)', () => {
     expect(rows.map((r) => [r.fundingTime, r.intervalHours])).toEqual([0, 8, 16, 24, 32].map((h) => [T0 + h * H, 8]));
   });
 
+  it('skips the head request when no settlement fits before the oldest row (sliding window, F01b)', async () => {
+    const fake = new FakeFundingClient([0, 8, 16].map((h) => ev(h)));
+    const sync = syncWith(fake);
+    await sync.sync('BTCUSDT', T0 - H, T0 + 17 * H);
+    fake.calls = [];
+    await sync.sync('BTCUSDT', T0 - 10 * 60 * 1000, T0 + 17 * H); // `from` minutes before the oldest row
+    expect(fake.calls).toEqual([[T0 + 16 * H + 1, T0 + 17 * H]]); // tail only
+  });
+
   it('re-reads the oldest stored interval once older history is filled in (PR #39 review)', async () => {
     const fake = new FakeFundingClient([0, 8, 16, 20, 24].map((h) => ev(h)));
     const sync = syncWith(fake);

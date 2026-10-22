@@ -26,7 +26,12 @@ export interface CandidateList {
   candidates: FundingCandidate[]; // sorted by symbol
   /** TRADING USDT perpetuals with no TRADING spot market under the same symbol (e.g. multiplier contracts like 1000PEPEUSDT). Sorted. */
   noSpot: string[];
+  /** Symbols outside the Binance ASCII format (e.g. `币安人生USDT`): not synced, listed for the owner. Sorted. */
+  unsupported: string[];
 }
+
+/** Symbol format the server accepts in URLs and the DB (same as its SYMBOL_RE). */
+const SYMBOL_FORMAT = /^[A-Z0-9]{2,20}$/;
 
 /**
  * Funding-arb universe (funding-arb plan F01b, spec B28): USDT perpetuals in
@@ -38,10 +43,15 @@ export function fundingCandidates(perps: readonly PerpListing[], spotSymbols: Re
   const seen = new Set<string>();
   const candidates: FundingCandidate[] = [];
   const noSpot: string[] = [];
+  const unsupported: string[] = [];
   for (const p of perps) {
     if (p.contractType !== 'PERPETUAL' || p.status !== 'TRADING' || p.quoteAsset !== 'USDT') continue;
     if (seen.has(p.symbol)) continue;
     seen.add(p.symbol);
+    if (!SYMBOL_FORMAT.test(p.symbol)) {
+      unsupported.push(p.symbol);
+      continue;
+    }
     if (spotSymbols.has(p.symbol)) {
       candidates.push({ symbol: p.symbol, onboardDate: p.onboardDate });
     } else {
@@ -50,7 +60,8 @@ export function fundingCandidates(perps: readonly PerpListing[], spotSymbols: Re
   }
   candidates.sort((a, b) => (a.symbol < b.symbol ? -1 : a.symbol > b.symbol ? 1 : 0));
   noSpot.sort();
-  return { candidates, noSpot };
+  unsupported.sort();
+  return { candidates, noSpot, unsupported };
 }
 
 /** How far back funding history must reach for one symbol (funding-arb plan F01b). */

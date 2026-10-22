@@ -70,7 +70,7 @@ describe('FundingSyncSchedule (sync right after each settlement)', () => {
       appendSettled: vi.fn(async (_symbol: string, _settled: readonly SettledFunding[]) => true),
       intervalMismatches: vi.fn(async (_symbols: readonly string[]) => [] as string[]),
     };
-    const source = { targets: vi.fn(async () => ({ targets, noSpot: [] })) };
+    const source = { targets: vi.fn(async () => ({ targets, noSpot: [], unsupported: [] })) };
     const opts: TargetOptions = { whitelist: symbols, candidates: false };
     const schedule = new FundingSyncSchedule(
       sync as unknown as FundingSync,

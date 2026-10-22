@@ -37,7 +37,9 @@ export class FundingSync {
     // History before the oldest stored event (a longer window than the last run).
     // The oldest stored row goes through again: its interval was read forward,
     // and now has a real predecessor.
-    if (from < oldest.fundingTime) {
+    // Only when an earlier settlement can fall inside the window: a sliding
+    // 30-day `from` sits minutes before the oldest row on every run (plan F01b).
+    if (from < oldest.fundingTime && hoursBetween(from, oldest.fundingTime) >= oldest.intervalHours) {
       const head = await this.client.fundingHistory(symbol, from, oldest.fundingTime - 1);
       if (head.length > 0) {
         const events = withIntervals([...head, oldest], { fallbackIntervalHours: oldest.intervalHours });

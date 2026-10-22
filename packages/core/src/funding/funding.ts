@@ -111,6 +111,19 @@ export interface FundingGap {
 }
 
 /**
+ * A short step onto a longer interval's grid (plan "Gap rule", F01b): moving 1h → 4h,
+ * Binance settles 16:00, 17:00, 20:00, 00:00. The step `d` is not a gap when the event
+ * after it lies on the UTC grid of the smallest funding interval above `d`, and the
+ * step after it (when there is one yet) is that interval.
+ */
+function isAlignedIntervalChange(d: number, before: number, next: number | undefined): boolean {
+  const target = FUNDING_INTERVAL_HOURS.find((h) => h > d);
+  if (target === undefined) return false;
+  if (toMinute(before) % (target * HOUR_MS) !== 0) return false;
+  return next === undefined || next === target;
+}
+
+/**
  * Gap check for stored funding history (plan F01 "Gap rule"). Events must be
  * sorted ascending. `from` / `to` bound the window that must be covered; `to`
  * is normally "now", and the interval still running at `to` is not a gap.
@@ -133,12 +146,12 @@ export function fundingGaps(events: readonly FundingEvent[], from: number, to: n
   diffs.forEach((d, i) => {
     const after = events[i]!.fundingTime;
     const before = events[i + 1]!.fundingTime;
-    if (!isFundingInterval(d)) {
-      gaps.push({ reason: 'irregular_interval', after, before, hours: d });
-      return;
-    }
     const prev = diffs[i - 1];
     const next = diffs[i + 1];
+    if (!isFundingInterval(d)) {
+      if (!isAlignedIntervalChange(d, before, next)) gaps.push({ reason: 'irregular_interval', after, before, hours: d });
+      return;
+    }
     if (prev !== undefined && next !== undefined && prev === next && d > prev && d % prev === 0) {
       gaps.push({ reason: 'missing_in_steady_interval', after, before, hours: d });
     }
