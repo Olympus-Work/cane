@@ -16,6 +16,8 @@ One step = one branch = one PR. A step's proof passes before the next step start
   `approved` after F02 fills in its (proposed) numbers.
 - **F01 Funding data ingestion: history + live.** Detail below.
 - **F02 Backtest / replay CLI.** Detail below.
+- **F01b Funding data for all scanner candidates.** Detail below (started after F03; see
+  its recorded decision).
 - **F03–F17.** Detail added when each starts. No order-placing step (F03, F05, F06)
   starts before the spec is approved.
 
@@ -96,6 +98,108 @@ events carry a few ms of offset). Between two consecutive stored events with gap
   F10 reads it live).
 - Choosing symbols from the whitelist (F15). Until then `FUNDING_SYNC_SYMBOLS` lists them.
 - Any order, account or keyed endpoint.
+
+## F01b: funding data for all scanner candidates
+Spec: B1–B3, B28–B31 (scanner inputs), B33. Ticket: z8p2987fte. Owner scope change
+2026-10-14: ingestion covers every scanner candidate, not only BTCUSDT/ETHUSDT.
+Money-affecting: no. Public market data only, like F01.
+
+### Recorded decision (owner, 2026-10-22)
+F02's proof is still open: no parameter set met the hurdle (best 2.19% net APR against
+6%), and the DB-backed rerun is still pending. The owner parked F02 and chose to start
+F01b now. F01b places no orders and reads only public endpoints. Its data is the input
+F14 needs, and it lets a later F02 rerun include more coins than BTC and ETH.
+
+### What it builds
+1. **Core (`packages/core/src/funding-candidates.ts`), pure functions:**
+   - `fundingCandidates(perps, spotSymbols)`: a candidate is a USDⓈ-M perp with
+     `contractType` PERPETUAL, `status` TRADING and quote USDT, whose symbol is also a
+     TRADING spot symbol. It returns the candidates (symbol, `onboardDate`) and the
+     perps it excluded because they have no spot market under that symbol.
+     **Rule:** the match is on the exact symbol. Multiplier contracts (`1000PEPEUSDT`,
+     `1000000MOGUSDT`) trade spot under the bare name and a different quantity unit, so
+     they are excluded with reason `no_spot` in v1. `check` prints the excluded count
+     and names, so the owner can see what this rule drops. A probe on 2026-10-22 found
+     524 TRADING USDT perps and 356 candidates.
+   - `fundingDepth(symbol, whitelist, onboardDate, now)`: whitelisted symbols get
+     730 days and every other candidate gets 30 days. `from` is clamped to
+     `max(now − depth, onboardDate)`, and the result says when the clamp applied
+     (`listedAt`). Until F15 exists, the whitelist is `FUNDING_SYNC_SYMBOLS`.
+2. **`FundingClient` additions (public, no key):**
+   - `perpListings()`: `/fapi/v1/exchangeInfo`.
+   - `spotTradingSymbols()`: `/api/v3/exchangeInfo?symbolStatus=TRADING`. It uses the spot
+     host already used by `KlinesClient` (`SPOT_API_BASE`, exported from the market-data
+     code instead of being repeated).
+   - `premiumIndexAll()`: one `/fapi/v1/premiumIndex` call without a symbol, which gives
+     every symbol's next funding time.
+   - `settledAt(slot)`: one `/fapi/v1/fundingRate` call without a symbol for a ±5 minute
+     window around a settlement time (funding times carry a few ms of offset). The
+     2026-10-22 00:00 UTC slot returned 799 rows, one per symbol. A response with exactly
+     1000 rows (the limit) may be truncated. It is never accepted as complete: the
+     schedule falls back to per-symbol requests for that slot.
+   - **Pacing:** every `FundingClient` request waits until at least 700 ms have passed
+     since the previous one (at most about 430 per 5 minutes, under the
+     `/fapi/v1/fundingRate` limit of 500 per 5 minutes per IP). The sync and the CLI make
+     their requests one at a time, so the 429/418 Retry-After wait in `publicGetJson`
+     already holds back every symbol, not just one.
+3. **`FundingSync.appendSettled(symbol, rows)`:** appends bulk rows after the newest
+   stored event, with intervals continuing from that event. It returns `false` and writes
+   nothing when the table has no row for the symbol, or when the newest stored event is
+   more than one interval before the first new row. The caller then runs the per-symbol
+   `sync`.
+4. **Live sync (`FundingSyncSchedule`, replaces the per-symbol F01 loop):**
+   - Off by default. Symbols = `FUNDING_SYNC_SYMBOLS` (depth 730 days), plus every
+     candidate (depth 30 days) when `FUNDING_SYNC_CANDIDATES=true`. Both unset = off.
+     Every merge redeploys the live S-01 server, so the owner turns candidates on as part
+     of the owner run.
+   - The candidate list is refreshed once an hour. A symbol that stops being a candidate
+     (delisted, or spot removed) stops syncing; its stored rows stay.
+   - A symbol is synced with the per-symbol `sync` the first time the process sees it
+     (fills history to its depth; the first boot with candidates on is the backfill).
+   - After that it runs per settlement slot. One `premiumIndexAll()` gives every symbol's
+     next funding time. When a slot plus 60 s has passed, one `settledAt(slot)` call
+     covers every symbol due at that slot. Each symbol with a row goes through
+     `appendSettled`; when that returns `false`, the symbol runs the per-symbol `sync`.
+     A due symbol with no row yet is retried each minute for up to 30 minutes, then
+     logged and moved to its next settlement, as in F01.
+   - **Back-off is global:** any failed request pauses the whole schedule for 5 minutes,
+     not one symbol. A 418 (IP ban) would also block S-01's trading calls from the same
+     IP, so no symbol keeps firing while another backs off.
+   - After a slot, the `fundingInfo` interval cross-check from F01 runs for the symbols
+     synced in that slot.
+5. **CLI:** `backfill` and `check` take `--candidates`. The symbols are then the whitelist
+   (`--symbols`, else `FUNDING_SYNC_SYMBOLS`, else BTCUSDT,ETHUSDT) at `--days` (730),
+   plus every candidate at `--candidate-days` (30). `check` uses each symbol's clamped
+   `from`. A symbol listed after `now − depth` is reported with `listed` and is not a
+   coverage gap. The output ends with one summary line: symbol counts, gaps, late
+   listings and the excluded perps. Exit code 1 only on real gaps. Do not run `backfill`
+   on Railway while live sync with candidates is on, because both share the IP's
+   `fundingRate` limit.
+
+### Proof (F01b)
+- Core unit tests: the candidate filter (not perpetual, not TRADING, not USDT, no spot,
+  multiplier contract, spot not TRADING) and `fundingDepth` (whitelist vs candidate, the
+  onboardDate clamp).
+- Client tests on recorded response shapes (exchangeInfo trimmed to edge symbols): the
+  parsers, `premiumIndexAll`, `settledAt` including the 1000-row truncation rule, and the
+  700 ms pacing.
+- Schedule tests on fakes: off by default, candidates added only with the flag, the first
+  sync per symbol, the bulk slot path, the fallback to per-symbol `sync`, the retry and
+  give-up, global back-off, the hourly refresh dropping a delisted symbol.
+- Sync test on Postgres: `appendSettled` appends, is a no-op on re-run, and refuses
+  (returns `false`) on an empty table or a gap.
+- Isolation test: the funding CLI context still has no order-placing, settings or key
+  provider.
+- **Owner run (Railway):** `funding backfill --candidates` then `funding check
+  --candidates`. Every symbol is covered for its depth with no gaps, or is listed with a
+  reason (for example, listed less than 30 days ago). The summary line is pasted into the
+  PR and ClickUp. Then set `FUNDING_SYNC_CANDIDATES=true`, and after one settlement the
+  log shows one bulk sync for the slot.
+
+### Not in F01b
+- Scanner scores, liquidity, snapshots (F14). F01b only stores funding.
+- Multiplier contracts (`1000…`) as candidates.
+- Rerunning F02 on the wider symbol set (owner's call, after F01b).
 
 ## F02: backtest / replay CLI
 Spec: B3–B6, B14, B17 (evidence only), B23, B26–B27.5, AC2, Open questions 2 and 3.
