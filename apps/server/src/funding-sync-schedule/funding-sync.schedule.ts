@@ -29,6 +29,22 @@ export function parseSyncCandidates(value: string | undefined): boolean {
 }
 
 /**
+ * Both env values → the sync options, or the error to log. A bad value turns
+ * funding sync off instead of failing the server boot, which would also stop
+ * S-01 (plan F01b, PR #44 review).
+ */
+export function parseSyncEnv(
+  symbols: string | undefined,
+  candidates: string | undefined,
+): { whitelist: string[]; candidates: boolean } | { error: string } {
+  try {
+    return { whitelist: parseSyncSymbols(symbols), candidates: parseSyncCandidates(candidates) };
+  } catch (err) {
+    return { error: message(err) };
+  }
+}
+
+/**
  * Live funding sync inside the server (plan F01b; owner 2026-10-15: right after
  * each settlement). Called every minute. A symbol is synced on its own the first
  * time the process sees it (history to its depth). After that, one bulk

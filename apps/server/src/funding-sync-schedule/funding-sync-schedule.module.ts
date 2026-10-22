@@ -2,7 +2,7 @@ import { Logger, Module, type OnApplicationBootstrap, type OnModuleDestroy } fro
 import { FundingCandidateSource } from '../funding/funding.candidates.js';
 import { FundingModule } from '../funding/funding.module.js';
 import { FundingSync } from '../funding/funding.sync.js';
-import { FundingSyncSchedule, parseSyncCandidates, parseSyncSymbols } from './funding-sync.schedule.js';
+import { FundingSyncSchedule, parseSyncEnv } from './funding-sync.schedule.js';
 
 const TICK_MS = 60_000;
 
@@ -21,8 +21,12 @@ export class FundingSyncScheduleModule implements OnApplicationBootstrap, OnModu
   ) {}
 
   onApplicationBootstrap(): void {
-    const whitelist = parseSyncSymbols(process.env.FUNDING_SYNC_SYMBOLS);
-    const candidates = parseSyncCandidates(process.env.FUNDING_SYNC_CANDIDATES);
+    const config = parseSyncEnv(process.env.FUNDING_SYNC_SYMBOLS, process.env.FUNDING_SYNC_CANDIDATES);
+    if ('error' in config) {
+      this.log.error(`${config.error}: live funding sync is off`);
+      return;
+    }
+    const { whitelist, candidates } = config;
     if (whitelist.length === 0 && !candidates) {
       this.log.log('FUNDING_SYNC_SYMBOLS and FUNDING_SYNC_CANDIDATES are not set: live funding sync is off');
       return;

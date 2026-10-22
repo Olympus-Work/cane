@@ -10,6 +10,7 @@ import {
   RETRY_MS,
   SETTLE_GRACE_MS,
   parseSyncCandidates,
+  parseSyncEnv,
   parseSyncSymbols,
 } from '../src/funding-sync-schedule/funding-sync.schedule.js';
 
@@ -48,6 +49,18 @@ describe('parseSyncCandidates', () => {
 
   it('rejects anything else', () => {
     expect(() => parseSyncCandidates('yes')).toThrow(/FUNDING_SYNC_CANDIDATES/);
+  });
+});
+
+describe('parseSyncEnv (PR 44 review: a bad value never stops the boot)', () => {
+  it('returns the options for valid values', () => {
+    expect(parseSyncEnv('BTCUSDT', 'true')).toEqual({ whitelist: ['BTCUSDT'], candidates: true });
+    expect(parseSyncEnv(undefined, undefined)).toEqual({ whitelist: [], candidates: false });
+  });
+
+  it('returns an error instead of throwing on a bad value', () => {
+    expect(parseSyncEnv(undefined, '1')).toEqual({ error: expect.stringMatching(/FUNDING_SYNC_CANDIDATES/) });
+    expect(parseSyncEnv('btc', 'true')).toEqual({ error: expect.stringMatching(/FUNDING_SYNC_SYMBOLS/) });
   });
 });
 
