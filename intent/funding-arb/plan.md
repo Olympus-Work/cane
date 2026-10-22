@@ -127,7 +127,7 @@ F14 needs, and it lets a later F02 rerun include more coins than BTC and ETH.
      (`listedAt`). Until F15 exists, the whitelist is `FUNDING_SYNC_SYMBOLS`.
 2. **`FundingClient` additions (public, no key):**
    - `perpListings()`: `/fapi/v1/exchangeInfo`.
-   - `spotTradingSymbols()`: `/api/v3/exchangeInfo?symbolStatus=TRADING`. It uses the spot
+   - `spotSymbols()`: `/api/v3/exchangeInfo?symbolStatus=TRADING`. It uses the spot
      host already used by `KlinesClient` (`SPOT_API_BASE`, exported from the market-data
      code instead of being repeated).
    - `premiumIndexAll()`: one `/fapi/v1/premiumIndex` call without a symbol, which gives
