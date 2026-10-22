@@ -1,4 +1,4 @@
-import { hoursBetween, withIntervals, type FundingEvent } from '@cane/core';
+import { hoursBetween, withIntervals, type FundingEvent, type SettledFunding } from '@cane/core';
 import type { FundingClient } from './funding.client.js';
 import type { FundingStore } from './funding.store.js';
 
@@ -62,6 +62,23 @@ export class FundingSync {
   }
 
   /**
+   * Appends settled events from a bulk `settledAt` call after the newest stored
+   * event (plan F01b). Returns false and writes nothing when nothing is stored
+   * yet, or when the newest stored event is more than one interval before the
+   * first new event: the caller then runs `sync`, which reads the gap per symbol.
+   */
+  async appendSettled(symbol: string, settled: readonly SettledFunding[]): Promise<boolean> {
+    const newest = await this.store.newest(symbol);
+    if (!newest) return false;
+    const fresh = settled.filter((e) => e.fundingTime > newest.fundingTime).sort((a, b) => a.fundingTime - b.fundingTime);
+    if (fresh.length === 0) return true;
+    if (hoursBetween(newest.fundingTime, fresh[0]!.fundingTime) > newest.intervalHours) return false;
+    const events = withIntervals(fresh, { previousTime: newest.fundingTime, previousIntervalHours: newest.intervalHours });
+    await this.store.upsert(symbol, events);
+    return true;
+  }
+
+  /**
    * Compares the newest stored interval with `/fapi/v1/fundingInfo` (symbols
    * whose interval was adjusted). Returns one message per mismatch.
    */
@@ -78,9 +95,19 @@ export class FundingSync {
     return out;
   }
 
-  /** Next settlement time the exchange announces for `symbol` (`/fapi/v1/premiumIndex`). */
-  async nextFundingTime(symbol: string): Promise<number> {
-    return (await this.client.premiumIndex(symbol)).nextFundingTime;
+  /** Next settlement time of every symbol, from one `/fapi/v1/premiumIndex` call (plan F01b). Symbols announcing none are left out. */
+  async nextFundingTimes(): Promise<Map<string, number>> {
+    const rows = await this.client.premiumIndexAll();
+    return new Map(rows.filter((r) => r.nextFundingTime > 0).map((r) => [r.symbol, r.nextFundingTime]));
+  }
+
+  /** Every symbol's settled event at `slot`, grouped by symbol; null when the bulk page may be truncated. */
+  async settledAt(slot: number): Promise<Map<string, SettledFunding[]> | null> {
+    const rows = await this.client.settledAt(slot);
+    if (rows === null) return null;
+    const out = new Map<string, SettledFunding[]>();
+    for (const { symbol, ...event } of rows) out.set(symbol, [...(out.get(symbol) ?? []), event]);
+    return out;
   }
 
   /** Interval from a lone settled event to the next settlement the exchange announces. */
