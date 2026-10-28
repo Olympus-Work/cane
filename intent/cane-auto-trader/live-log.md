@@ -29,6 +29,56 @@ Window: 30 days from the first live evaluation of S-01 (2026-10-09).
 | UTC day | Strategy | Result | Mismatches |
 |---|---|---|---|
 | 2026-10-09 | S-01 BTCUSDT futures | 5/5 match | 0 |
+| 2026-10-10 | S-01 BTCUSDT futures | 6/6 match | 0 |
+| 2026-10-11 | S-01 BTCUSDT futures | 6/6 match | 0 |
+| 2026-10-11 | S-02 XAUTUSDT futures | 0/0 match | 0 |
+| 2026-10-12 | S-01 BTCUSDT futures | 6/6 match | 0 |
+| 2026-10-12 | S-02 XAUTUSDT futures | 3/3 match | 0 |
+| 2026-10-13 | S-01 BTCUSDT futures | 6/6 match | 0 |
+| 2026-10-13 | S-02 XAUTUSDT futures | 6/6 match | 0 |
+| 2026-10-14 | S-01 BTCUSDT futures | 4/6 match | 2 (`missing_live`, downtime) |
+| 2026-10-14 | S-02 XAUTUSDT futures | 4/6 match | 2 (`missing_live`, downtime) |
+| 2026-10-15 | S-01 BTCUSDT futures | 3/6 match | 3 (`missing_live`, downtime) |
+| 2026-10-15 | S-02 XAUTUSDT futures | 3/6 match | 3 (`missing_live`, downtime) |
+| 2026-10-16 | S-01 BTCUSDT futures | 6/6 match | 0 |
+| 2026-10-16 | S-02 XAUTUSDT futures | 6/6 match | 0 |
+| 2026-10-17 | S-01 BTCUSDT futures | 6/6 match | 0 |
+| 2026-10-17 | S-02 XAUTUSDT futures | 6/6 match | 0 |
+| 2026-10-18 | S-01 BTCUSDT futures | 6/6 match | 0 |
+| 2026-10-18 | S-02 XAUTUSDT futures | 6/6 match | 0 |
+| 2026-10-19 | S-01 BTCUSDT futures | 6/6 match | 0 |
+| 2026-10-19 | S-02 XAUTUSDT futures | 6/6 match | 0 |
+| 2026-10-20 | S-01 BTCUSDT futures | 6/6 match | 0 |
+| 2026-10-20 | S-02 XAUTUSDT futures | 6/6 match | 0 |
+| 2026-10-21 | S-01 BTCUSDT futures | 6/6 match | 0 |
+| 2026-10-21 | S-02 XAUTUSDT futures | 6/6 match | 0 |
+| 2026-10-22 | S-01 BTCUSDT futures | 6/6 match | 0 |
+| 2026-10-22 | S-02 XAUTUSDT futures | 6/6 match | 0 |
+| 2026-10-23 | S-01 BTCUSDT futures | 6/6 match | 0 |
+| 2026-10-23 | S-02 XAUTUSDT futures | 6/6 match | 0 |
+| 2026-10-24 | S-01 BTCUSDT futures | 6/6 match | 0 |
+| 2026-10-24 | S-02 XAUTUSDT futures | 6/6 match | 0 |
+| 2026-10-25 | S-01 BTCUSDT futures | 6/6 match | 0 |
+| 2026-10-25 | S-02 XAUTUSDT futures | 6/6 match | 0 |
+| 2026-10-26 | S-01 BTCUSDT futures | 6/6 match | 0 |
+| 2026-10-26 | S-02 XAUTUSDT futures | 6/6 match | 0 |
+| 2026-10-27 | S-01 BTCUSDT futures | 6/6 match | 0 |
+| 2026-10-27 | S-02 XAUTUSDT futures | 6/6 match | 0 |
+
+S-02 (XAUTUSDT futures) was created on 2026-10-11; its first full day is 2026-10-12
+(3/3: enabled mid-day). Results are from the daily LINE summaries; restarts re-ran the
+previous day and always gave the same result.
+
+Check failures (the tool, not a mismatch; the day was re-run later):
+- 2026-10-14 22:08 ICT and 2026-10-15: `replay-diff printed no JSON result`. The real
+  error was hidden; PR #40 (merged 2026-10-15) makes the check fail with it.
+- 2026-10-15 21:46 ICT and 2026-10-16 06:26 ICT: `Klines request failed with status
+  451` (Binance geo-block, see the downtime below). Runs minutes before and after each
+  of these succeeded with the same result.
+
+Downtime: from 2026-10-14 to 2026-10-15 Railway's Singapore egress IP geolocated to the
+US and Binance answered HTTP 451 to every call, so the engine could not evaluate 4H
+closes. The service moved to EU West on 2026-10-15 at about 16:30 UTC.
 
 ## Mismatches and explanations
 
