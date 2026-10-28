@@ -32,3 +32,11 @@ apps/web/e2e/screenshots/
 apps/web/e2e/results/
 apps/web/playwright-report/
 test-results/
+
+# Design prototypes (HTML exports + third-party design-system bundle): kept
+# locally by the owner, not in the public repo. The handoff READMEs and tokens/
+# stay tracked.
+intent/*/design_handoff_*/prototype/
+
+# Local Claude Code settings
+.claude/settings.local.json

@@ -8,7 +8,7 @@ Behaviour is specified in `../spec.md` (B1–B60; UI in B42–B60) and `../inten
 ## About the design files
 `prototype/Funding Arb.dc.html` is a **design reference built in HTML**. It is a clickable prototype showing intended layout, copy and behaviour. It is not production code. Recreate these screens in the cane-auto-trader web app's existing stack, components and theme (S10). All numbers in the prototype are mock data; per the brief, real values come from the backend as-is and the UI never computes PnL or APR.
 
-Open the file in a browser (it loads `support.js` and `_ds/` from the shared copy in `../../cane-auto-trader/design_handoff_cane_auto_trader/prototype/`). The prototype skips login and opens on the Dashboard. Its **Tweaks** panel switches scenarios:
+Open the file in a browser (it loads `support.js` and `_ds/` from the shared copy in `../../cane-auto-trader/design_handoff_cane_auto_trader/prototype/`). The prototype skips login and opens on the Dashboard. The `prototype/` folder is not in the public repository (it holds a third-party design-system bundle); the owner keeps it locally. Its **Tweaks** panel switches scenarios:
 - `startScreen`: `dashboard`, `arbHome`, `arbPair`, `arbSettings`, `arbRecs`, `killswitch`, …
 - `arbScenario`: `open` (BTC + ETH open, ETH at margin L1), `attention` (ETH needs attention), `transition` (BTC opening, ETH failed to open), `quiet` (enabled, funding below entry, no pairs), `disabled` (feature flag off)
 - `jevOn`: Jev outlook on or off
@@ -17,7 +17,7 @@ Open the file in a browser (it loads `support.js` and `_ds/` from the shared cop
 - TH/EN language and dark/light theme toggles live in the app header
 
 ## Fidelity
-**High-fidelity.** Colors, type, spacing, radii and copy are final and follow the app's existing design system (tokens in `../../cane-auto-trader/design_handoff_cane_auto_trader/prototype/_ds/.../tokens/`). Reuse the app's existing components (Button, Field, pills, cards, modal, TOTP input, toast) rather than building new ones. Values marked TBD in the brief (thresholds, caps, limits) appear with sample numbers and a "Set after backtest F02" tag; design for them to exist, not for the specific numbers.
+**High-fidelity.** Colors, type, spacing, radii and copy are final and follow the app's existing design system (tokens in `../../cane-auto-trader/design_handoff_cane_auto_trader/tokens/`). Reuse the app's existing components (Button, Field, pills, cards, modal, TOTP input, toast) rather than building new ones. Values marked TBD in the brief (thresholds, caps, limits) appear with sample numbers and a "Set after backtest F02" tag; design for them to exist, not for the specific numbers.
 
 ---
 
@@ -146,7 +146,7 @@ Strategy disabled · enabled with no pairs (quiet market) · pair Opening / Fail
 ## State (prototype names, for reference)
 `apEnabled`, `apWl` (whitelist: sym, enabled, cap, ovr, src), `apParams` (saved values), `apEdits` (unsaved edits, keys `param`, `cap:SYM`, `ovr:SYM`), `apClosed`, `apSym`/`apFrom` (pair detail), `apRange` (7d/30d), `apSev`, `apMuteInfo`, `apLog` (audit entries), `apManSym`/`apManCap`/`apManErr` (manual add). Backend provides: per-coin state, legs, margin ratio, drift, funding series, PnL components, BNB buffers, reconcile time, scanner list (score, APR 7d/30d, consistency, break-even, liquidity + reason, Jev probability or null), dropped list, audit log.
 
-## Design tokens (from `../../cane-auto-trader/design_handoff_cane_auto_trader/prototype/_ds/.../tokens/`)
+## Design tokens (from `../../cane-auto-trader/design_handoff_cane_auto_trader/tokens/`)
 - Fonts: Poppins (UI; Noto Sans Thai fallback for TH), JetBrains Mono for all numbers, symbols, timestamps and parameter names. `font-variant-numeric: tabular-nums`.
 - Dark theme (default): `--bg-base #151a1e`, `--bg-raised #1e252b`, `--surface #2b3740`, `--surface-hover #3a4a55`, `--border #2b3740`, `--border-strong #3a4a55`, text `#ffffff` / `--text-secondary #9ca3af` / `--text-muted #6b7280`, `--text-accent #a5b4fc`.
 - Light theme (`.light`): bg `#f9fafb`, raised `#ffffff`, border `#e5e7eb` / `#d1d5db`, text `#111827` / `#4b5563` / `#9ca3af`, accent `#4f46e5`.
