@@ -517,7 +517,7 @@ Each step ends with its proof passing in CI before the next starts. Steps
     race), status
     `disabled`. Validation gives 400 with `{code, message}` (never a CHECK
     500): spot has no leverage or margin mode and sizing B; futures default
-    5x, `isolated`, mode B; `base_pct` 5–20; threshold 0–1; `risk_pct` only in
+    5x, `isolated`, mode B; `base_pct` 5–40; threshold 0–1; `risk_pct` only in
     mode C. The pair must be listed and TRADING on the chosen market (B10.6),
     checked through the `ExchangeReader` port.
   - `PATCH /v1/strategies/:id`: with an open position, pair, market, leverage
@@ -896,6 +896,22 @@ Each step ends with its proof passing in CI before the next starts. Steps
     stays in the audit log and on Settings → Security.
   - Proof: unit tests on the rendered text and the card labels. After the
     deploy, the owner's next `[Login]` card shows the four rows.
+- **`base_pct` up to 40, spec B6.2 rev 5.4 (owner, 2026-10-28).** A small
+  account at `base_pct` 20 sizes below the exchange minimum order
+  (BTCUSDT futures: 0.001 BTC step), so the order would be skipped. The
+  allowed range becomes 5–40 everywhere it is enforced:
+  - core `sizePct` (`BASE_PCT_MAX`), so the server create/update validation
+    follows;
+  - the DB check `strategies_base_pct` (migration 0005, with a down file);
+  - the web strategy form slider, range check and EN/TH hint and error text.
+  - Proof: core tests (40 accepted, 41 rejected, `sizePct(40, 3)` capped at
+    100); server strategy-input tests at 40 and 41; migration 0005 up then
+    down on the test Postgres (40 inserts after up, 41 is rejected; down
+    restores 5–20). Before merge the owner checks S-01 and S-02 have no
+    open position (the deploy runs the migration and restarts the engine).
+    After the deploy the owner sets S-01 `base_pct` to 40 and checks that
+    the sizing preview notional is worth at least 0.001 BTC at the
+    current price.
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.
