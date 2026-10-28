@@ -147,7 +147,7 @@ export const th: Record<string, string> = {
   modeC: "C · ความเสี่ยง % ต่อเทรด",
   modeCD: "กำหนดขนาดให้ขาดทุนเมื่อชน stop เท่ากับ % ของ equity ตามระดับ confluence",
   baseSize: "ขนาดฐาน",
-  baseHint: "5–20% แต่ละปัจจัย confluence ที่ยืนยันเพิ่ม 20%",
+  baseHint: "5–40% แต่ละปัจจัย confluence ที่ยืนยันเพิ่ม 20%",
   jevThr: "เกณฑ์ความมั่นใจ Jev",
   riskFull: "ความเสี่ยงที่ confluence เต็ม (%)",
   cancel: "ยกเลิก",

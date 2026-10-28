@@ -14,7 +14,7 @@ export type SizingMode = 'A' | 'B' | 'C';
 export const FACTOR_BONUS_PCT = 20;
 export const MAX_SIZE_PCT = 100;
 export const BASE_PCT_MIN = 5;
-export const BASE_PCT_MAX = 20;
+export const BASE_PCT_MAX = 40;
 
 /** Binance symbol filters used for rounding (LOT_SIZE / MARKET_LOT_SIZE, PRICE_FILTER, MIN_NOTIONAL). */
 export interface SymbolFilters {

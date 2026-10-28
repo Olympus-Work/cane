@@ -147,7 +147,7 @@ export const en: Record<string, string> = {
   modeC: "C · Risk % per trade",
   modeCD: "Size so a stop-out loses a set % of equity, scaled by confluence.",
   baseSize: "Base size",
-  baseHint: "5–20%. Each confirmed confluence factor adds 20%.",
+  baseHint: "5–40%. Each confirmed confluence factor adds 20%.",
   jevThr: "Jev confidence threshold",
   riskFull: "Risk at full confluence (%)",
   cancel: "Cancel",

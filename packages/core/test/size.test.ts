@@ -40,11 +40,13 @@ describe('B6.2 size_pct', () => {
     expect([0, 1, 2, 3].map((n) => sizePct(d(10), n).toString())).toEqual(['10', '30', '50', '70']);
     expect(sizePct(d(5), 3).toString()).toBe('65');
     expect(sizePct(d(20), 3).toString()).toBe('80');
+    expect(sizePct(d(40), 2).toString()).toBe('80');
+    expect(sizePct(d(40), 3).toString()).toBe('100');
   });
 
-  it('rejects base outside 5-20 and factor counts outside 0-3', () => {
+  it('rejects base outside 5-40 and factor counts outside 0-3', () => {
     expect(() => sizePct(d(4), 0)).toThrow();
-    expect(() => sizePct(d(21), 0)).toThrow();
+    expect(() => sizePct(d(41), 0)).toThrow();
     expect(() => sizePct(d(10), 4)).toThrow();
   });
 });

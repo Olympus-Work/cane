@@ -50,7 +50,7 @@ export function StrategyForm({ existing, items, onDone }: { existing: StrategyIt
   const pairUpper = pair.trim().toUpperCase();
   const clash = items.find((s) => s.id !== existing?.id && s.pair === pairUpper && (s.status === 'enabled' || s.status === 'needs_attention'));
   const pairError = pair.trim() === '' ? undefined : !PAIR_RE.test(pairUpper) ? t('pairInvalid') : clash ? t('dup', { pair: pairUpper, id: clash.id, market: clash.market === 'spot' ? t('spot') : t('futures') }) : undefined;
-  const baseError = inRange(basePct, 5, 20) ? undefined : t('errBaseRange');
+  const baseError = inRange(basePct, 5, 40) ? undefined : t('errBaseRange');
   const thresholdError = inRange(threshold, 0, 1) ? undefined : t('errThresholdRange');
   const riskError = mode === 'C' && !(inRange(riskPct, 0, 100) && new Decimal(riskPct).gt(0)) ? t('errRiskRange') : undefined;
   const valid = PAIR_RE.test(pairUpper) && !clash && !baseError && !thresholdError && !riskError;
@@ -163,7 +163,7 @@ export function StrategyForm({ existing, items, onDone }: { existing: StrategyIt
             <label className="field-label" htmlFor="sf-base">
               {t('baseSize')} <span className="mono form-value">{basePct}%</span>
             </label>
-            <input id="sf-base" className="form-range" type="range" min={5} max={20} step={1} value={inRange(basePct, 5, 20) ? Number(basePct) : 10} onChange={(e) => setBasePct(e.target.value)} />
+            <input id="sf-base" className="form-range" type="range" min={5} max={40} step={1} value={inRange(basePct, 5, 40) ? Number(basePct) : 10} onChange={(e) => setBasePct(e.target.value)} />
             <p className={baseError ? 'field-error' : 'field-hint'}>{baseError ?? t('baseHint')}</p>
           </div>
 

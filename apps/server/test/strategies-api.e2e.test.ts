@@ -100,7 +100,7 @@ describe.skipIf(!DATABASE_URL)('Strategy API (S09.5, B10)', () => {
   it('5. bad bodies are 400 with a code and create no row', async () => {
     const cases: Array<[object, string]> = [
       [{ pair: 'BTCUSDT', market: 'spot', leverage: 3 }, 'spot_no_leverage'],
-      [{ pair: 'BTCUSDT', basePct: 25 }, 'bad_basePct'],
+      [{ pair: 'BTCUSDT', basePct: 41 }, 'bad_basePct'],
       [{ pair: 'BTCUSDT', leverage: 21 }, 'bad_leverage'],
       [{ pair: 'BTCUSDT', sizingMode: 'C', riskPct: 0 }, 'bad_riskPct'],
       [[1, 2, 3], 'bad_body'],
@@ -329,8 +329,8 @@ describe.skipIf(!DATABASE_URL)('Strategy API (S09.5, B10)', () => {
       ['700', '700'],
     ]);
 
-    expect((await api.call('GET', '/v1/strategies/sizing-preview?market=futures&basePct=25')).statusCode).toBe(400);
-    expect((await api.call('GET', '/v1/strategies/sizing-preview?market=futures&basePct=25')).json()).toMatchObject({ code: 'bad_basePct' });
+    expect((await api.call('GET', '/v1/strategies/sizing-preview?market=futures&basePct=41')).statusCode).toBe(400);
+    expect((await api.call('GET', '/v1/strategies/sizing-preview?market=futures&basePct=41')).json()).toMatchObject({ code: 'bad_basePct' });
     expect((await api.call('GET', '/v1/strategies/sizing-preview?market=margin')).statusCode).toBe(400);
     expect((await api.call('GET', '/v1/strategies/sizing-preview?market=margin')).json()).toMatchObject({ code: 'bad_market' });
 

@@ -150,7 +150,7 @@ export const strategies = pgTable(
       sql`(${t.market} = 'futures' and ${t.leverage} between 1 and 20 and ${t.marginMode} is not null)
         or (${t.market} = 'spot' and ${t.leverage} is null and ${t.marginMode} is null and ${t.sizingMode} = 'B')`,
     ),
-    check('strategies_base_pct', sql`${t.basePct} between 5 and 20`),
+    check('strategies_base_pct', sql`${t.basePct} between 5 and 40`),
     check('strategies_confidence', sql`${t.confidenceThreshold} between 0 and 1`),
     check('strategies_risk_pct', sql`(${t.sizingMode} = 'C') = (${t.riskPct} is not null) and (${t.riskPct} is null or ${t.riskPct} > 0)`),
     // B10.2: one active strategy per pair (spot and futures BTCUSDT are the same pair).
