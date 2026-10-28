@@ -76,11 +76,29 @@ Check failures (the tool, not a mismatch; the day was re-run later):
   451` (Binance geo-block, see the downtime below). Runs minutes before and after each
   of these succeeded with the same result.
 
-Downtime: from 2026-10-14 to 2026-10-15 Railway's Singapore egress IP geolocated to the
-US and Binance answered HTTP 451 to every call, so the engine could not evaluate 4H
-closes. The service moved to EU West on 2026-10-15 at about 16:30 UTC.
+Downtime: on 2026-10-14 and 2026-10-15 Railway's Singapore egress IP geolocated to the
+US and Binance answered HTTP 451, so the engine could not evaluate some 4H closes. The
+replay-diff shows which: live missed the closes at 2026-10-14 16:00 and 20:00, 2026-10-15
+00:00 and 04:00, and 2026-10-15 16:00 UTC; it did evaluate the 08:00 and 12:00 closes on
+2026-10-15. The service moved to EU West on 2026-10-15 at about 16:30 UTC, and no close
+has been missed since.
 
 ## Mismatches and explanations
 
 | UTC day | Strategy | 4H key (UTC) | Outcome | Position | Live | Replay | Explanation |
 |---|---|---|---|---|---|---|---|
+| 2026-10-14 | S-01 | 2026-10-14 12:00 | `missing_live` | rebuilt | none recorded | none:no_signal | 451 downtime. Replay would not have traded. |
+| 2026-10-14 | S-01 | 2026-10-14 16:00 | `missing_live` | rebuilt | none recorded | none:no_signal | 451 downtime. Replay would not have traded. |
+| 2026-10-14 | S-02 | 2026-10-14 12:00 | `missing_live` | rebuilt | none recorded | warming_up 1w | 451 downtime. Replay was still warming up, so no trade. |
+| 2026-10-14 | S-02 | 2026-10-14 16:00 | `missing_live` | rebuilt | none recorded | warming_up 1w | 451 downtime. Replay was still warming up, so no trade. |
+| 2026-10-15 | S-01 | 2026-10-14 20:00 | `missing_live` | rebuilt | none recorded | none:no_signal | 451 downtime. Replay would not have traded. |
+| 2026-10-15 | S-01 | 2026-10-15 00:00 | `missing_live` | rebuilt | none recorded | none:no_signal | 451 downtime. Replay would not have traded. |
+| 2026-10-15 | S-01 | 2026-10-15 12:00 | `missing_live` | rebuilt | none recorded | none:no_signal | 451 downtime. Replay would not have traded. |
+| 2026-10-15 | S-02 | 2026-10-14 20:00 | `missing_live` | rebuilt | none recorded | warming_up 1w | 451 downtime. Replay was still warming up, so no trade. |
+| 2026-10-15 | S-02 | 2026-10-15 00:00 | `missing_live` | rebuilt | none recorded | warming_up 1w | 451 downtime. Replay was still warming up, so no trade. |
+| 2026-10-15 | S-02 | 2026-10-15 12:00 | `missing_live` | rebuilt | none recorded | warming_up 1w | 451 downtime. Replay was still warming up, so no trade. |
+
+The 4H key is the candle's open time; the day is the UTC day of its close. Source: the
+`replay-diff-cli --day` JSON for 2026-10-14 and 2026-10-15, re-run on 2026-10-28. No
+`differ` and no `missing_replay` so far: every mismatch is a missed live evaluation
+during the 451 downtime, and the replay shows none of them would have placed an order.
