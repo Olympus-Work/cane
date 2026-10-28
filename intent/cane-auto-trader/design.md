@@ -48,7 +48,7 @@ Prototype file: `Cane Auto Trader.dc.html` (project root)
   - Searchable USDT pair picker (shows pairs already in use).
   - Market: Spot / Futures.
   - Futures only: leverage slider (ceiling, 1–20x, default 5x, helper ends "Max 20x."), margin mode (Isolated default / Cross), sizing mode cards A / B (default) / C.
-  - Base size 5–20% (default 10), Jev threshold (default 0.70), risk % at full confluence (mode C only).
+  - Base size 5–20% (default 10; 5–40% since spec rev 5.4), Jev threshold (default 0.70), risk % at full confluence (mode C only).
   - Live sizing preview, e.g. "With 10,000.00 USDT and 5x: 20% → notional 2,000.00, margin 400.00", plus base / 2 factors / all 3 factors rows.
   - Leverage and margin mode locked with explanation while the strategy has an open position.
 - States: loading, empty (CTA), error banner.

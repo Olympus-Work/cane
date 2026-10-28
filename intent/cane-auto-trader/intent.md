@@ -70,7 +70,8 @@ signal + Jev output.
 - Jev input design: confluence features are computed deterministically in
   code; Jev classifies each factor (yes/no + confidence). Factor counts as
   present at confidence >= 0.70 (configurable). Size = base 10% (playbook
-  range 5–20%, configurable) + 20% per factor present, cap 100%.
+  range 5–20%, configurable; the app range is 5–40% since spec rev 5.4) + 20%
+  per factor present, cap 100%.
 - Shorts (futures) use mirrored factors: ascending-channel breakdown,
   euphoria/blow-off (consecutive big green bars, gap up, volume spike),
   lower high. These mirrors are new logic, not from the source playbook.

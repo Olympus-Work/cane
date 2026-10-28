@@ -293,7 +293,7 @@ Stack, gap 24 (16 px padding):
     - **B · % equity as notional** (default) — "Size % of equity is the position notional. Leverage only changes margin used."
     - **C · Risk % per trade** — "Size so a stop-out loses a set % of equity, scaled by confluence."
   - **Lock**: when editing a strategy with an open position, Pair, Market, Leverage and Margin mode are disabled at 0.55 opacity. A note with `fa-lock` reads: "Leverage and margin mode are locked while {id} has an open position. They can change after the position closes."
-- **Base size**: range 5–20, default 10. Helper: "5–20%. Each confirmed confluence factor adds 20%."
+- **Base size**: range 5–20, default 10. Helper: "5–20%. Each confirmed confluence factor adds 20%." (Superseded: the range is 5–40 since spec rev 5.4.)
 - **Jev confidence threshold**: number input, step 0.05, default 0.70.
 - **Risk at full confluence (%)**: mode C only, default 2.
 - Footer: Cancel (ghost) / Save (primary, `fa-check`). New strategies are saved as Disabled.
@@ -373,7 +373,7 @@ Fixed bottom-centre (28 px from the bottom), pill, bg `--gray-900`, white 13 px,
 - **Validation**:
   - Pair must be a known USDT pair.
   - One enabled strategy per pair.
-  - Base 5–20.
+  - Base 5–20 (5–40 since spec rev 5.4).
   - Threshold 0–1.
   - Risk only for mode C.
   - TOTP exactly 6 digits.
