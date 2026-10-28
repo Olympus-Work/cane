@@ -798,7 +798,7 @@ function BlogHeader() {
     }
   }, /*#__PURE__*/React.createElement(Avatar, {
     src: "../../assets/profile-image.png",
-    alt: "Wai Phyo Aung",
+    alt: "Sample Owner",
     size: 36
   }), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -809,13 +809,13 @@ function BlogHeader() {
       fontWeight: 'var(--weight-bold)',
       color: 'var(--text-primary)'
     }
-  }, "Waiphyo"), /*#__PURE__*/React.createElement("div", {
+  }, "Sample"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 'var(--text-xs)',
       color: 'var(--text-muted)',
       fontFamily: 'var(--font-mono)'
     }
-  }, "blog.waiphyoaung.com"))), /*#__PURE__*/React.createElement("nav", {
+  }, "blog.example.com"))), /*#__PURE__*/React.createElement("nav", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -1082,7 +1082,7 @@ function PostView({
     }
   }, /*#__PURE__*/React.createElement(Avatar, {
     src: "../../assets/profile-image.png",
-    alt: "Wai Phyo Aung",
+    alt: "Sample Owner",
     size: 40
   }), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -1094,7 +1094,7 @@ function PostView({
       fontWeight: 'var(--weight-semibold)',
       color: 'var(--text-primary)'
     }
-  }, "Wai Phyo Aung"), /*#__PURE__*/React.createElement("div", {
+  }, "Sample Owner"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 'var(--text-xs)',
       color: 'var(--text-muted)',
@@ -1530,22 +1530,22 @@ function HomeView() {
   }), /*#__PURE__*/React.createElement(ContactRow, {
     icon: "fab fa-linkedin-in",
     label: "LinkedIn",
-    value: "linkedin.com/in/wai-phyo-aung",
+    value: "linkedin.com/in/example",
     href: id.social.linkedin
   }), /*#__PURE__*/React.createElement(ContactRow, {
     icon: "fab fa-github",
     label: "GitHub",
-    value: "github.com/waiphyoaung",
+    value: "github.com/example",
     href: id.social.github
   }), /*#__PURE__*/React.createElement(ContactRow, {
     icon: "fab fa-youtube",
     label: "YouTube",
-    value: "youtube.com/@waiphyoaung",
+    value: "youtube.com/@example",
     href: id.social.youtube
   }), /*#__PURE__*/React.createElement(ContactRow, {
     icon: "fas fa-newspaper",
     label: "Blog",
-    value: "blog.waiphyoaung.com",
+    value: "blog.example.com",
     href: id.social.blog
   }))));
 }
@@ -1712,16 +1712,16 @@ Object.assign(window, {
 try { (() => {
 // Shared identity + project data (mirrors Portfolio/JS/config.js).
 const IDENTITY = {
-  name: 'Wai Phyo Aung',
-  fullName: 'Wai Phyo Aung – Waiphyo',
-  title: 'Cyber Security Specialist',
-  location: 'Bangkok, Thailand',
-  email: 'waiphyo00297@gmail.com',
+  name: 'Sample Owner',
+  fullName: 'Sample Owner',
+  title: 'Sample Title',
+  location: 'Sample City',
+  email: 'owner@example.com',
   social: {
-    github: 'https://github.com/waiphyoaung',
-    linkedin: 'https://www.linkedin.com/in/wai-phyo-aung-41b070148/',
-    youtube: 'https://www.youtube.com/@waiphyoaung',
-    blog: 'https://blog.waiphyoaung.com'
+    github: 'https://github.com/example',
+    linkedin: 'https://www.linkedin.com/in/example',
+    youtube: 'https://www.youtube.com/@example',
+    blog: 'https://blog.example.com'
   }
 };
 const SKILLS = ['Network Security', 'Vulnerability Assessment', 'Incident Response', 'Security Architecture', 'Policy & Compliance', 'Risk Management', 'SIEM / Log Analysis', 'Cloud Security', 'Firewall (Palo Alto, FortiGate)', 'EDR / XDR', 'Zero Trust'];
@@ -1741,7 +1741,7 @@ const PROJECTS = [{
     label: 'Panorama',
     color: 'amber'
   }],
-  href: 'https://blog.waiphyoaung.com/enterprise-firewall-migration'
+  href: 'https://blog.example.com/enterprise-firewall-migration'
 }, {
   category: 'Detection & Response',
   color: 'teal',
@@ -1757,7 +1757,7 @@ const PROJECTS = [{
     label: 'Threat Hunting',
     color: 'purple'
   }],
-  href: 'https://blog.waiphyoaung.com/siem-soc-deployment'
+  href: 'https://blog.example.com/siem-soc-deployment'
 }, {
   category: 'Risk Management',
   color: 'amber',
@@ -1773,7 +1773,7 @@ const PROJECTS = [{
     label: 'CVSS',
     color: 'red'
   }],
-  href: 'https://blog.waiphyoaung.com/vulnerability-management'
+  href: 'https://blog.example.com/vulnerability-management'
 }, {
   category: 'Access Control',
   color: 'purple',
@@ -1789,7 +1789,7 @@ const PROJECTS = [{
     label: 'Segmentation',
     color: 'green'
   }],
-  href: 'https://blog.waiphyoaung.com/zero-trust-rollout'
+  href: 'https://blog.example.com/zero-trust-rollout'
 }, {
   category: 'Detection & Response',
   color: 'rose',
@@ -1804,7 +1804,7 @@ const PROJECTS = [{
   }, {
     label: 'IR Playbooks'
   }],
-  href: 'https://blog.waiphyoaung.com/edr-xdr-deployment'
+  href: 'https://blog.example.com/edr-xdr-deployment'
 }, {
   category: 'Cloud Security',
   color: 'sky',
@@ -1820,7 +1820,7 @@ const PROJECTS = [{
     label: 'CSPM',
     color: 'emerald'
   }],
-  href: 'https://blog.waiphyoaung.com/cloud-security-posture'
+  href: 'https://blog.example.com/cloud-security-posture'
 }];
 Object.assign(window, {
   IDENTITY,
