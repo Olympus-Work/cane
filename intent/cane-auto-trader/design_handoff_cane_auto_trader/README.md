@@ -8,6 +8,8 @@ Business rules live in `../spec.md` and `../intent.md` (the source of truth). A 
 ## About the Design Files
 The files in `prototype/` are **design references created in HTML**: a working prototype showing the intended look and behaviour. They are **not production code to copy**. Recreate these designs in the target codebase's environment (React, Vue, etc.) using its own patterns and libraries. If there is no frontend yet, pick a suitable stack (suggested: React + TypeScript + Vite, CSS variables for tokens, a small i18n layer for TH/EN). All data in the prototype is hard-coded sample data. Wire it to the real backend per `spec.md`.
 
+The `prototype/` folder is not in the public repository (it holds a third-party design-system bundle); the owner keeps it locally. The tokens it uses are the same as `tokens/` here.
+
 To open the prototype: serve the `prototype/` folder with any static server (e.g. `npx serve prototype`) and open `Cane Auto Trader.dc.html`. It needs network access for Google Fonts and Font Awesome (cdnjs). All app logic is in the `<script data-dc-script>` block at the bottom of the file (class `Component`, method `renderVals()`), and the markup is in the `<x-dc>` template above it.
 
 Prototype controls (props on the root, shown in the host's Tweaks panel; in code they default to the values in bold):
