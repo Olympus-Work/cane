@@ -903,6 +903,8 @@ Each step ends with its proof passing in CI before the next starts. Steps
     After the deploy the owner sets S-01 `base_pct` to 40 and checks that
     the sizing preview notional is worth at least 0.001 BTC at the
     current price.
+  - Rollback: `down` for 0005 fails while any strategy has `base_pct`
+    above 20. Lower those strategies to 20 or less first.
 - **Replay isolation (owner OK 2026-09-28):** replay and the daily diff
   share only `packages/core` (rules) and read live records; they never
   load the order executor or keys, and use a read-only DB role.
