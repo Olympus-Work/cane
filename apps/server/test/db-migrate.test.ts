@@ -74,12 +74,12 @@ describe.skipIf(!url)('db migrations (fresh database)', () => {
       'strategies',
       'trades',
     ]);
-    expect(await count('select count(*)::int as n from drizzle.__drizzle_migrations')).toBe(5);
+    expect(await count('select count(*)::int as n from drizzle.__drizzle_migrations')).toBe(6);
   });
 
   it('up again is a no-op', async () => {
     await migrateUp(pool);
-    expect(await count('select count(*)::int as n from drizzle.__drizzle_migrations')).toBe(5);
+    expect(await count('select count(*)::int as n from drizzle.__drizzle_migrations')).toBe(6);
   });
 
   it('signals are idempotent per strategy, timeframe and candle', async () => {
@@ -141,6 +141,20 @@ describe.skipIf(!url)('db migrations (fresh database)', () => {
        values ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
       ['S-01', 'S-01-1727740800000-entry', 'futures', 'BTCUSDT', 'BUY', 'MARKET', 'entry', 'NEW', '0.01'],
     );
+  });
+
+  it('base_pct takes 5–40 (0005); one step down restores 5–20', async () => {
+    await pool.query("update strategies set base_pct = 40 where id = 'S-02'");
+    await expectPgError(pool.query("update strategies set base_pct = 41 where id = 'S-02'"), '23514');
+    // Down refuses while a row is above 20, and leaves 0005 applied.
+    await expectPgError(migrateDown(pool, 1), '23514');
+    expect(await count('select count(*)::int as n from drizzle.__drizzle_migrations')).toBe(6);
+    await pool.query("update strategies set base_pct = 20 where id = 'S-02'");
+    await migrateDown(pool, 1);
+    await expectPgError(pool.query("update strategies set base_pct = 21 where id = 'S-02'"), '23514');
+    await migrateUp(pool);
+    await pool.query("update strategies set base_pct = 40 where id = 'S-02'");
+    await pool.query("update strategies set base_pct = 10 where id = 'S-02'");
   });
 
   it('funding_rate is keyed by symbol and time and only takes Binance intervals', async () => {

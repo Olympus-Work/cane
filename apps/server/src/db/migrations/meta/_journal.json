@@ -36,6 +36,13 @@
       "when": 1792047859834,
       "tag": "0004_funding_rate",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793183586272,
+      "tag": "0005_strategies_base_pct_40",
+      "breakpoints": true
     }
   ]
 }

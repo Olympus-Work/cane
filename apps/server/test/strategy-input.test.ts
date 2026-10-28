@@ -80,13 +80,13 @@ describe('parseCreate rejections', () => {
     expect(codeOf(() => parseCreate({ pair: 'BTCUSDT', leverage }))).toBe('bad_leverage');
   });
 
-  it.each([4.99, 20.01])('rejects basePct %s', (basePct) => {
+  it.each([4.99, 40.01])('rejects basePct %s', (basePct) => {
     expect(codeOf(() => parseCreate({ pair: 'BTCUSDT', basePct }))).toBe('bad_basePct');
   });
 
-  it('accepts basePct at the bounds 5 and 20', () => {
+  it('accepts basePct at the bounds 5 and 40', () => {
     expect(parseCreate({ pair: 'BTCUSDT', basePct: 5 }).basePct).toBe('5');
-    expect(parseCreate({ pair: 'BTCUSDT', basePct: 20 }).basePct).toBe('20');
+    expect(parseCreate({ pair: 'BTCUSDT', basePct: 40 }).basePct).toBe('40');
   });
 
   it.each([-0.01, 1.01])('rejects confidenceThreshold %s', (confidenceThreshold) => {
