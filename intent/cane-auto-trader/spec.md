@@ -17,6 +17,9 @@ off); B7.5 "with realised profit" means net PnL > 0. No other change.
 Revision 5.3 (2026-10-12, owner decision): B13.5 added; the `login_success`
 notification carries method, device, IP and session expiry. The Data row
 for session metadata now names that notification.
+Revision 5.4 (2026-10-28, owner decision): B6.2 `base_pct` range widened
+from 5–20 to 5–40, so a small account can still clear the exchange minimum
+order size without a deposit. Default stays 10.
 Author: Claude (drafted for owner review). Approver: Zong (owner).
 
 Defaults below were confirmed by the owner on 2026-09-25. Numeric defaults are configurable unless stated otherwise.
@@ -127,7 +130,7 @@ Given an enabled strategy with no open position on its pair:
 1. Jev classifies three factors for the signal candle (B8). A factor is
    *present* if Jev returns `present = true` with `confidence ≥ 0.70`.
 2. `size_pct = base_pct + 20 × present_factors`, capped at 100.
-   `base_pct` default = 10 (allowed range 5–20).
+   `base_pct` default = 10 (allowed range 5–40).
 3. Equity: spot = total spot wallet value in USDT; futures = USDⓈ-M wallet
    margin balance in USDT. Both read from Binance at sizing time.
 4. Mode **B** (default): notional = `size_pct% × equity`;
@@ -214,7 +217,7 @@ Given an enabled strategy with no open position on its pair:
 1. Create: pair, market (spot / futures, form default futures), and for
    futures: leverage (1–20, default 5; 20x is a
    hard maximum even where Binance allows more), sizing mode
-   (default B), margin mode (default isolated), `base_pct` (5–20, default
+   (default B), margin mode (default isolated), `base_pct` (5–40, default
    10), confidence threshold (0–1, default 0.70), `risk_pct` (mode C only,
    default 2). New strategies start `disabled` and get an ID `S-NN`.
    The form shows a live sizing preview (base only / 2 factors / 3 factors)
