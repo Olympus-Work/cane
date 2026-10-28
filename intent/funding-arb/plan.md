@@ -209,6 +209,16 @@ F14 needs, and it lets a later F02 rerun include more coins than BTC and ETH.
   reason (for example, listed less than 30 days ago). The summary line is pasted into the
   PR and ClickUp. Then set `FUNDING_SYNC_CANDIDATES=true`, and after one settlement the
   log shows one bulk sync for the slot.
+- **Owner run result (Railway, 2026-10-28, deploy 5a9c15e): passed.** `backfill
+  --candidates` added 55,435 rows over 353 symbols. `check --candidates`: 353 symbols,
+  353 covered, `withGaps` and `listedInsideWindow` empty, 165 excluded for no spot
+  market, 5 unsupported (non-ASCII). BTCUSDT and ETHUSDT: 730 days, 2,190 rows each, no
+  gaps. Ten symbols changed interval inside the window with no gap (the known F04 APR
+  limit). With `FUNDING_SYNC_CANDIDATES=true` the boot log says `live funding sync after
+  each settlement: all scanner candidates`, and the 08:00 UTC slot logged `settlement
+  2026-10-28T08:00:00.000Z: 353 symbols synced`.
+  PR #44 merged on 2026-10-22 but did not deploy until 2026-10-28: the Railway GitHub App
+  had been removed, so merges to `main` built nothing (README now says how to spot this).
 
 ### Not in F01b
 - Scanner scores, liquidity, snapshots (F14). F01b only stores funding.
