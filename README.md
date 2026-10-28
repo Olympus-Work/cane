@@ -123,7 +123,7 @@ There is one Railway service plus the Postgres add-on. The server also serves th
    ```sh
    CANE_OWNER_PASSWORD='<12+ characters>' node apps/server/dist/owner-cli.js seed-owner --email you@example.com
    ```
-   This prints the authenticator secret and recovery codes once. If the shell does not have the service variables, run `env | grep -c CANE_MASTER_KEY` to check, and say so rather than copying the master key anywhere.
+   This prints the authenticator secret and recovery codes once. If the shell (here or in the dashboard Console) says `node: command not found`, Railpack's Node is not on its `PATH`: run `export PATH=/mise/installs/node/24/bin:$PATH` first. If the shell does not have the service variables, run `env | grep -c CANE_MASTER_KEY` to check, and say so rather than copying the master key anywhere.
 5. **Settings.** Log in at `https://<domain>`.
    - Set LINE and Telegram, and send a test message.
    - Save the live Binance key: Reading, Spot & Margin Trading and Futures on; Withdrawals and Universal Transfer off.
