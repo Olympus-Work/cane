@@ -97,7 +97,7 @@ CANE_OWNER_PASSWORD='<12+ characters>' pnpm --filter @cane/server owner seed-own
 
 ## Deploy (Railway)
 
-There is one Railway service plus the Postgres add-on. The server also serves the built web app (`apps/web/dist`) from its own origin, because the session cookie is `secure` and `sameSite=strict`. Railway settings are entered in the dashboard; the repository has no `railway.json`, since Railway deprecated it. Never put a real value in a file: keys, passwords and the master key go only into Railway variables.
+There is one Railway service plus the Postgres add-on. The server also serves the built web app (`apps/web/dist`) from its own origin, because the session cookie is `secure` and `sameSite=strict`. Railway settings are entered in the dashboard; the repository has no `railway.json`, since Railway deprecated it. Auto-deploy from `main` needs the Railway GitHub App installed on the repository; each deploy then shows up under the repository's GitHub deployments, so a merge with no new entry there means the app is missing. Never put a real value in a file: keys, passwords and the master key go only into Railway variables.
 
 1. **Service settings** (dashboard → service → Settings). pnpm comes from `packageManager` in `package.json`; Node is pinned by the variable in step 2. Railway may detect the monorepo and create one service per package. Keep only `@cane/server` and delete the others. Leave Root Directory and Watch Paths empty, and replace the detected start command with the one below.
    - Build command: `pnpm install --frozen-lockfile && pnpm build`
